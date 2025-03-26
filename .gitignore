@@ -1,0 +1,51 @@
+### R stuff
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.qs
+.sif
+
+### data and figures 
+data/
+docs/
+logs/
+temp/
+test/
+containers/
+work/
+
+results/
+outputs/
+figures/
+reports/
+
+# Common genomic data formats
+*.bam
+*.bai
+*.vcf
+*.vcf.gz
+*.vcf.gz.tbi
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.sam
+*.fasta
+*.fa
+*.bed
+*.gtf
+*.gff
+*.bigwig
+*.bw
+*.maf
+*.maf.gz
+
+# Miscellaneous stuff
+**/*_cache/*
+.DS_Store
+
+# IDE specific
+.vscode/
+.nextflow/
+*.code-workspace
