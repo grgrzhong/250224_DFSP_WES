@@ -49,7 +49,7 @@ run_Mutect2Normal() {
     LOG_DIR="${PON_OUT}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/mutect2_normal.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/mutect2_normal.sh"
 
     # Run GATK Mutect2 in parallel
     echo "$NORMAL_SAMPLES" | parallel \
@@ -71,7 +71,7 @@ run_GenomicsDBImport() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/genomics_db_import.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/genomics_db_import.sh"
 
     # Run GATK GenomicsDBImport in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -92,7 +92,7 @@ run_CreateSomaticPanelOfNormals() {
     LOG_DIR="${PON_OUT}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/create_pon.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/create_pon.sh"
 
     # Run GATK CreateSomaticPanelOfNormals in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -113,7 +113,7 @@ run_GetpileupSummaries() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/get_pileup_summaries.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/get_pileup_summaries.sh"
 
     # Run GATK GetpileupSummaries in parallel
     echo "$TUMOUR_SAMPLES" | parallel --env BAM,MUTECT_CALL,REFERENCE_DIR \
@@ -131,7 +131,7 @@ run_CalculateContamination() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/calculate_contamination.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/calculate_contamination.sh"
 
     # Run GATK CalculateContamination in parallel
     echo "$TUMOUR_SAMPLES" | parallel --env MUTECT_CALL \
@@ -156,7 +156,7 @@ run_Mutect2CallVariant() {
     LOG_DIR="${MUTECT_CALL}/parallel_logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/mutect2_call.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/mutect2_call.sh"
 
     # Run Mutect2 in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -175,7 +175,7 @@ run_LearnReadOrientationModel() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/learn_read_orientation_model.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/learn_read_orientation_model.sh"
 
     # Run GATK LearnReadOrientationModel in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -196,11 +196,11 @@ run_FilterMutectCalls() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/filter_mutect_calls.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/filter_mutect_calls.sh"
 
     # Run GATK FilterMutectCalls in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
-        --env MUTECT_CALL,REFERENCE,AVAIL_MEM \
+        --env MUTECT_CALL,REFERENCE \
         --jobs $PARALLEL_JOBS \
         --joblog "$LOG_DIR/parallel_FilterMutectCalls.log" \
         filter_mutect_calls {}
@@ -216,7 +216,7 @@ run_NormalizeReads() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_calling/mutect2/normalize_reads.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/normalize_reads.sh"
 
     # Run GATK NormalizeReads in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -238,7 +238,7 @@ run_FuncotatorAnnotation() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_annotation/funcotator.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/funcotator.sh"
 
     # Run GATK Funcotator annotation in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
@@ -257,14 +257,14 @@ run_AnnovarAnnotation() {
     LOG_DIR="${MUTECT_CALL}/logs" && mkdir -p "${LOG_DIR}"
 
     # Load module
-    source "${BASE_DIR}/${PROJECT_DIR}/modules/variant_annotation/annovar.sh"
+    source "${BASE_DIR}/${PROJECT_DIR}/scripts/annovar.sh"
 
     # Run ANNOVAR annotation in parallel
     echo "$TUMOUR_SAMPLES" | parallel \
         --env MUTECT_CALL \
         --jobs $PARALLEL_JOBS \
         --joblog "$LOG_DIR/parallel_Annovar.log" \
-        annotate_with_funcotator {}
+        annotate_with_annovar {}
 }
 
 # # Main Workflow

@@ -1,3 +1,8 @@
-input: './samplesheet.csv'
-outdir: './results/sarek'
-genome: 'GATK.GRCh38'
+input: /home/zhonggr/projects/250224_DFSP_WES/data/csv/samplesheet.csv
+outdir: ./results/
+# pon: /home/zhonggr/projects/250224_DFSP_WES/data/mutect2_pon/pon.vcf.gz
+# pon_tbi: /home/zhonggr/projects/250224_DFSP_WES/data/mutect2_pon/pon.vcf.gz.tbi
+# tools: mutect2
+log: ./logs/sarek.log
+
+# fasta: /home/zhonggr/projects/250224_DFSP_WES/data/Reference/Gencode/gencode.hg38.v36.primary_assembly.fa

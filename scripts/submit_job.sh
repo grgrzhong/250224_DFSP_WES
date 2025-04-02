@@ -17,10 +17,10 @@ fi
 source "$PROJECT_CONFIG"
 
 # Fixed paths (based on project configuration)
-readonly LIB_SCRIPT="${BASE_DIR}/${PROJECT_DIR}/workflows/mutation_calling/mutation_calling.sh"
+readonly LIB_SCRIPT="${BASE_DIR}/${PROJECT_DIR}/scripts/mutation_calling.sh"
 readonly CONDA_INIT="/home/zhonggr/miniforge3/etc/profile.d/conda.sh"
 readonly CONDA_ENV="varcall"
-readonly SLURM_LOG_DIR="${BASE_DIR}/${PROJECT_DIR}/logs/slurm"
+readonly SLURM_LOG_DIR="${BASE_DIR}/${PROJECT_DIR}/logs"
 
 # Default SLURM settings - can be overridden via command line
 STEP=""

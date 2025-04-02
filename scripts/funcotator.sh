@@ -21,9 +21,11 @@ annotate_with_funcotator() {
 
     local tumour=$1
     local var_out="${MUTECT_CALL}/${tumour}"
-    
+    local var_ann=${BASE_DIR}/${PROJECT_DIR}/${WORK_DIR}/variant_annotation/funcotator/${tumour}
+
     # Ensure output directory exists
     mkdir -p "$var_out"
+    mkdir -p "$var_ann"
     
     log_message "Annotating variants with Funcotator for sample: ${tumour}"
     

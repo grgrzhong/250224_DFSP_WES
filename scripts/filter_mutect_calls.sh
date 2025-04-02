@@ -16,7 +16,7 @@
 
 filter_mutect_calls() {
     # Validate required global variables
-    for var in MUTECT_CALL REFERENCE AVAIL_MEM; do
+    for var in MUTECT_CALL REFERENCE; do
         if [[ -z "${!var}" ]]; then
             echo "ERROR: Required global variable $var is not set" >&2
             return 1
@@ -26,7 +26,8 @@ filter_mutect_calls() {
     local tumour=$1
     local out_dir="$MUTECT_CALL/${tumour}"
     local case=$(echo "$tumour" | sed -E 's/^(.*?)-(T|N).*$/\1/')
-    
+    local avail_mem=${AVAIL_MEM:-4}
+
     # Check if output directory exists
     if [[ ! -d "$out_dir" ]]; then
         echo "ERROR: Output directory not found: $out_dir" >&2
@@ -62,7 +63,7 @@ filter_mutect_calls() {
     
     log_message "Starting FilterMutectCalls for sample: ${tumour}"
     
-    gatk --java-options "-Xmx${AVAIL_MEM}g" FilterMutectCalls \
+    gatk --java-options "-Xmx${avail_mem}g" FilterMutectCalls \
         -V "${out_dir}/${tumour}_unfiltered.vcf.gz" \
         -R "$REFERENCE" \
         --ob-priors "${out_dir}/${tumour}.read-orientation-model.tar.gz" \

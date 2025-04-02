@@ -21,10 +21,11 @@ annotate_with_annovar() {
 
     local tumour=$1
     local var_out="${MUTECT_CALL}/${tumour}"
-    
+    local var_ann=${BASE_DIR}/${PROJECT_DIR}/${WORK_DIR}/variant_annotation/annovar/${tumour}
     # Ensure output directory exists
     mkdir -p "$var_out"
-    
+    mkdir -p "$var_ann"
+
     log_message "Processing ANNOVAR annotation for sample: ${tumour}"
     
     # Check if input VCF exists
@@ -36,27 +37,27 @@ annotate_with_annovar() {
     # Run ANNOVAR annotation
     perl $BASE_DIR/Software/annovar//table_annovar.pl $var_out/${tumour}_normalized_filtered.vcf.gz \
         $BASE_DIR/Software/annovar/humandb/ \
-        -buildver hg38 -out $var_out/${tumour} -remove \
+        -buildver hg38 -out $var_ann/${tumour} -remove \
         -protocol refGene,cytoBand,dbnsfp33a,gnomad_exome,avsnp150,clinvar_20221231,cosmic70 \
         -operation gx,r,f,f,f,f,f \
         -nastring . -polish -xreffile $BASE_DIR/Software/annovar/example/gene_fullxref.txt \
         --otherinfo --vcfinput \
-        >& ${var_out}/${tumour}.Annovar.log
+        >& ${var_ann}/${tumour}.Annovar.log
     
     # Check if ANNOVAR ran successfully
-    if [[ $? -ne 0 || ! -f "$var_out/${tumour}.hg38_multianno.txt" ]]; then
+    if [[ $? -ne 0 || ! -f "$var_ann/${tumour}.hg38_multianno.txt" ]]; then
         log_message "ERROR: ANNOVAR annotation failed for ${tumour}"
         return 1
     fi
     
     # Extract additional fields from the VCF and create a simplified output
     log_message "Creating simplified annotation file for ${tumour}"
-    less -S $var_out/${tumour}.hg38_multianno.txt | \
+    less -S $var_ann/${tumour}.hg38_multianno.txt | \
         awk 'BEGIN {FS=OFS="\t"} NR==1 {print $0, "AD", "AF", "DP"}; NR >1 {split($NF, a, ":"); $(NF+1)=a[2]; $(NF+1)=a[3]; $(NF+1)=a[4]; print}' \
-        > $var_out/${tumour}_annovar.txt
+        > $var_ann/${tumour}_annovar.txt
     
     # Check if output file was created successfully
-    if [[ ! -f "$var_out/${tumour}_annovar.txt" ]]; then
+    if [[ ! -f "$var_ann/${tumour}_annovar.txt" ]]; then
         log_message "ERROR: Failed to create simplified annotation file for ${tumour}"
         return 1
     fi

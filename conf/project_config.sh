@@ -10,8 +10,8 @@
 export BASE_DIR="/lustre1/g/path_my"
 export REFERENCE_DIR="/lustre1/g/path_my/Reference"
 export PROJECT_DIR="250224_DFSP_WES"
-# export WORK_DIR="data/WES/DFSP"
-export WORK_DIR="data/WES/SARC"
+export WORK_DIR="data/WES/DFSP"
+# export WORK_DIR="data/WES/SARC"
 
 export SAMPLE_SHEET=$BASE_DIR/$PROJECT_DIR/$WORK_DIR/samplesheet.csv
 
@@ -42,4 +42,4 @@ fi
 # export MAX_MEM=$(($TOTAL_MEM * 8 / 10 /))
 
 # Load general utility functions
-source "${BASE_DIR}/${PROJECT_DIR}/modules/utils/utils.sh"
+source "${BASE_DIR}/${PROJECT_DIR}/scripts/utils.sh"
