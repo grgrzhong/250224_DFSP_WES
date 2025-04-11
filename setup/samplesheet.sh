@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# filepath: /home/zhonggr/projects/250224_DFSP_WES/scripts/create_samplesheet.sh
+# filepath: /home/zhonggr/projects/250224_DFSP_WES/samplesheet.sh
 
 # Set directories
-data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/WES/DFSP}"
-bam_dir="${data_dir}/bam"
-fastq_dir="${data_dir}/fastq"  # This contains all FASTQ files, not organized by sample
+data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/WES}"
+fastq_dir="${data_dir}/preprocessing/fastq"  # This contains all FASTQ files, not organized by sample
+bam_dir="${data_dir}/preprocessing/recalibrated"
 
-SAMPLE_SHEET="${data_dir}/samplesheet.csv"
+SAMPLE_SHEET="${data_dir}/csv/samplesheet.csv"
 
 # Ensure output directory exists
 mkdir -p "$(dirname "$SAMPLE_SHEET")"
@@ -77,98 +77,75 @@ for sample_dir in $(ls "$bam_dir"); do
     fi
     
     # Find FASTQ files - now looking in the main fastq directory
-    # We'll search for files that contain the sample name in their filename
     echo "Looking for FASTQ files for sample: $sample_dir"
     
-    # Search patterns to try (from most specific to least specific)
-    patterns=(
-        "${sample_dir}_R1"       # Sample_R1 pattern
-        "${sample_dir}_1"        # Sample_1 pattern
-        "${sample_dir}.*_R1"     # Sample followed by anything then _R1
-        "${sample_dir}.*_1"      # Sample followed by anything then _1
-        "${sample_dir}"          # Just the sample name
-    )
+    # Define common patterns for R1/R2 files
+    R1_patterns=("_R1_" "_R1." "_1.")
+    R2_patterns=("_R2_" "_R2." "_2.")
     
-    # Find R1 (read 1) FASTQ file
-    for pattern in "${patterns[@]}"; do
+    # Find R1 FASTQ file
+    for r1_pattern in "${R1_patterns[@]}"; do
         if [[ -z "$fastq_1" ]]; then
-            # Try to find files with this pattern
-            potential_files=$(find "$fastq_dir" -name "*${pattern}*.fastq.gz" 2>/dev/null)
+            # Look for files matching both the sample name and the R1 pattern
+            found_files=$(find "$fastq_dir" -name "*${sample_dir}*${r1_pattern}*" \( -name "*.fastq.gz" -o -name "*.fq.gz" \) 2>/dev/null | sort)
             
-            # If no .fastq.gz files, try .fq.gz
-            if [[ -z "$potential_files" ]]; then
-                potential_files=$(find "$fastq_dir" -name "*${pattern}*.fq.gz" 2>/dev/null)
-            fi
-            
-            # Choose the first matching file
-            for file in $potential_files; do
-                # Check if this file looks like an R1/read 1 file
-                if [[ "$file" =~ _R1_ || "$file" =~ _1\. ]]; then
-                    fastq_1="$file"
-                    echo "  Found R1: $fastq_1"
-                    break
-                fi
-            done
-            
-            # If we found a match, break the outer loop too
-            if [[ -n "$fastq_1" ]]; then
+            if [[ -n "$found_files" ]]; then
+                # Take the first matching file
+                fastq_1=$(echo "$found_files" | head -n 1)
+                echo "  Found R1: $fastq_1 (pattern: $r1_pattern)"
                 break
             fi
         fi
     done
     
-    # Find R2 (read 2) FASTQ file - similar approach to R1
-    # If we found an R1 file, try to find the matching R2 by replacing R1/1 with R2/2
+    # Find R2 FASTQ file - if we found R1, try to find its pair
     if [[ -n "$fastq_1" ]]; then
-        # First try a direct replacement
-        potential_r2="${fastq_1/_R1_/_R2_}"
-        if [[ -f "$potential_r2" ]]; then
-            fastq_2="$potential_r2"
-            echo "  Found R2 (direct replacement): $fastq_2"
-        else
-            potential_r2="${fastq_1/_1\./_2\.}"
-            if [[ -f "$potential_r2" ]]; then
-                fastq_2="$potential_r2"
-                echo "  Found R2 (direct replacement): $fastq_2"
-            fi
-        fi
-    fi
-    
-    # If we still don't have an R2 file, search for it as we did for R1
-    if [[ -z "$fastq_2" ]]; then
-        patterns=(
-            "${sample_dir}_R2"
-            "${sample_dir}_2"
-            "${sample_dir}.*_R2"
-            "${sample_dir}.*_2"
-            "${sample_dir}"
-        )
-        
-        for pattern in "${patterns[@]}"; do
-            if [[ -z "$fastq_2" ]]; then
-                potential_files=$(find "$fastq_dir" -name "*${pattern}*.fastq.gz" 2>/dev/null)
-                
-                # If no .fastq.gz files, try .fq.gz
-                if [[ -z "$potential_files" ]]; then
-                    potential_files=$(find "$fastq_dir" -name "*${pattern}*.fq.gz" 2>/dev/null)
-                fi
-                
-                for file in $potential_files; do
-                    if [[ "$file" =~ _R2_ || "$file" =~ _2\. ]]; then
-                        fastq_2="$file"
-                        echo "  Found R2: $fastq_2"
-                        break
-                    fi
-                done
-                
-                if [[ -n "$fastq_2" ]]; then
+        # Try to find the matching R2 based on the R1 filename
+        for i in "${!R1_patterns[@]}"; do
+            r1_pattern="${R1_patterns[$i]}"
+            r2_pattern="${R2_patterns[$i]}"
+            
+            if [[ "$fastq_1" == *"$r1_pattern"* ]]; then
+                potential_r2="${fastq_1/$r1_pattern/$r2_pattern}"
+                if [[ -f "$potential_r2" ]]; then
+                    fastq_2="$potential_r2"
+                    echo "  Found R2 (paired with R1): $fastq_2"
                     break
                 fi
             fi
         done
     fi
     
-    # Last resort: try to find any remaining FASTQ files that might match by listing all related files
+    # If we still don't have an R2, search independently
+    if [[ -z "$fastq_2" ]]; then
+        for r2_pattern in "${R2_patterns[@]}"; do
+            if [[ -z "$fastq_2" ]]; then
+                found_files=$(find "$fastq_dir" -name "*${sample_dir}*${r2_pattern}*" \( -name "*.fastq.gz" -o -name "*.fq.gz" \) 2>/dev/null | sort)
+                
+                if [[ -n "$found_files" ]]; then
+                    fastq_2=$(echo "$found_files" | head -n 1)
+                    echo "  Found R2: $fastq_2 (pattern: $r2_pattern)"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    # Additional validation - check if R1 and R2 appear to be properly paired
+    if [[ -n "$fastq_1" && -n "$fastq_2" ]]; then
+        # Extract base names for comparison (removing R1/R2 and extension parts)
+        f1_base=$(basename "$fastq_1" | sed -E 's/_R[12]_.*|_[12]\..*//')
+        f2_base=$(basename "$fastq_2" | sed -E 's/_R[12]_.*|_[12]\..*//')
+        
+        # Ensure the base parts match
+        if [[ "$f1_base" != "$f2_base" ]]; then
+            echo "  WARNING: R1 and R2 files appear to be from different samples!"
+            echo "    R1 base: $f1_base"
+            echo "    R2 base: $f2_base"
+        fi
+    fi
+    
+    # Last resort: if we still don't have both FASTQ files, try to find any files containing the sample name
     if [[ -z "$fastq_1" || -z "$fastq_2" ]]; then
         echo "  Still searching for FASTQ files..."
         # Get all files that might relate to this sample
@@ -178,22 +155,69 @@ for sample_dir in $(ls "$bam_dir"); do
         if [[ -z "$fastq_1" && -z "$fastq_2" ]]; then
             file_count=$(echo "$related_files" | wc -l)
             if [[ $file_count -eq 2 ]]; then
-                fastq_1=$(echo "$related_files" | head -n 1)
-                fastq_2=$(echo "$related_files" | tail -n 1)
-                echo "  Using the only two related files found:"
+                # Try to determine which is R1 and which is R2
+                r1_file=""
+                r2_file=""
+                while read -r file; do
+                    for r1p in "${R1_patterns[@]}"; do
+                        if [[ "$file" == *"$r1p"* ]]; then
+                            r1_file="$file"
+                            break
+                        fi
+                    done
+                    for r2p in "${R2_patterns[@]}"; do
+                        if [[ "$file" == *"$r2p"* ]]; then
+                            r2_file="$file"
+                            break
+                        fi
+                    done
+                done <<< "$related_files"
+                
+                # If we identified both, use them
+                if [[ -n "$r1_file" && -n "$r2_file" ]]; then
+                    fastq_1="$r1_file"
+                    fastq_2="$r2_file"
+                # Otherwise just use first and second
+                else
+                    fastq_1=$(echo "$related_files" | head -n 1)
+                    fastq_2=$(echo "$related_files" | tail -n 1)
+                fi
+                echo "  Using two related files found:"
                 echo "    R1: $fastq_1"
                 echo "    R2: $fastq_2" 
             else
                 echo "  Found $file_count related files, cannot determine which to use."
             fi
-        # If we just need R1, use the first file
+        # If we just need R1, use the first file that matches R1 patterns
         elif [[ -z "$fastq_1" ]]; then
-            fastq_1=$(echo "$related_files" | grep -E '_R1_|_1\.' | head -n 1)
-            echo "  Found R1 from related files: $fastq_1"
-        # If we just need R2, use the first file that looks like R2
+            for r1p in "${R1_patterns[@]}"; do
+                r1_file=$(echo "$related_files" | grep "$r1p" | head -n 1)
+                if [[ -n "$r1_file" ]]; then
+                    fastq_1="$r1_file"
+                    echo "  Found R1 from related files: $fastq_1"
+                    break
+                fi
+            done
+            # If still not found, use first file
+            if [[ -z "$fastq_1" && -n "$related_files" ]]; then
+                fastq_1=$(echo "$related_files" | head -n 1)
+                echo "  Using first related file as R1: $fastq_1"
+            fi
+        # If we just need R2, use the first file that matches R2 patterns
         elif [[ -z "$fastq_2" ]]; then
-            fastq_2=$(echo "$related_files" | grep -E '_R2_|_2\.' | head -n 1)
-            echo "  Found R2 from related files: $fastq_2"
+            for r2p in "${R2_patterns[@]}"; do
+                r2_file=$(echo "$related_files" | grep "$r2p" | head -n 1)
+                if [[ -n "$r2_file" ]]; then
+                    fastq_2="$r2_file"
+                    echo "  Found R2 from related files: $fastq_2"
+                    break
+                fi
+            done
+            # If still not found, use first file not matching fastq_1
+            if [[ -z "$fastq_2" && -n "$related_files" ]]; then
+                fastq_2=$(echo "$related_files" | grep -v "$fastq_1" | head -n 1)
+                echo "  Using non-R1 related file as R2: $fastq_2"
+            fi
         fi
     fi
     

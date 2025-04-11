@@ -8,21 +8,21 @@ params.reference = "/path/to/your/reference/genome.fa" // Replace with actual re
 
 // Define process to run Manta for tumor-normal pairs
 process MANTA_TUMOR_NORMAL {
-    tag "${patient}_T${tumor_id}_N${normal_id}"
+    tag "${patient}_T${tumour_id}_N${normal_id}"
     
-    publishDir "${params.outdir}/manta/${tumor_id}", mode: 'copy'
+    publishDir "${params.outdir}/manta/${tumour_id}", mode: 'copy'
     
     container "${params.singularity_container_dir}/manta.1.6.0.img"
     
     input:
-    tuple val(patient), val(tumor_id), path(tumor_bam), path(tumor_bai), val(normal_id), path(normal_bam), path(normal_bai)
+    tuple val(patient), val(tumour_id), path(tumor_bam), path(tumor_bai), val(normal_id), path(normal_bam), path(normal_bai)
     path reference
     
     output:
-    tuple val(patient), val(tumor_id), val(normal_id), path("${patient}_T${tumor_id}_N${normal_id}/results/variants/diploidSV.vcf.gz"), emit: diploid_sv
-    tuple val(patient), val(tumor_id), val(normal_id), path("${patient}_T${tumor_id}_N${normal_id}/results/variants/somaticSV.vcf.gz"), emit: somatic_sv
-    tuple val(patient), val(tumor_id), val(normal_id), path("${patient}_T${tumor_id}_N${normal_id}/results/variants/candidateSV.vcf.gz"), emit: candidate_sv
-    tuple val(patient), val(tumor_id), val(normal_id), path("${patient}_T${tumor_id}_N${normal_id}/results/variants/*"), emit: all_variants
+    tuple val(patient), val(tumour_id), val(normal_id), path("${patient}_T${tumour_id}_N${normal_id}/results/variants/diploidSV.vcf.gz"), emit: diploid_sv
+    tuple val(patient), val(tumour_id), val(normal_id), path("${patient}_T${tumour_id}_N${normal_id}/results/variants/somaticSV.vcf.gz"), emit: somatic_sv
+    tuple val(patient), val(tumour_id), val(normal_id), path("${patient}_T${tumour_id}_N${normal_id}/results/variants/candidateSV.vcf.gz"), emit: candidate_sv
+    tuple val(patient), val(tumour_id), val(normal_id), path("${patient}_T${tumour_id}_N${normal_id}/results/variants/*"), emit: all_variants
     
     script:
     """
@@ -31,10 +31,10 @@ process MANTA_TUMOR_NORMAL {
         --normalBam ${normal_bam} \
         --tumorBam ${tumor_bam} \
         --referenceFasta ${reference} \
-        --runDir ${patient}_T${tumor_id}_N${normal_id}
+        --runDir ${patient}_T${tumour_id}_N${normal_id}
     
     # Run Manta using available threads
-    python ${patient}_T${tumor_id}_N${normal_id}/runWorkflow.py \
+    python ${patient}_T${tumour_id}_N${normal_id}/runWorkflow.py \
         --mode local \
         --jobs ${task.cpus}
     """
@@ -42,7 +42,7 @@ process MANTA_TUMOR_NORMAL {
 
 // Define process to run Manta for tumor-only samples
 process MANTA_TUMOR_ONLY {
-    tag "${patient}_T${tumor_id}"
+    tag "${patient}_T${tumour_id}"
     
     publishDir "${params.outdir}/manta/${patient}", mode: 'copy'
     
@@ -51,13 +51,13 @@ process MANTA_TUMOR_ONLY {
     cpus params.threads
     
     input:
-    tuple val(patient), val(tumor_id), path(tumor_bam), path(tumor_bai)
+    tuple val(patient), val(tumour_id), path(tumor_bam), path(tumor_bai)
     path reference
     
     output:
-    tuple val(patient), val(tumor_id), path("${patient}_T${tumor_id}/results/variants/tumorSV.vcf.gz"), emit: tumor_sv
-    tuple val(patient), val(tumor_id), path("${patient}_T${tumor_id}/results/variants/candidateSV.vcf.gz"), emit: candidate_sv
-    tuple val(patient), val(tumor_id), path("${patient}_T${tumor_id}/results/variants/*"), emit: all_variants
+    tuple val(patient), val(tumour_id), path("${patient}_T${tumour_id}/results/variants/tumorSV.vcf.gz"), emit: tumor_sv
+    tuple val(patient), val(tumour_id), path("${patient}_T${tumour_id}/results/variants/candidateSV.vcf.gz"), emit: candidate_sv
+    tuple val(patient), val(tumour_id), path("${patient}_T${tumour_id}/results/variants/*"), emit: all_variants
     
     script:
     """
@@ -65,10 +65,10 @@ process MANTA_TUMOR_ONLY {
     configManta.py \
         --tumorBam ${tumor_bam} \
         --referenceFasta ${reference} \
-        --runDir ${patient}_T${tumor_id}
+        --runDir ${patient}_T${tumour_id}
     
     # Run Manta using available threads
-    python ${patient}_T${tumor_id}/runWorkflow.py \
+    python ${patient}_T${tumour_id}/runWorkflow.py \
         --mode local \
         --jobs ${task.cpus}
     """
