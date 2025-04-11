@@ -3,7 +3,8 @@
 # filepath: /home/zhonggr/projects/250224_DFSP_WES/samplesheet.sh
 
 # Set directories
-data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/WES}"
+data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/SARC}"
+# data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/WES}"
 fastq_dir="${data_dir}/preprocessing/fastq"  # This contains all FASTQ files, not organized by sample
 bam_dir="${data_dir}/preprocessing/recalibrated"
 
