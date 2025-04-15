@@ -4,24 +4,6 @@ process GATK4_MARKDUPLICATES {
     
     label 'process_medium'
 
-    // container "${params.singularity_container_dir}/gatk4-4.5.0.0.sif"
-    
-    // publishDir(
-    //     [
-    //     [
-    //         path: { "${params.outdir}/preprocessing/bam/${meta.id}" },
-    //         mode: params.publish_dir_mode,
-    //         pattern: "*.bam",
-    //         enabled: params.save_markdup_bam
-    //     ],
-    //     [
-    //         path: { "${params.outdir}/reports/markduplicates/${meta.id}" },
-    //         mode: params.publish_dir_mode,
-    //         pattern: "*metrics.txt"
-    //     ]
-    // ]
-    // )
-
     input:
     tuple val(meta), path(bam)
     // path fasta
@@ -29,8 +11,7 @@ process GATK4_MARKDUPLICATES {
 
     output:
     tuple val(meta), path("*.bam"),     emit: bam
-    tuple val(meta), path("*.bai"),     emit: bai
-    tuple val(meta), path("*.metrics"), emit: metrics
+    tuple val(meta), path("*.txt"),     emit: metrics
     path "versions.yml", emit: versions
 
     when:
@@ -60,7 +41,6 @@ process GATK4_MARKDUPLICATES {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         gatk4: \$(gatk --version 2>&1 | grep -e '^GATK' | sed 's/^GATK v//g')
-        samtools: \$(samtools --version | grep -e '^samtools' | sed 's/samtools //g')
     END_VERSIONS
     """
 }

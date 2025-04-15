@@ -39,6 +39,7 @@ reports/
 *.bw
 *.maf
 *.maf.gz
+.nextflow.*
 
 # Miscellaneous stuff
 **/*_cache/*

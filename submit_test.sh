@@ -10,13 +10,10 @@ export NXF_DISABLE_CHECK_LATEST=true
 export NFX_OPTS="-Xms=512m -Xmx=8g"
 export NXF_ANSI_LOG=true
 
-# export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
-export NXF_LOG_FILE="${PWD}/.nextflow.log"
+export NXF_LOG_FILE="${PWD}/test/.nextflow.log"
 rm -f ${NXF_LOG_FILE}
 
 # Test the mutation_calling workflow
-nextflow run workflows/mutation_calling/main.nf \
+nextflow run modules/variant_calling/vcf2maf/vcf2maf/test/main.nf.test \
     -profile local \
-    -resume \
-    --input /home/zhonggr/projects/250224_DFSP_WES/data/SARC/csv/samplesheet.csv \
-    --outdir data/SARC
+    -work-dir test/work

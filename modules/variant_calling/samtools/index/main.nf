@@ -4,14 +4,6 @@ process SAMTOOLS_INDEX {
 
     label 'process_low'
 
-    publishDir(
-        [
-            mode: params.publish_dir_mode,
-            path: { "${params.outdir}/preprocessing/bam/${meta.id}" },
-            pattern: "*.bai"
-        ]
-    )
-
     input:
     tuple val(meta), path(input)
 

@@ -21,8 +21,8 @@ export NXF_DISABLE_CHECK_LATEST=true
 export NFX_OPTS="-Xms=512m -Xmx=8g"
 export NXF_ANSI_LOG=true
 
-export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
-# export NXF_LOG_FILE="${PWD}/.nextflow.log"
+# export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
+export NXF_LOG_FILE="${PWD}/.nextflow.log"
 # rm -f ${NXF_LOG_FILE}
 
 # Test the mutation_calling workflow

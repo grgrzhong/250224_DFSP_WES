@@ -7,16 +7,19 @@ nextflow.enable.dsl = 2
 ========================================================================================
 */
 
-include { FASTP_TRIM             } from '../../modules/variant_calling/fastp/main.nf'
-include { FASTQC                 } from '../../modules/variant_calling/fastqc/main.nf'
-include { BWA_MEM                } from '../../modules/variant_calling/bwa/mem/main.nf'
-include { TAG_UMI                } from '../../modules/variant_calling/tagumi/main.nf'
-include { SAMTOOLS_SORT          } from '../../modules/variant_calling/samtools/sort/main.nf'
-include { GATK4_MARKDUPLICATES   } from '../../modules/variant_calling/gatk4/markduplicates/main.nf'
-include { GATK4_BASERECALIBRATOR } from '../../modules/variant_calling/gatk4/baserecalibrator/main.nf'
-include { GATK4_APPLYBQSR        } from '../../modules/variant_calling/gatk4/applybqsr/main.nf'
-include { GATK4_COLLECTHSMETRICS } from '../../modules/variant_calling/gatk4/collecthsmetrics/main.nf'
-include { BAMTOOLS_STATS         } from '../../modules/variant_calling/bamtools/stats/main.nf'
+include { FASTP_TRIM                                } from '../../modules/variant_calling/fastp/main.nf'
+include { FASTQC                                    } from '../../modules/variant_calling/fastqc/main.nf'
+include { BWA_MEM                                   } from '../../modules/variant_calling/bwa/mem/main.nf'
+include { TAG_UMI                                   } from '../../modules/variant_calling/tagumi/main.nf'
+include { SAMTOOLS_SORT                             } from '../../modules/variant_calling/samtools/sort/main.nf'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_MARKDUP  } from '../../modules/variant_calling/samtools/index/main.nf'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_RECAL    } from '../../modules/variant_calling/samtools/index/main.nf'
+include { GATK4_MARKDUPLICATES                      } from '../../modules/variant_calling/gatk4/markduplicates/main.nf'
+include { SAMTOOLS_INDEX                            } from '../../modules/variant_calling/samtools/index/main.nf'
+include { GATK4_BASERECALIBRATOR                    } from '../../modules/variant_calling/gatk4/baserecalibrator/main.nf'
+include { GATK4_APPLYBQSR                           } from '../../modules/variant_calling/gatk4/applybqsr/main.nf'
+include { GATK4_COLLECTHSMETRICS                    } from '../../modules/variant_calling/gatk4/collecthsmetrics/main.nf'
+include { BAMTOOLS_STATS                            } from '../../modules/variant_calling/bamtools/stats/main.nf'
 
 /*
 ========================================================================================
@@ -138,9 +141,12 @@ workflow {
     // Mark duplicates and creat index
     GATK4_MARKDUPLICATES(SAMTOOLS_SORT.out.bam)
     
+    // Create bam index
+    SAMTOOLS_INDEX_MARKDUP(GATK4_MARKDUPLICATES.out.bam)
+
     // Base recalibration
     GATK4_BASERECALIBRATOR(
-        GATK4_MARKDUPLICATES.out.bam.join(GATK4_MARKDUPLICATES.out.bai),
+        GATK4_MARKDUPLICATES.out.bam.join(SAMTOOLS_INDEX_MARKDUP.out.bai),
         fasta,
         fai,
         dict,
@@ -151,14 +157,17 @@ workflow {
 
     // Apply BQSR to generate recalibrated BAM
     GATK4_APPLYBQSR(
-        GATK4_MARKDUPLICATES.out.bam.join(GATK4_MARKDUPLICATES.out.bai),
-        GATK4_BASERECALIBRATOR.out.table,
+        GATK4_MARKDUPLICATES.out.bam.join(SAMTOOLS_INDEX_MARKDUP.out.bai),
+        GATK4_BASERECALIBRATOR.out.table.map { meta, table -> table},
         intervals
     )
+    
+    // Create index for the recalibrated BAM
+    SAMTOOLS_INDEX_RECAL(GATK4_APPLYBQSR.out.bam)
 
     // Calculate hybrid selection metrics
     GATK4_COLLECTHSMETRICS(
-        GATK4_APPLYBQSR.out.bam.join(GATK4_APPLYBQSR.out.bai),
+        GATK4_APPLYBQSR.out.bam.join(SAMTOOLS_INDEX_RECAL.out.bai),
         fasta,
         fai,
         dict, 
@@ -168,6 +177,6 @@ workflow {
 
     // Generate BAM statistics
     BAMTOOLS_STATS(
-        GATK4_APPLYBQSR.out.bam.join(GATK4_APPLYBQSR.out.bai),
+        GATK4_APPLYBQSR.out.bam.join(SAMTOOLS_INDEX_RECAL.out.bai),
     )
 }

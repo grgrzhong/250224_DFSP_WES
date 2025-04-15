@@ -24,6 +24,7 @@ singularity pull --dir ${container_dir}/singularity multiqc.sif oras://community
 singularity pull --dir ${container_dir}/singularity pysam.sif oras://community.wave.seqera.io/library/pysam_python:65ddcfde3934cade
 singularity pull --dir ${container_dir}/singularity samtools.sif oras://community.wave.seqera.io/library/samtools:1.21--84c9d77c3901e90b
 singularity pull --dir ${container_dir}/singularity vcf2maf.sif oras://community.wave.seqera.io/library/vcf2maf:1.6.22--478125c4e2c927b2
+singularity pull --force --dir ${container_dir}/singularity vcf2maf.sif oras://community.wave.seqera.io/library/ensembl-vep_vcf2maf:df9fb21816c1659e
 
 
 
