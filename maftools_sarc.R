@@ -5,6 +5,9 @@ library(here)
 library(tidyverse)
 library(readxl)
 
+
+SavePlot()
+
 ## Read the annovar output
 input_dir <- here("data/SARC/annotation/annovar")
 input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*.txt")
