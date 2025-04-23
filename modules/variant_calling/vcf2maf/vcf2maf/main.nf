@@ -42,7 +42,7 @@ process VCF2MAF {
         --ref-fasta $fasta \\
         --tumor-id ${meta.tumour_id} \\
         --normal-id ${meta.normal_id} \\
-        --vep-data "${vep_cache}" \\
+        --vep-data ${vep_cache} \\
         --input-vcf ${vcf} \\
         --output-maf ${prefix}.maf
     

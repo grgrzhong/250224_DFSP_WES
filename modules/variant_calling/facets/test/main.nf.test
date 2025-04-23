@@ -1,0 +1,36 @@
+#!/usr/bin/env nextflow
+
+include { CNV_FACETS } from '../main.nf'
+
+// Default parameters
+params.input_tumour_bam = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bam"
+params.input_tumour_bai = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bai"
+params.input_normal_bam = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bam"
+params.input_normal_bai = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bai"
+
+params.dbsnp = params.genomes[params.genome].dbsnp
+params.dbsnp_tbi = params.genomes[params.genome].dbsnp_tbi
+
+// Define workflow
+workflow {
+    // Get reference files
+    dbsnp = file(params.dbsnp)
+    dbsnp_tbi = file(params.dbsnp_tbi)
+    
+    // Create channel with sarek-style meta map
+    tumour_normal_pairs = Channel.of([
+        [
+            id: "DFSP-161-T_vs_DFSP-161-N",
+            patient_id: "DFSP-161",
+            tumor_id: "DFSP-161-T", 
+            normal_id: "DFSP-161-N"
+        ],
+        file(params.input_normal_bam),
+        file(params.input_normal_bai),
+        file(params.input_tumour_bam),
+        file(params.input_tumour_bai)
+    ])
+    
+    // Run CNV-FACETS on paired samples
+    CNV_FACETS(tumour_normal_pairs, dbsnp, dbsnp_tbi)
+}

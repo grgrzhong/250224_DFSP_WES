@@ -1,0 +1,963 @@
+==========================================
+SLURM_JOB_ID        = 2011628
+SLURM_NODELIST      = GPA-2-15
+SLURM_NTASKS        = 1
+SLURM_CPUS_PER_TASK = 16
+This SLURM script is running on host GPA-2-15
+Working directory is /lustre1/g/path_my/250224_DFSP_WES
+==========================================
+
+ N E X T F L O W   ~  version 24.10.5
+
+Launching `workflows/mutation_calling/main.nf` [amazing_faggin] DSL2 - revision: 1533b2be9b
+
+[-        ] FASTP_TRIM             -
+[-        ] FASTQC                 -
+[-        ] BWA_MEM                -
+[-        ] TAG_UMI                -
+[-        ] SAMTOOLS_SORT          -
+[-        ] GATK4_MARKDUPLICATES   -
+[-        ] SAMTOOLS_INDEX_MARKDUP -
+[-        ] GATK4_BASERECALIBRATOR -
+[-        ] GATK4_APPLYBQSR        -
+[-        ] SAMTOOLS_INDEX_RECAL   -
+[-        ] GATK4_COLLECTHSMETRICS -
+[-        ] BAMTOOLS_STATS         -
+WARN: There's no process matching config selector: CNV_FACETS
+WARN: There's no process matching config selector: VCF2MAF
+WARN: There's no process matching config selector: MULTIQC
+
+[-        ] FASTP_TRIM             -
+[-        ] FASTQC                 -
+[-        ] BWA_MEM                -
+[-        ] TAG_UMI                -
+[-        ] SAMTOOLS_SORT          -
+[-        ] GATK4_MARKDUPLICATES   -
+[-        ] SAMTOOLS_INDEX_MARKDUP -
+[-        ] GATK4_BASERECALIBRATOR -
+[-        ] GATK4_APPLYBQSR        -
+[-        ] SAMTOOLS_INDEX_RECAL   -
+[-        ] GATK4_COLLECTHSMETRICS -
+[-        ] BAMTOOLS_STATS         -
+WARN: There's no process matching config selector: CNV_FACETS
+WARN: There's no process matching config selector: VCF2MAF
+WARN: There's no process matching config selector: MULTIQC
+
+executor >  local (4)
+[83/6438db] FASTP_TRIM (SARC-004-T) | 0 of 4
+[-        ] FASTQC                  -
+[-        ] BWA_MEM                 -
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+WARN: There's no process matching config selector: CNV_FACETS
+WARN: There's no process matching config selector: VCF2MAF
+WARN: There's no process matching config selector: MULTIQC
+
+executor >  local (4)
+[83/6438db] FASTP_TRIM (SARC-004-T) | 0 of 4
+[-        ] FASTQC                  | 0 of 1
+[-        ] BWA_MEM                 -
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+
+
+
+executor >  local (6)
+[e1/daeed2] FASTP_TRIM (SARC-006-N) | 1 of 4
+[60/dd266a] FASTQC (SARC-006-N)     | 0 of 1
+[e6/7e72b1] BWA_MEM (SARC-006-N)    | 0 of 1
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+
+
+
+executor >  local (6)
+[83/6438db] FASTP_TRIM (SARC-004-T) | 2 of 4
+[60/dd266a] FASTQC (SARC-006-N)     | 0 of 1
+[e6/7e72b1] BWA_MEM (SARC-006-N)    | 0 of 1
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (8)
+[83/6438db] FASTP_TRIM (SARC-004-T) | 2 of 4
+[58/1f1878] FASTQC (SARC-004-T)     | 0 of 2
+[3d/c5d54d] BWA_MEM (SARC-004-T)    | 0 of 2
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (10)
+[b9/102ec6] FASTP_TRIM (SARC-006-T) | 3 of 4
+[89/1dd936] FASTQC (SARC-006-T)     | 0 of 3
+[69/910786] BWA_MEM (SARC-006-T)    | 0 of 3
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (10)
+[b9/102ec6] FASTP_TRIM (SARC-006-T) | 3 of 4
+[89/1dd936] FASTQC (SARC-006-T)     | 0 of 3
+[69/910786] BWA_MEM (SARC-006-T)    | 0 of 3
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (10)
+[b9/102ec6] FASTP_TRIM (SARC-006-T) | 3 of 4
+[60/dd266a] FASTQC (SARC-006-N)     | 1 of 3
+[69/910786] BWA_MEM (SARC-006-T)    | 0 of 3
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (10)
+[b9/102ec6] FASTP_TRIM (SARC-006-T) | 3 of 4
+[60/dd266a] FASTQC (SARC-006-N)     | 1 of 4
+[69/910786] BWA_MEM (SARC-006-T)    | 0 of 3
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (12)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)     | 1 of 4
+[37/4d1a2d] BWA_MEM (SARC-004-N)    | 0 of 4
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (12)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[58/1f1878] FASTQC (SARC-004-T)     | 2 of 4
+[37/4d1a2d] BWA_MEM (SARC-004-N)    | 0 of 4
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (12)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[89/1dd936] FASTQC (SARC-006-T)     | 3 of 4
+[37/4d1a2d] BWA_MEM (SARC-004-N)    | 0 of 4
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (12)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)     | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)    | 0 of 4
+[-        ] TAG_UMI                 -
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (13)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)     | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)    | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)    | 0 of 1
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (13)
+[05/58cabc] FASTP_TRIM (SARC-004-N) | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)     | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)    | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)    | 0 of 1
+[-        ] SAMTOOLS_SORT           -
+[-        ] GATK4_MARKDUPLICATES    -
+[-        ] SAMTOOLS_INDEX_MARKDUP  -
+[-        ] GATK4_BASERECALIBRATOR  -
+[-        ] GATK4_APPLYBQSR         -
+[-        ] SAMTOOLS_INDEX_RECAL    -
+[-        ] GATK4_COLLECTHSMETRICS  -
+[-        ] BAMTOOLS_STATS          -
+
+executor >  local (14)
+[05/58cabc] FASTP_TRIM (SARC-004-N)    | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)        | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)       | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)       | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N) | 0 of 1
+[-        ] GATK4_MARKDUPLICATES       -
+[-        ] SAMTOOLS_INDEX_MARKDUP     -
+[-        ] GATK4_BASERECALIBRATOR     -
+[-        ] GATK4_APPLYBQSR            -
+[-        ] SAMTOOLS_INDEX_RECAL       -
+[-        ] GATK4_COLLECTHSMETRICS     -
+[-        ] BAMTOOLS_STATS             -
+
+executor >  local (14)
+[05/58cabc] FASTP_TRIM (SARC-004-N)    | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)        | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)       | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)       | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N) | 1 of 1
+[-        ] GATK4_MARKDUPLICATES       -
+[-        ] SAMTOOLS_INDEX_MARKDUP     -
+[-        ] GATK4_BASERECALIBRATOR     -
+[-        ] GATK4_APPLYBQSR            -
+[-        ] SAMTOOLS_INDEX_RECAL       -
+[-        ] GATK4_COLLECTHSMETRICS     -
+[-        ] BAMTOOLS_STATS             -
+
+executor >  local (15)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 0 of 1
+[-        ] SAMTOOLS_INDEX_MARKDUP         -
+[-        ] GATK4_BASERECALIBRATOR         -
+[-        ] GATK4_APPLYBQSR                -
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (15)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 0 of 1
+[-        ] SAMTOOLS_INDEX_MARKDUP         -
+[-        ] GATK4_BASERECALIBRATOR         -
+[-        ] GATK4_APPLYBQSR                -
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (16)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 0 of 1
+[-        ] GATK4_BASERECALIBRATOR         -
+[-        ] GATK4_APPLYBQSR                -
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (16)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[-        ] GATK4_BASERECALIBRATOR         -
+[-        ] GATK4_APPLYBQSR                -
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (17)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 0 of 1
+[-        ] GATK4_APPLYBQSR                -
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (18)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 0 of 1
+[-        ] SAMTOOLS_INDEX_RECAL           -
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (19)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 0 of 1
+[-        ] GATK4_COLLECTHSMETRICS         -
+[-        ] BAMTOOLS_STATS                 -
+
+executor >  local (21)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 0 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 0 of 1
+
+executor >  local (21)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 0 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (21)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[e6/7e72b1] BWA_MEM (SARC-006-N)           | 1 of 4
+[1f/28dced] TAG_UMI (SARC-006-N)           | 1 of 1
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (22)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[69/910786] BWA_MEM (SARC-006-T)           | 2 of 4
+[69/ee7711] TAG_UMI (SARC-006-T)           | 1 of 2
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (23)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[3d/c5d54d] BWA_MEM (SARC-004-T)           | 3 of 4
+[89/d9dccf] TAG_UMI (SARC-004-T)           | 1 of 3
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (24)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 1 of 4
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (24)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 1 of 4
+[c5/67e6c9] SAMTOOLS_SORT (SARC-006-N)     | 1 of 1
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (25)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[69/ee7711] TAG_UMI (SARC-006-T)           | 2 of 4
+[c1/16efe1] SAMTOOLS_SORT (SARC-006-T)     | 1 of 2
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (25)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[69/ee7711] TAG_UMI (SARC-006-T)           | 2 of 4
+[c1/16efe1] SAMTOOLS_SORT (SARC-006-T)     | 1 of 2
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (26)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[89/d9dccf] TAG_UMI (SARC-004-T)           | 3 of 4
+[e2/cff72a] SAMTOOLS_SORT (SARC-004-T)     | 1 of 3
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (26)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e2/cff72a] SAMTOOLS_SORT (SARC-004-T)     | 1 of 4
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (27)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 1 of 4
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (27)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[c1/16efe1] SAMTOOLS_SORT (SARC-006-T)     | 2 of 4
+[35/6b6800] GAT…ARKDUPLICATES (SARC-006-N) | 1 of 1
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (28)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[c1/16efe1] SAMTOOLS_SORT (SARC-006-T)     | 2 of 4
+[64/583a31] GAT…ARKDUPLICATES (SARC-006-T) | 1 of 2
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (28)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e2/cff72a] SAMTOOLS_SORT (SARC-004-T)     | 3 of 4
+[64/583a31] GAT…ARKDUPLICATES (SARC-006-T) | 1 of 2
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (29)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e2/cff72a] SAMTOOLS_SORT (SARC-004-T)     | 3 of 4
+[df/863001] GAT…ARKDUPLICATES (SARC-004-T) | 1 of 3
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (30)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 1 of 4
+[96/216d70] SAM…INDEX_MARKDUP (SARC-006-N) | 1 of 1
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (31)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 1 of 4
+[bf/5902cd] SAM…INDEX_MARKDUP (SARC-006-T) | 1 of 2
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (31)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[64/583a31] GAT…ARKDUPLICATES (SARC-006-T) | 2 of 4
+[bf/5902cd] SAM…INDEX_MARKDUP (SARC-006-T) | 1 of 2
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (31)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[64/583a31] GAT…ARKDUPLICATES (SARC-006-T) | 2 of 4
+[bf/5902cd] SAM…INDEX_MARKDUP (SARC-006-T) | 2 of 2
+[dd/405b76] GAT…ERECALIBRATOR (SARC-006-N) | 1 of 1
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (32)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[64/583a31] GAT…ARKDUPLICATES (SARC-006-T) | 2 of 4
+[bf/5902cd] SAM…INDEX_MARKDUP (SARC-006-T) | 2 of 2
+[52/41b1eb] GAT…ERECALIBRATOR (SARC-006-T) | 1 of 2
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (33)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[df/863001] GAT…ARKDUPLICATES (SARC-004-T) | 3 of 4
+[af/dcbd2d] SAM…INDEX_MARKDUP (SARC-004-T) | 2 of 3
+[52/41b1eb] GAT…ERECALIBRATOR (SARC-006-T) | 1 of 2
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (34)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[df/863001] GAT…ARKDUPLICATES (SARC-004-T) | 3 of 4
+[af/dcbd2d] SAM…INDEX_MARKDUP (SARC-004-T) | 3 of 3
+[69/79503d] GAT…ERECALIBRATOR (SARC-004-T) | 1 of 3
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (35)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[df/863001] GAT…ARKDUPLICATES (SARC-004-T) | 3 of 4
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 3 of 4
+[69/79503d] GAT…ERECALIBRATOR (SARC-004-T) | 1 of 3
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (35)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 3 of 4
+[69/79503d] GAT…ERECALIBRATOR (SARC-004-T) | 1 of 3
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (36)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 1 of 4
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (36)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 1 of 4
+[5b/f04471] GATK4_APPLYBQSR (SARC-006-N)   | 1 of 1
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (37)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[52/41b1eb] GAT…ERECALIBRATOR (SARC-006-T) | 2 of 4
+[8d/af7305] GATK4_APPLYBQSR (SARC-006-T)   | 1 of 2
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (38)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[69/79503d] GAT…ERECALIBRATOR (SARC-004-T) | 3 of 4
+[50/397e3c] GATK4_APPLYBQSR (SARC-004-T)   | 1 of 3
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (39)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 1 of 4
+[f6/c74b15] SAM…S_INDEX_RECAL (SARC-006-N) | 1 of 1
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (40)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 1 of 4
+[74/a9272d] SAM…S_INDEX_RECAL (SARC-006-T) | 1 of 2
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (40)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[8d/af7305] GATK4_APPLYBQSR (SARC-006-T)   | 2 of 4
+[74/a9272d] SAM…S_INDEX_RECAL (SARC-006-T) | 1 of 2
+[b5/8ae8fa] GAT…LECTHSMETRICS (SARC-006-N) | 1 of 1
+[c3/b26f9e] BAMTOOLS_STATS (SARC-006-N)    | 1 of 1
+
+executor >  local (42)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[8d/af7305] GATK4_APPLYBQSR (SARC-006-T)   | 2 of 4
+[74/a9272d] SAM…S_INDEX_RECAL (SARC-006-T) | 2 of 2
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 1 of 2
+[80/5fa21f] BAMTOOLS_STATS (SARC-006-T)    | 1 of 2
+
+executor >  local (42)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[8d/af7305] GATK4_APPLYBQSR (SARC-006-T)   | 2 of 4
+[74/a9272d] SAM…S_INDEX_RECAL (SARC-006-T) | 2 of 2
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 1 of 2
+[80/5fa21f] BAMTOOLS_STATS (SARC-006-T)    | 2 of 2
+
+executor >  local (43)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[50/397e3c] GATK4_APPLYBQSR (SARC-004-T)   | 3 of 4
+[13/e7dc1b] SAM…S_INDEX_RECAL (SARC-004-T) | 2 of 3
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 1 of 2
+[80/5fa21f] BAMTOOLS_STATS (SARC-006-T)    | 2 of 2
+
+executor >  local (45)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[50/397e3c] GATK4_APPLYBQSR (SARC-004-T)   | 3 of 4
+[13/e7dc1b] SAM…S_INDEX_RECAL (SARC-004-T) | 3 of 3
+[85/14e467] GAT…LECTHSMETRICS (SARC-004-T) | 1 of 3
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 2 of 3
+
+executor >  local (46)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 3 of 4
+[85/14e467] GAT…LECTHSMETRICS (SARC-004-T) | 1 of 3
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 2 of 3
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[35/3a05fb] GAT…LECTHSMETRICS (SARC-004-N) | 1 of 4
+[76/c9bda4] BAMTOOLS_STATS (SARC-004-N)    | 2 of 4
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 2 of 4
+[76/c9bda4] BAMTOOLS_STATS (SARC-004-N)    | 2 of 4
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 2 of 4
+[76/c9bda4] BAMTOOLS_STATS (SARC-004-N)    | 3 of 4
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 2 of 4
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 4 of 4 ✔

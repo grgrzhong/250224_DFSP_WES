@@ -1,0 +1,30 @@
+#!/usr/bin/env nextflow
+
+params.vcf = "/home/zhonggr/projects/250224_DFSP_WES/data/SARC/annotation/annovar/SARC-004-T/SARC-004-T.hg38.multianno.vcf"
+params.outdir = "/home/zhonggr/projects/250224_DFSP_WES/data/SARC"
+params.vep_cache = "/home/zhonggr/projects/250224_DFSP_WES/data/Reference/ensembl_vep"
+
+include { VCF2MAF } from '../main.nf'
+
+workflow {
+    
+    Channel
+        .fromPath(params.vcf, checkIfExists: true)
+        .map { 
+            vcf -> 
+            def meta  = [
+                id: "SARC-004-T",
+                tumour_id: "SARC-004-T",
+                normal_id: "SARC-004-N"
+            ]
+
+            return [meta, vcf]
+        }
+        .set { vcf_ch }
+    
+    vep_cache_ch        = file(params.vep_cache)
+    fasta_ch               = file(params.genomes[params.genome].fasta)
+
+    VCF2MAF(vcf_ch, fasta_ch, vep_cache_ch)
+
+}

@@ -10,7 +10,7 @@
 data/
 logs/
 temp/
-test/
+/test/
 containers/
 work/
 

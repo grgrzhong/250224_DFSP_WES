@@ -1,0 +1,3 @@
+#!/usr/bin/env nextflow
+
+params.input = "/home/zhonggr/projects/250224_DFSP_WES/data/WES/preprocessing/bam/DFSP-261-T/DFSP-261-T.umi.bam"

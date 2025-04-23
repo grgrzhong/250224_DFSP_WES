@@ -1,0 +1,28 @@
+#!/usr/bin/env nextflow
+nextflow.enable.dsl = 2
+
+
+include { TAG_UMI } from '../main.nf'
+
+params.bam = "${launchDir}/data/WES/preprocessing/bam/DFSP-261-N/DFSP-261-N.bam"
+
+workflow {
+    
+    bam_ch = Channel
+        .fromPath(params.bam)
+        .ifEmpty { exit 1, "BAM file not found at ${params.bam}" }
+        .map { row ->
+            def meta = [:]
+            meta.id = "DFSP-261-N"
+            meta.patient_id = "DFSP-261"
+            meta.status = 1
+            return [meta, row]
+        }
+    
+    bam_ch.view()
+    
+    log.info("Tagging UMI in BAM file: ${bam_ch}")
+
+    TAG_UMI(bam_ch)
+    
+}
