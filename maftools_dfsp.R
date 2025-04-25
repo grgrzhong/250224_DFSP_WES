@@ -6,8 +6,8 @@ library(tidyverse)
 library(readxl)
 
 ## Read the annovar output
-input_dir <- here("data/sarc/annotation/annovar")
-input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*.txt")
+input_dir <- here("data/wes/variant_calling/mutect2")
+input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*annovar.txt")
 
 read_tsv(input_files[1])
 
@@ -22,8 +22,8 @@ maf_data <- annovarToMaf(
 maf_data |> as_tibble()
 
 ## Read the funcotator output
-input_dir <- here("data/sarc/annotation/funcotator")
-input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*.tsv")
+input_dir <- here("data/wes/variant_calling/mutect2")
+input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*annotated.tsv")
 
 input_data <- map2(
   input_files, names(input_files),
@@ -36,15 +36,31 @@ input_data <- map2(
 )
 
 maf_data <- merge_mafs(mafs = input_data, verbose = TRUE)
+qsave(maf_data, here("data/wes/annotation/summary/merged_maf.qs"))
 
 
+maf_data <- qread(here("data/wes/annotation/summary/merged_maf.qs"))
 str(maf_data)
 
-getSampleSummary(maf_data)
-getGeneSummary(maf_data)
-getClinicalData(maf_data)
-getFields(maf_data)
-write.mafSummary(maf = maf_data, basename = "maf_data")
+sample_info <- read_excel(
+  here("data/clinical/DFSP-Multiomics-Sample list (updated 2024.09).xlsx")
+) |> 
+  select(Sample.ID, Specimen.Class, Histology.Nature)
+
+unique(sample_info$Histology.Nature)
+
+
+
+group_info <- read_excel(here("data/clinical/groups.xlsx"))
+
+sample_info |> 
+  filter(Histology.Nature %in% group_info$group1)
+
+# getSampleSummary(maf_data)
+# getGeneSummary(maf_data)
+# getClinicalData(maf_data)
+# getFields(maf_data)
+# write.mafSummary(maf = maf_data, basename = "maf_data")
 
 plotmafSummary(
   maf = maf_data,
@@ -54,7 +70,7 @@ plotmafSummary(
   titvRaw = FALSE
 )
 
-oncoplot(maf = maf_data, top = 10)
+oncoplot(maf = maf_data, top = 20)
 
 maf_data.titv <- titv(maf = maf_data, plot = FALSE, useSyn = TRUE)
 # plot titv summary

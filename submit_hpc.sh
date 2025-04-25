@@ -19,7 +19,7 @@ cd /home/zhonggr/projects/250224_DFSP_WES
 # export NXF_OFFLINE=true
 # export NXF_HOME=$HOME/.nextflow
 export NXF_DISABLE_CHECK_LATEST=true
-export NXF_OPTS="-Xms512m -Xmx4g"
+export NXF_OPTS="-Xms512m -Xmx8g"
 # export NXF_ANSI_LOG=true
 
 # export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
