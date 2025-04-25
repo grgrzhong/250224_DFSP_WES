@@ -961,3 +961,51 @@ executor >  local (48)
 [df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
 [ca/d7b716] GAT…LECTHSMETRICS (SARC-006-T) | 2 of 4
 [ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 4 of 4 ✔
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[85/14e467] GAT…LECTHSMETRICS (SARC-004-T) | 3 of 4
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 4 of 4 ✔
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[35/3a05fb] GAT…LECTHSMETRICS (SARC-004-N) | 4 of 4 ✔
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 4 of 4 ✔
+
+executor >  local (48)
+[05/58cabc] FASTP_TRIM (SARC-004-N)        | 4 of 4 ✔
+[a0/a2254e] FASTQC (SARC-004-N)            | 4 of 4 ✔
+[37/4d1a2d] BWA_MEM (SARC-004-N)           | 4 of 4 ✔
+[29/cae369] TAG_UMI (SARC-004-N)           | 4 of 4 ✔
+[e3/e4711b] SAMTOOLS_SORT (SARC-004-N)     | 4 of 4 ✔
+[c6/39b37a] GAT…ARKDUPLICATES (SARC-004-N) | 4 of 4 ✔
+[fc/74d7c0] SAM…INDEX_MARKDUP (SARC-004-N) | 4 of 4 ✔
+[a1/894519] GAT…ERECALIBRATOR (SARC-004-N) | 4 of 4 ✔
+[02/b81e72] GATK4_APPLYBQSR (SARC-004-N)   | 4 of 4 ✔
+[df/a0d9d6] SAM…S_INDEX_RECAL (SARC-004-N) | 4 of 4 ✔
+[35/3a05fb] GAT…LECTHSMETRICS (SARC-004-N) | 4 of 4 ✔
+[ef/867bfc] BAMTOOLS_STATS (SARC-004-T)    | 4 of 4 ✔
+Completed at: 23-Apr-2025 14:42:00
+Duration    : 21h 6m 13s
+CPU hours   : 144.9
+Succeeded   : 48
+
+

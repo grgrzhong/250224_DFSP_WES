@@ -9,6 +9,7 @@
 ### data and figures 
 data/
 logs/
+slurm/
 temp/
 /test/
 containers/

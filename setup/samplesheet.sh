@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# filepath: /home/zhonggr/projects/250224_DFSP_WES/samplesheet.sh
-
 # Set directories
-data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/sarc}"
-# data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/wes}"
+# data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/sarc}"
+data_dir="${1:-/home/zhonggr/projects/250224_DFSP_WES/data/wes}"
 fastq_dir="${data_dir}/preprocessing/fastq"  # This contains all FASTQ files, not organized by sample
 bam_dir="${data_dir}/preprocessing/recalibrated"
 
@@ -19,65 +17,34 @@ temp_file="${SAMPLE_SHEET}.tmp"
 # Create header
 echo "patient,sample,status,fastq_1,fastq_2,bam,bai" > "$temp_file"
 
-# Process each sample directory in BAM_DIR
-for sample_dir in $(ls "$bam_dir"); do
-    # Extract patient ID by removing everything after and including the last dash
-    patient=$(echo "$sample_dir" | sed -E 's/^(.*?)-(T|N).*$/\1/')
+# Check if bam_dir exists and is not empty
+bam_dir_exists=false
+if [[ -d "$bam_dir" ]] && [[ "$(ls -A "$bam_dir" 2>/dev/null)" ]]; then
+    bam_dir_exists=true
+    echo "BAM directory exists and is not empty."
+else
+    echo "BAM directory is empty or doesn't exist."
+fi
+
+# Check if fastq_dir exists and is not empty
+fastq_dir_exists=false
+if [[ -d "$fastq_dir" ]] && [[ "$(ls -A "$fastq_dir" 2>/dev/null)" ]]; then
+    fastq_dir_exists=true
+    echo "FASTQ directory exists and is not empty."
+else
+    echo "FASTQ directory is empty or doesn't exist."
+fi
+
+# Function to process FASTQ files and find matching pairs
+process_fastq_files() {
+    local sample_dir=$1
+    local fastq_1=""
+    local fastq_2=""
     
-    # Determine status (0 for normal, 1 for tumor) based on sample name
-    if [[ "$sample_dir" == *"-N"* ]]; then
-        status="0"
-    elif [[ "$sample_dir" == *"-T"* ]]; then
-        status="1"
-    else
-        echo "Warning: Cannot determine status for $sample_dir, skipping"
-        continue
+    if ! $fastq_dir_exists; then
+        return 0
     fi
     
-    # Initialize variables
-    fastq_1=""
-    fastq_2=""
-    bam_file=""
-    bai_file=""
-    
-    # Find the BAM file
-    potential_bam="${bam_dir}/${sample_dir}/${sample_dir}_recalibrated.bam"
-    if [[ -f "$potential_bam" ]]; then
-        bam_file="$potential_bam"
-    else
-        # Try to find any BAM file in the sample directory
-        found_bam=$(find "${bam_dir}/${sample_dir}" -name "*.bam" | head -n 1)
-        if [[ -n "$found_bam" ]]; then
-            bam_file="$found_bam"
-        else
-            echo "Warning: No BAM file found for $sample_dir"
-        fi
-    fi
-    
-    # Find the BAI file
-    if [[ -n "$bam_file" ]]; then
-        # Check for BAM.BAI file
-        potential_bai="${bam_file}.bai"
-        if [[ -f "$potential_bai" ]]; then
-            bai_file="$potential_bai"
-        else
-            # Check for BAM file with .bai extension
-            potential_bai="${bam_file%.bam}.bai"
-            if [[ -f "$potential_bai" ]]; then
-                bai_file="$potential_bai"
-            else
-                # Try to find any BAI file in the sample directory
-                found_bai=$(find "${bam_dir}/${sample_dir}" -name "*.bai" | head -n 1)
-                if [[ -n "$found_bai" ]]; then
-                    bai_file="$found_bai"
-                else
-                    echo "Warning: No BAI file found for $sample_dir"
-                fi
-            fi
-        fi
-    fi
-    
-    # Find FASTQ files - now looking in the main fastq directory
     echo "Looking for FASTQ files for sample: $sample_dir"
     
     # Define common patterns for R1/R2 files
@@ -222,17 +189,153 @@ for sample_dir in $(ls "$bam_dir"); do
         fi
     fi
     
-    # Add to sample sheet (use empty strings if files aren't found)
-    echo "${patient},${sample_dir},${status},${fastq_1},${fastq_2},${bam_file},${bai_file}" >> "$temp_file"
+    # Set return values
+    FASTQ_1="$fastq_1"
+    FASTQ_2="$fastq_2"
+}
+
+# If neither directory exists, exit with error
+if ! $bam_dir_exists && ! $fastq_dir_exists; then
+    echo "Error: Neither BAM nor FASTQ directories exist or have content. Nothing to do."
+    exit 1
+fi
+
+# Process samples from BAM directory if it exists
+if $bam_dir_exists; then
+    for sample_dir in $(ls "$bam_dir"); do
+        # Extract patient ID by removing everything after and including the last dash
+        patient=$(echo "$sample_dir" | sed -E 's/^(.*?)-(T|N).*$/\1/')
+        
+        # Determine status (0 for normal, 1 for tumor) based on sample name
+        if [[ "$sample_dir" == *"-N"* ]]; then
+            status="0"
+        elif [[ "$sample_dir" == *"-T"* ]]; then
+            status="1"
+        else
+            echo "Warning: Cannot determine status for $sample_dir, skipping"
+            continue
+        fi
+        
+        # Initialize variables
+        fastq_1=""
+        fastq_2=""
+        bam_file=""
+        bai_file=""
+        
+        # Find the BAM file
+        potential_bam="${bam_dir}/${sample_dir}/${sample_dir}_recalibrated.bam"
+        if [[ -f "$potential_bam" ]]; then
+            bam_file="$potential_bam"
+        else
+            # Try to find any BAM file in the sample directory
+            found_bam=$(find "${bam_dir}/${sample_dir}" -name "*.bam" | head -n 1)
+            if [[ -n "$found_bam" ]]; then
+                bam_file="$found_bam"
+            else
+                echo "Warning: No BAM file found for $sample_dir"
+            fi
+        fi
+        
+        # Find the BAI file
+        if [[ -n "$bam_file" ]]; then
+            # Check for BAM.BAI file
+            potential_bai="${bam_file}.bai"
+            if [[ -f "$potential_bai" ]]; then
+                bai_file="$potential_bai"
+            else
+                # Check for BAM file with .bai extension
+                potential_bai="${bam_file%.bam}.bai"
+                if [[ -f "$potential_bai" ]]; then
+                    bai_file="$potential_bai"
+                else
+                    # Try to find any BAI file in the sample directory
+                    found_bai=$(find "${bam_dir}/${sample_dir}" -name "*.bai" | head -n 1)
+                    if [[ -n "$found_bai" ]]; then
+                        bai_file="$found_bai"
+                    else
+                        echo "Warning: No BAI file found for $sample_dir"
+                    fi
+                fi
+            fi
+        fi
+        
+        # Process FASTQ files
+        FASTQ_1=""
+        FASTQ_2=""
+        process_fastq_files "$sample_dir"
+        fastq_1="$FASTQ_1"
+        fastq_2="$FASTQ_2"
+        
+        # Add to sample sheet (use empty strings if files aren't found)
+        echo "${patient},${sample_dir},${status},${fastq_1},${fastq_2},${bam_file},${bai_file}" >> "$temp_file"
+        
+        # Report what we found for this sample
+        echo "Sample ${sample_dir} added with:"
+        if [[ -n "$fastq_1" ]]; then echo "  FASTQ_1: $fastq_1"; else echo "  FASTQ_1: Missing"; fi
+        if [[ -n "$fastq_2" ]]; then echo "  FASTQ_2: $fastq_2"; else echo "  FASTQ_2: Missing"; fi
+        if [[ -n "$bam_file" ]]; then echo "  BAM: $bam_file"; else echo "  BAM: Missing"; fi
+        if [[ -n "$bai_file" ]]; then echo "  BAI: $bai_file"; else echo "  BAI: Missing"; fi
+        echo "-----------------------------------------"
+    done
+# If BAM directory doesn't exist but FASTQ directory does, extract sample information from FASTQ files
+elif $fastq_dir_exists; then
+    echo "Processing samples from FASTQ files only..."
     
-    # Report what we found for this sample
-    echo "Sample ${sample_dir} added with:"
-    if [[ -n "$fastq_1" ]]; then echo "  FASTQ_1: $fastq_1"; else echo "  FASTQ_1: Missing"; fi
-    if [[ -n "$fastq_2" ]]; then echo "  FASTQ_2: $fastq_2"; else echo "  FASTQ_2: Missing"; fi
-    if [[ -n "$bam_file" ]]; then echo "  BAM: $bam_file"; else echo "  BAM: Missing"; fi
-    if [[ -n "$bai_file" ]]; then echo "  BAI: $bai_file"; else echo "  BAI: Missing"; fi
-    echo "-----------------------------------------"
-done
+    # Find all potential sample names from FASTQ files
+    # This regex attempts to extract sample names from typical naming patterns
+    sample_names=$(find "$fastq_dir" -name "*.fastq.gz" -o -name "*.fq.gz" | 
+                   sed -E 's/.*\/([^\/]+)[-_]R?[12][-_.].*/\1/' | 
+                   sort -u)
+    
+    for sample_name in $sample_names; do
+        # Try to determine if it's tumor or normal from the name
+        if [[ "$sample_name" == *"-N"* || "$sample_name" == *"_N"* || 
+              "$sample_name" == *"Normal"* || "$sample_name" == *"normal"* ]]; then
+            status="0"
+            # Extract patient ID assuming format PATIENT-N...
+            patient=$(echo "$sample_name" | sed -E 's/^(.*?)[-_](N|Normal|normal).*/\1/')
+        elif [[ "$sample_name" == *"-T"* || "$sample_name" == *"_T"* || 
+                "$sample_name" == *"Tumor"* || "$sample_name" == *"tumor"* ]]; then
+            status="1"
+            # Extract patient ID assuming format PATIENT-T...
+            patient=$(echo "$sample_name" | sed -E 's/^(.*?)[-_](T|Tumor|tumor).*/\1/')
+        else
+            echo "Warning: Cannot determine status for $sample_name, assuming tumor."
+            status="1"
+            patient="$sample_name" # Use sample name as patient ID if can't extract
+        fi
+        
+        # Process FASTQ files
+        FASTQ_1=""
+        FASTQ_2=""
+        process_fastq_files "$sample_name"
+        fastq_1="$FASTQ_1"
+        fastq_2="$FASTQ_2"
+        
+        # Skip if we couldn't find any FASTQ files for this sample
+        if [[ -z "$fastq_1" && -z "$fastq_2" ]]; then
+            echo "No FASTQ files found for potential sample $sample_name, skipping."
+            continue
+        fi
+        
+        # Add to sample sheet
+        echo "${patient},${sample_name},${status},${fastq_1},${fastq_2},," >> "$temp_file"
+        
+        # Report what we found for this sample
+        echo "Sample ${sample_name} added with:"
+        if [[ -n "$fastq_1" ]]; then echo "  FASTQ_1: $fastq_1"; else echo "  FASTQ_1: Missing"; fi
+        if [[ -n "$fastq_2" ]]; then echo "  FASTQ_2: $fastq_2"; else echo "  FASTQ_2: Missing"; fi
+        echo "  BAM: Missing"
+        echo "  BAI: Missing"
+        echo "-----------------------------------------"
+    done
+fi
+
+# Check if we have any samples
+if [[ ! -s "$temp_file" || $(wc -l < "$temp_file") -eq 1 ]]; then
+    echo "Error: No samples found!"
+    exit 1
+fi
 
 # Sort file (keeping header)
 (head -n 1 "$temp_file" && tail -n +2 "$temp_file" | sort -t',' -k1,1 -k2,2) > "$SAMPLE_SHEET"

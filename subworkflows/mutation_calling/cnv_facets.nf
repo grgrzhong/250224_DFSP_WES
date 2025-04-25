@@ -13,10 +13,6 @@ process CNV_FACETS {
     
     tag "${meta.id}"
     
-    publishDir "${params.outdir}/variant_calling/cnv/facets/${meta.patient_id}/${meta.tumour_id}_vs_${meta.normal_id}", mode: "copy"
-    
-    // container "/home/zhonggr/projects/250224_DFSP_WES/containers/singularity/cnv_facets-0.16.1.sif"
-    
     input:
     tuple val(meta), path(input_normal), path(input_index_normal), path(input_tumour), path(input_index_tumor)
     path dbsnp
@@ -31,7 +27,7 @@ process CNV_FACETS {
     tuple val(meta), path("*.vcf.gz.tbi"),  emit: vcf_tbi
     
     script:
-    def prefix = meta.id
+    def prefix = meta.tumour_id
 
     """
     # Run CNV-FACETS for tumor-normal pair
