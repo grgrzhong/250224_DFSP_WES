@@ -10,7 +10,6 @@
 data/
 logs/
 slurm/
-temp/
 /test/
 containers/
 work/
