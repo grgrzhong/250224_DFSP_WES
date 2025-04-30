@@ -13,8 +13,6 @@ INTERVAL=/home/zhonggr/projects/250224_DFSP_WES/reference/Exome/xgen-exome-hyb-p
 BAM=/home/zhonggr/projects/250224_DFSP_WES
 PON_OUT=/media/maximus/Data/WES/PON-Mutect
 
-export PATH=/media/maximus/Data/Software/gatk-4.4.0.0/:$PATH
-
 CASELIST=$(ls $BAM | grep N)
 
 #Step 1. Run Mutect2 in tumor-only mode for each normal sample.
@@ -45,7 +43,7 @@ eval $cmd
 
 #Step 3. Combine the normal calls using CreateSomaticPanelOfNormals.
 #Take ~2 days
-gatk --java-options -Xmx108g CreateSomaticPanelOfNormals \
+gatk --java-options -Xmx8g CreateSomaticPanelOfNormals \
 -R $REFERENCE \
 -L $INTERVAL \
 -V gendb://$PON_OUT/pon_db \

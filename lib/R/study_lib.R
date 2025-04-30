@@ -150,31 +150,28 @@ TestVariantFilter <- function(
     filter_params,
     maf,
     is_save = FALSE,
-    fig_dir = "figures/annovar",
-    fig_name = "compare_filter"
+    fig_dir = "figures/variant_filtering",
+    fig_name = "filter_params"
 ) {
     
+    variants_per_sample_before <- maf |>
+        count(Tumor_Sample_Barcode, name = "n_variants_before")
+
     # Apply filtering with parameters
     maf_filtered <- maf |>
-        # Filter by sequencing quality
+        ## Filter by sequencing quality
         filter(
             DP >= filter_params$min_depth | is.na(DP),
-            (is.na(AF) | as.numeric(AF) >= filter_params$min_vaf)
+            (is.na(AF) | as.numeric(AF) >= filter_params$min_vaf),
+            (is.na(VAD) | as.numeric(VAD) >= filter_params$min_vad),
         ) |>
-        # Filter by variant impact
+        ## Filter by variant impact
         filter(
             !Variant_Classification %in% filter_params$exclude_classifications,
-            !ExonicFunc.refGene %in% filter_params$exclude_exonic_func
+            !ExonicFunc.refGene %in% filter_params$exclude_exonic_func,
+            (Func.refGene %in% filter_params$include_func | is.na(Func.refGene))
         ) |>
-        # Filter population variants
-        # # Filter by pathogenicity predictions
-        # filter(
-        #   SIFT_pred == "D" |
-        #   Polyphen2_HDIV_pred %in% c("D", "P") |
-        #   MutationTaster_pred %in% c("D", "A") |
-        #   (!is.na(CADD_phred) & as.numeric(CADD_phred) >= filter_params$min_cadd_phred) |
-        #   is.na(SIFT_pred)
-        # )
+        ## Filter population variants
         mutate(
             gnomAD_exome_ALL_num = suppressWarnings(
                 as.numeric(gnomAD_exome_ALL)
@@ -236,7 +233,7 @@ TestVariantFilter <- function(
         ) |>
         ggplot(aes(x = variant_count, fill = filter_status)) +
         geom_histogram(
-            binwidth = 500, alpha = 0.7, position = "identity", boundary = 0
+            binwidth = 200, alpha = 0.7, position = "identity", boundary = 0
         ) +
         facet_wrap(~filter_status, ncol = 1, scales = "free_y") +
         scale_fill_manual(
@@ -247,7 +244,7 @@ TestVariantFilter <- function(
             data = . %>% group_by(filter_status) %>%
                 summarize(mean_count = mean(variant_count)),
             aes(xintercept = mean_count),
-            linetype = "dashed", size = 1, color = "red"
+            linetype = "dashed", linewidth = 0.5, color = "red"
         ) +
         # Add mean value labels
         geom_text(
@@ -255,6 +252,27 @@ TestVariantFilter <- function(
                 summarize(mean_count = mean(variant_count)),
             aes(x = mean_count, y = Inf, label = sprintf("Mean: %d", round(mean_count))),
             hjust = -0.1, vjust = 1.5, color = "black", size = 7, size.unit = "pt"
+        ) +
+        # Add filter parameters as annotation only on "After filtering" panel
+        geom_text(
+            data = data.frame(
+                filter_status = "Before filtering",
+                x = 20000,  # Adjust this position as needed
+                y = I(0.3)    # Use relative position on y-axis
+            ),
+            aes(x = x, y = y, label = sprintf(
+                "Filter params:\nread depth >= %d\nvaf >= %.2f\nvad >= %d\npop_freq <= %.4f",
+                filter_params$min_depth, 
+                filter_params$min_vaf,
+                filter_params$min_vad,
+                filter_params$max_population_freq
+            )),
+            hjust = 0,  # Left-aligned text
+            vjust = 0,  # Top-aligned text
+            size = 6, 
+            size.unit = "pt",
+            color = "black",
+            fontface = "plain"
         ) +
         # Colors and theme
         labs(
@@ -275,15 +293,93 @@ TestVariantFilter <- function(
         SavePlot(
             plot = p,
             width = 4,
-            height = 4,
+            height = 3,
             dir = fig_dir,
             filename = fig_name
         )
     }
 
+    print(variant_comparison)
+    
     list(
             maf_filtered = maf_filtered,
             variant_counts = variant_comparison,
             plot = p
         )
+}
+
+MafOncoPlot <- function(
+    maf,
+    genes = NULL,
+    top_n_genes = 30,
+    clinical_features = NULL,
+    annotation_colors = NULL,
+    sort_by_annotation = TRUE,
+    show_sample_names = TRUE,
+    remove_non_mutated = FALSE,
+    title = "OncoPlot",
+    font_size = 0.7,
+    width = 10,
+    height = 8,
+    fig_dir = "figures/oncoplots",
+    fig_name = "onco_plot"
+) {
+    
+    # Create directory if it doesn't exist
+    fs::dir_create(here(fig_dir))
+    
+    # If no genes specified, get top mutated ones
+    if (is.null(genes)) {
+        gene_summary <- getGeneSummary(maf)
+        n_genes <- min(top_n_genes, nrow(gene_summary))
+        
+        # Check if we have enough genes
+        if (n_genes < 2) {
+            warning("Not enough genes for oncoplot (minimum 2 required)")
+            return(NULL)
+        }
+        
+        genes <- gene_summary[1:n_genes, "Hugo_Symbol"]
+        genes <- genes$Hugo_Symbol
+    }
+    
+    # Save PDF version
+    pdf_file <- file.path(here(fig_dir), paste0(fig_name, ".pdf"))
+    pdf(pdf_file, width = width, height = height)
+    
+    p <- oncoplot(
+        maf = maf,
+        genes = genes,
+        clinicalFeatures = clinical_features,
+        annotationColor = annotation_colors,
+        sortByAnnotation = sort_by_annotation,
+        showTumorSampleBarcodes = show_sample_names,
+        removeNonMutated = remove_non_mutated,
+        fontSize = font_size,
+        titleText = title
+    )
+    
+    dev.off()
+
+    # Also save PNG version
+    png_file <- file.path(here(fig_dir), paste0(fig_name, ".png"))
+    png(png_file, width = width, height = height, res = 300, units = "in")
+
+    oncoplot(
+        maf = maf,
+        genes = genes,
+        clinicalFeatures = clinical_features,
+        annotationColor = annotation_colors,
+        sortByAnnotation = sort_by_annotation,
+        showTumorSampleBarcodes = show_sample_names,
+        removeNonMutated = remove_non_mutated,
+        fontSize = font_size,
+        titleText = title
+    )
+    dev.off()
+    
+    message(paste("Saved plots to:", here(fig_dir)))
+    
+    # Return the plot object (or list with plot and comparison if available)
+    return(p)
 }
