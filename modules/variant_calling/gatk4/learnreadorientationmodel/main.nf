@@ -1,11 +1,8 @@
 process GATK4_LEARNREADORIENTATIONMODEL {
-    tag "$meta.id"
-    label 'process_low'
 
-    conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gatk4:4.5.0.0--py36hdfd78af_0':
-        'biocontainers/gatk4:4.5.0.0--py36hdfd78af_0' }"
+    tag "$meta.id"
+
+    label 'process_low'
 
     input:
     tuple val(meta), path(f1r2)
@@ -19,8 +16,7 @@ process GATK4_LEARNREADORIENTATIONMODEL {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def input_list = f1r2.collect{"--input $it"}.join(' ')
+    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -31,8 +27,8 @@ process GATK4_LEARNREADORIENTATIONMODEL {
     """
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
         LearnReadOrientationModel \\
-        $input_list \\
-        --output ${prefix}.tar.gz \\
+        -I ${f1r2} \\
+        --output ${prefix}.readorientationmodel.tar.gz \\
         --tmp-dir . \\
         $args
 

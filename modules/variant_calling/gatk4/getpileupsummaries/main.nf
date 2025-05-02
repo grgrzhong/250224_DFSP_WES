@@ -5,10 +5,7 @@ process GATK4_GETPILEUPSUMMARIES {
     label 'process_low'
 
     input:
-    tuple val(meta), path(input), path(index), path(intervals)
-    tuple val(meta2), path(fasta)
-    tuple val(meta3), path(fai)
-    tuple val(meta4), path(dict)
+    tuple val(meta), path(input), path(index)
     path  variants
     path  variants_tbi
 
@@ -21,9 +18,7 @@ process GATK4_GETPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_command = intervals ? "--intervals $intervals" : "--intervals $variants"
-    def reference_command = fasta ? "--reference $fasta" : ''
+    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -37,9 +32,7 @@ process GATK4_GETPILEUPSUMMARIES {
         --input $input \\
         --variant $variants \\
         --output ${prefix}.pileups.table \\
-        $reference_command \\
-        $interval_command \\
-        --tmp-dir . \\
+        --intervals $variants \\
         $args
 
     cat <<-END_VERSIONS > versions.yml

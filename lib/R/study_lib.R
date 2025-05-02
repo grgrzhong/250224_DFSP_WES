@@ -1,3 +1,14 @@
+
+## Load required libraries
+suppressWarnings(library(maftools))
+suppressWarnings(library(qs))
+suppressWarnings(library(fs))
+suppressWarnings(library(here))
+suppressWarnings(library(tidyverse))
+suppressWarnings(library(readxl))
+suppressWarnings(library(writexl))
+
+
 SavePlot <- function(
     plot, width = 8, height = 6, only_png = TRUE, dir, filename
 ) {
@@ -148,15 +159,9 @@ plot_theme <- function() {
 
 TestVariantFilter <- function(
     filter_params,
-    maf,
-    is_save = FALSE,
-    fig_dir = "figures/variant_filtering",
-    fig_name = "filter_params"
+    maf
 ) {
     
-    variants_per_sample_before <- maf |>
-        count(Tumor_Sample_Barcode, name = "n_variants_before")
-
     # Apply filtering with parameters
     maf_filtered <- maf |>
         ## Filter by sequencing quality
@@ -184,41 +189,30 @@ TestVariantFilter <- function(
         select(-gnomAD_exome_ALL_num)
 
     # Count variants per sample after filtering
-    variants_per_sample_after <- maf_filtered |>
+    post_filter_count <- maf_filtered |>
         count(Tumor_Sample_Barcode, name = "n_variants_after")
 
     # Merge before and after counts
-    variant_comparison <- variants_per_sample_before |>
-        left_join(variants_per_sample_after, by = "Tumor_Sample_Barcode") |>
+    filter_res <- post_filter_count |>
         mutate(
             n_variants_after = replace_na(n_variants_after, 0),
-            percent_retained = round(n_variants_after / n_variants_before * 100, 1)
+            # percent_retained = round(n_variants_after / n_variants_before * 100, 1)
         )
-
-    # Print summary statistics
-    cat(
-        "Total variants after filtering:",
-        sum(variant_comparison$n_variants_after), "\n"
+    
+    list(
+        maf_filtered = maf_filtered,
+        filter_res = filter_res
     )
+}
 
-    cat(
-        "Average variants per sample before:",
-        mean(variant_comparison$n_variants_before), "\n"
-    )
-
-    cat(
-        "Average variants per sample after:",
-        mean(variant_comparison$n_variants_after), "\n"
-    )
-
-    cat(
-        "Average percentage retained:",
-        mean(variant_comparison$percent_retained), "%\n"
-    )
-
-    # Create comparison visualizations
+PlotVariantFilter <- function(
+    is_save = FALSE,
+    fig_dir = "figures/variant_filtering",
+    fig_name = "filter_params"
+) {
+     # Create comparison visualizations
     ## 1. Bar plot of variant counts before/after by sample
-    p <- variant_comparison |>
+    p <- filter_res |>
         pivot_longer(
             cols = c(n_variants_before, n_variants_after),
             names_to = "filter_status",
@@ -299,13 +293,6 @@ TestVariantFilter <- function(
         )
     }
 
-    print(variant_comparison)
-    
-    list(
-            maf_filtered = maf_filtered,
-            variant_counts = variant_comparison,
-            plot = p
-        )
 }
 
 MafOncoPlot <- function(
@@ -322,7 +309,8 @@ MafOncoPlot <- function(
     width = 10,
     height = 8,
     fig_dir = "figures/oncoplots",
-    fig_name = "onco_plot"
+    fig_name = "onco_plot",
+    is_pdf = FALSE
 ) {
     
     # Create directory if it doesn't exist
@@ -343,25 +331,28 @@ MafOncoPlot <- function(
         genes <- genes$Hugo_Symbol
     }
     
-    # Save PDF version
-    pdf_file <- file.path(here(fig_dir), paste0(fig_name, ".pdf"))
-    pdf(pdf_file, width = width, height = height)
-    
-    p <- oncoplot(
-        maf = maf,
-        genes = genes,
-        clinicalFeatures = clinical_features,
-        annotationColor = annotation_colors,
-        sortByAnnotation = sort_by_annotation,
-        showTumorSampleBarcodes = show_sample_names,
-        removeNonMutated = remove_non_mutated,
-        fontSize = font_size,
-        titleText = title
-    )
-    
-    dev.off()
+    if (is_pdf) {
+        # Save PDF version
+        pdf_file <- file.path(here(fig_dir), paste0(fig_name, ".pdf"))
+        pdf(pdf_file, width = width, height = height)
+        
+        p <- oncoplot(
+            maf = maf,
+            genes = genes,
+            clinicalFeatures = clinical_features,
+            annotationColor = annotation_colors,
+            sortByAnnotation = sort_by_annotation,
+            showTumorSampleBarcodes = show_sample_names,
+            removeNonMutated = remove_non_mutated,
+            fontSize = font_size,
+            titleText = title
+        )
+        
+        dev.off()
 
-    # Also save PNG version
+    }
+
+    # save PNG version
     png_file <- file.path(here(fig_dir), paste0(fig_name, ".png"))
     png(png_file, width = width, height = height, res = 300, units = "in")
 
@@ -379,7 +370,5 @@ MafOncoPlot <- function(
     dev.off()
     
     message(paste("Saved plots to:", here(fig_dir)))
-    
-    # Return the plot object (or list with plot and comparison if available)
-    return(p)
+
 }

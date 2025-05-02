@@ -7,8 +7,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=4G
-#SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/$(date +%Y%m%d)_%j_%x.out
-#SBATCH --error=/home/zhonggr/projects/250224_DFSP_WES/slurm/$(date +%Y%m%d)_%j_%x.err
+#SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.out
+#SBATCH --error=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
@@ -27,14 +27,21 @@ export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f ${NXF_LOG_FILE}
 
 # Test the mutation_calling workflow
-nextflow run workflows/mutation_calling/main.nf \
-    -profile hpc \
-    --input /home/zhonggr/projects/250224_DFSP_WES/data/sarc/csv/samplesheet.csv \
-    --outdir data/sarc
+# nextflow run workflows/mutation_calling/main.nf \
+#     -profile hpc \
+#     --input /home/zhonggr/projects/250224_DFSP_WES/data/sarc/csv/samplesheet.csv \
+#     --outdir data/sarc
+
+# # Run the workflow local
+# nextflow run workflows/mutation_calling/main.nf \
+#     -profile local \
+#     -resume \
+#     --input /home/zhonggr/projects/250224_DFSP_WES/data/sarc/csv/samplesheet.csv \
+#     --outdir data/sarc
 
 # run testing
-rm -f ${NXF_LOG_FILE}
 nextflow run subworkflows/mutation_calling/mutect2_call.nf \
     -profile hpc \
-    -work-dir test_work \
-    --outdir test_results
+    -resume \
+    -work-dir test/work \
+    --outdir test/results

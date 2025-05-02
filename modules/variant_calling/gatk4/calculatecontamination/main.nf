@@ -1,11 +1,8 @@
 process GATK4_CALCULATECONTAMINATION {
-    tag "$meta.id"
-    label 'process_low'
 
-    conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gatk4:4.5.0.0--py36hdfd78af_0':
-        'biocontainers/gatk4:4.5.0.0--py36hdfd78af_0' }"
+    tag "$meta.id"
+
+    label 'process_low'
 
     input:
     tuple val(meta), path(pileup), path(matched)
@@ -20,7 +17,7 @@ process GATK4_CALCULATECONTAMINATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
     def matched_command = matched ? "--matched-normal $matched" : ''
 
     def avail_mem = 3072
@@ -35,6 +32,7 @@ process GATK4_CALCULATECONTAMINATION {
         --input $pileup \\
         --output ${prefix}.contamination.table \\
         $matched_command \\
+        -segments ${prefix}.segmentation.table \\
         --tmp-dir . \\
         $args
 

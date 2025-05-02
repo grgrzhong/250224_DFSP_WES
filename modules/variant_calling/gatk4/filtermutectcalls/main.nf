@@ -1,35 +1,27 @@
 process GATK4_FILTERMUTECTCALLS {
     tag "$meta.id"
+    
     label 'process_low'
 
-    conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gatk4:4.5.0.0--py36hdfd78af_0':
-        'biocontainers/gatk4:4.5.0.0--py36hdfd78af_0' }"
-
     input:
-    tuple val(meta), path(vcf), path(vcf_tbi), path(stats), path(orientationbias), path(segmentation), path(table), val(estimate)
-    tuple val(meta2), path(fasta)
-    tuple val(meta3), path(fai)
-    tuple val(meta4), path(dict)
+    tuple val(meta), path(vcf), path(vcf_tbi), path(stats), path(orientationmodel), path(contamination), path(segmentation)
+    path(fasta)
+    path(fai)
+    path(dict)
 
     output:
-    tuple val(meta), path("*.vcf.gz")            , emit: vcf
-    tuple val(meta), path("*.vcf.gz.tbi")        , emit: tbi
-    tuple val(meta), path("*.filteringStats.tsv"), emit: stats
-    path "versions.yml"                          , emit: versions
+    tuple val(meta), path("*.vcf.gz")      , emit: vcf
+    tuple val(meta), path("*.vcf.gz.tbi")  , emit: tbi
+    tuple val(meta), path("*.stats")       , emit: stats
+    tuple val(meta), path("*.log")         , emit: log 
+    path "versions.yml"                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-
-    def orientationbias_command = orientationbias ? orientationbias.collect{"--orientation-bias-artifact-priors $it"}.join(' ') : ''
-    def segmentation_command    = segmentation    ? segmentation.collect{"--tumor-segmentation $it"}.join(' ')                  : ''
-    def estimate_command        = estimate        ? " --contamination-estimate ${estimate} "                                    : ''
-    def table_command           = table           ? table.collect{"--contamination-table $it"}.join(' ')                        : ''
+    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -41,27 +33,17 @@ process GATK4_FILTERMUTECTCALLS {
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
         FilterMutectCalls \\
         --variant $vcf \\
-        --output ${prefix}.vcf.gz \\
         --reference $fasta \\
-        $orientationbias_command \\
-        $segmentation_command \\
-        $estimate_command \\
-        $table_command \\
+        --ob-priors $orientationmodel \\
+        --contamination-table $contamination \\
+        --tumor-segmentation $segmentation \\
+        --min-allele-fraction 0.01 \\
+        --unique-alt-read-count 1 \\
+        --stats ${prefix}.unfiltered.vcf.gz.stats \\
+        --output ${prefix}.filtered.vcf.gz \\
         --tmp-dir . \\
-        $args
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
-    END_VERSIONS
-    """
-
-    stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    """
-    echo "" | gzip > ${prefix}.vcf.gz
-    touch ${prefix}.vcf.gz.tbi
-    touch ${prefix}.vcf.gz.filteringStats.tsv
+        $args \\
+        2> ${prefix}.filtermutectcalls.log
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

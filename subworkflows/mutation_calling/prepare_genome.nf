@@ -49,6 +49,21 @@ workflow PREPARE_GENOME {
                                Channel.fromPath(params.genomes[genome_id].annovar_db, checkIfExists: true) :
                                Channel.empty()
 
+         // Print genome resource information similar to nf-core/sarek
+        log.info"""
+        
+        Fasta                : ${params.genomes[genome_id].fasta}
+        Fasta index          : ${params.genomes[genome_id].fai}
+        Dict                 : ${params.genomes[genome_id].dict}
+        Germline resource    : ${params.genomes[genome_id].germline_resource}
+        Panel of normals     : ${params.genomes[genome_id].containsKey('pon') ? params.genomes[genome_id].pon : 'Not provided'}
+        Pileup variants      : ${params.genomes[genome_id].contamination_variants}
+        Intervals            : ${params.genomes[genome_id].intervals}
+        Funcotator resources : ${params.genomes[genome_id].containsKey('funcotator') ? params.genomes[genome_id].funcotator : 'Not provided'}
+        Annovar database     : ${params.genomes[genome_id].containsKey('annovar_db') ? params.genomes[genome_id].annovar_db : 'Not provided'}
+        
+        """
+
     emit:
         fasta                = fasta
         fai                  = fai

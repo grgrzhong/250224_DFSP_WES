@@ -1,11 +1,8 @@
 process GATK4_FUNCOTATOR {
+    
     tag "$meta.id"
-    label 'process_medium'
 
-    conda "bioconda::gatk4=4.4.0.0"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gatk4:4.4.0.0--py36hdfd78af_0':
-        'quay.io/biocontainers/gatk4:4.4.0.0--py36hdfd78af_0' }"
+    label 'process_medium'
 
     input:
     tuple val(meta), path(vcf)

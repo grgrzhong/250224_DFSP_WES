@@ -1,17 +1,14 @@
-process TABIX_TABIX {
-    tag "$input"
+process TABIX {
+    
+    tag "$meta.id"
+    
     label 'process_low'
     
-    conda "bioconda::tabix=1.11"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/tabix:1.11--hdfd78af_0' :
-        'biocontainers/tabix:1.11--hdfd78af_0' }"
-    
     input:
-    path input
+    tuple val(meta), path(vcf)
     
     output:
-    path "*.tbi", emit: tbi
+    tuple val(meta), path("*.tbi"), emit: tbi
     path "versions.yml", emit: versions
     
     when:
@@ -21,7 +18,9 @@ process TABIX_TABIX {
     def args = task.ext.args ?: ''
     
     """
-    tabix $args $input
+    tabix \\
+        $vcf \\
+        $args
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
