@@ -1,17 +1,9 @@
 process BWA_MEM {
-    tag "${meta.id}"
-    label 'process_high'
-    
-    // container "${params.singularity_container_dir}/bwa-0.7.19.sif"
 
-    // publishDir([
-    //     [
-    //         path: { "${params.outdir}/preprocessing/bam/${meta.id}" },
-    //         mode: params.publish_dir_mode,
-    //         pattern: "*.bam",
-    //         enabled: params.save_mapped_bam
-    //     ]
-    // ])
+    tag "${meta.id}"
+
+    label 'process_high'
+
     
     input:
     tuple val(meta), path(reads1), path(reads2)

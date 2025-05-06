@@ -1,55 +1,62 @@
 
-include { GATK4_MUTECT2 as GATK4_MUTECT2_NORMAL } from '../../modules/variant_calling/gatk4/mutect2/'
-include { GATK4_GENOMICSDBIMPORT } from '../../modules/variant_calling/gatk4/genomicsdbimport/'
-include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/variant_calling/gatk4/createsomaticpanelofnormals/'
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                GATK4 Mutect2 create PON subworkflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Load the required modules
+include { GATK4_MUTECT2_NORMAL } from '../../modules/variant_calling/gatk4/mutect2/normal/main.nf'
+include { GATK4_GENOMICSDBIMPORT } from '../../modules/variant_calling/gatk4/genomicsdbimport/main.nf'
+include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/variant_calling/gatk4/createsomaticpanelofnormals/main.nf'
 
 workflow MUTECT2_SOMATIC_PON {
     
+    take:
+        // Reference genome files
+        fasta
+        fai
+        dict
+        interval
+        // Normal samples
+        normal_samples
 
-    main:
-       // Prepare reference files
-        reference_fai = Channel.fromPath("${reference}.fai")
-        reference_dict = Channel.fromPath("${reference.parent}/${reference.baseName}.dict")
-        
+    main: 
         // Run Mutect2 on each normal sample
         GATK4_MUTECT2_NORMAL(
             normal_samples,
-            reference,
-            reference_fai,
-            reference_dict,
+            fasta,
+            fai,
+            dict,
             interval
         )
         
         // Collect all VCFs for GenomicsDB Import
-        vcfs = GATK4_MUTECT2_NORMAL.out.vcfs
-            .map { sample_id, vcf, tbi -> vcf }
-            .collect()
-            
-        tbis = GATK4_MUTECT2_NORMAL.out.vcfs
-            .map { sample_id, vcf, tbi -> tbi }
-            .collect()
+        vcfs = GATK4_MUTECT2_NORMAL.out.vcf.collect()
+        tbis = GATK4_MUTECT2_NORMAL.out.tbi.collect()
+        
             
         // Create GenomicsDB
         GATK4_GENOMICSDBIMPORT(
             vcfs,
             tbis,
-            reference,
-            reference_fai,
-            reference_dict,
+            fasta,
+            fai,
+            dict,
             interval
         )
         
         // Create Panel of Normals
         GATK4_CREATESOMATICPANELOFNORMALS(
             GATK4_GENOMICSDBIMPORT.out.pon_db,
-            reference,
-            reference_fai,
-            reference_dict,
+            fasta,
+            fai,
+            dict,
             interval
         )
         
     emit:
-        pon_vcf = CREATE_SOMATIC_PON.out.pon_vcf
-        pon_vcf_tbi = CREATE_SOMATIC_PON.out.pon_vcf_tbi
+        pon_vcf = GATK4_CREATESOMATICPANELOFNORMALS.out.vcf
+        pon_vcf_tbi = GATK4_CREATESOMATICPANELOFNORMALS.out.tbi
     
 }

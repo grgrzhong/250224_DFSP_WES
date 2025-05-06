@@ -30,8 +30,6 @@ process BCFTOOLS_NORM {
         $vcf \\
         $args
     
-    tabix -p vcf ${prefix}.normalized.vcf.gz
-    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')

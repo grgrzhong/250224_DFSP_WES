@@ -40,8 +40,10 @@ rm -f ${NXF_LOG_FILE}
 #     --outdir data/sarc
 
 # run testing
-nextflow run subworkflows/mutation_calling/mutect2_call.nf \
+rm -f ${NXF_LOG_FILE}
+nextflow run workflows/mutation_calling/main.nf \
     -profile hpc \
     -resume \
-    -work-dir test/work \
-    --outdir test/results
+    -work-dir work \
+    --step cnvkit \
+    --outdir results

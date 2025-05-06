@@ -8,7 +8,7 @@ process BCFTOOLS_VIEW {
     tuple val(meta), path(vcf)
     
     output:
-    tuple val(meta), path("*normalized.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.vcf.gz"), emit: vcf
     path "versions.yml", emit: versions
     
     when:

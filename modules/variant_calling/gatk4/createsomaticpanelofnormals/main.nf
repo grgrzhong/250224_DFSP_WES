@@ -1,15 +1,12 @@
 process GATK4_CREATESOMATICPANELOFNORMALS {
-    tag "PON"
-    label 'process_high'
-    label 'error_retry'
     
-    conda "bioconda::gatk4=4.4.0.0"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/gatk4:4.4.0.0--py36hdfd78af_0' :
-        'biocontainers/gatk4:4.4.0.0--py36hdfd78af_0' }"
+    tag "PON"
+    
+    label 'process_high'
+
     
     input:
-    path genomicsdb
+    path pon_db
     path fasta
     path fai
     path dict
@@ -25,16 +22,33 @@ process GATK4_CREATESOMATICPANELOFNORMALS {
     
     script:
     def args = task.ext.args ?: ''
-    def interval_command = intervals ? "-L ${intervals}" : ""
-    
+
+    def avail_mem = 64
+    if (!task.memory) {
+        log.info '[GATK CreateSomaticPanelOfNormals] Available memory not known - defaulting to 8GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.giga*0.8).intValue()
+    }
+
     """
-    gatk --java-options "-Xmx${task.memory.toGiga()}g" \\
+    gatk --java-options "-Xmx${avail_mem}g -XX:-UsePerfData" \\
         CreateSomaticPanelOfNormals \\
-        -R ${fasta} \\
-        -V gendb://${genomicsdb} \\
-        ${interval_command} \\
+        -R $fasta \\
+        -L $intervals \\
+        -V gendb://${pon_db} \\
         -O pon.vcf.gz \\
         $args
+    
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
+    END_VERSIONS
+    """
+
+    stub:
+    """
+    touch pon.vcf.gz
+    touch pon.vcf.gz.tbi
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
