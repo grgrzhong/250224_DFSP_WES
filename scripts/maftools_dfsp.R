@@ -1,4 +1,5 @@
 
+# Load required libraries
 source(here::here("lib/R/study_lib.R"))
 
 ##############################################################################
@@ -17,8 +18,8 @@ maf <- maf |>
     )
 
 qsave(
-  maf, 
-  here("data/wes/annotation/merged/annovar_maf_merged.qs")
+    maf,
+    here("data/wes/annotation/merged/annovar_maf_merged.qs")
 )
 
 ##############################################################################
@@ -458,6 +459,94 @@ write_xlsx(
 )
 
 ############################################################################
-## Filtering variants --------------
+## General variants filtering --------------
 ############################################################################
+maf <- qread(here("data/wes/annotation/merged/annovar_maf_merged.qs")) |> 
+    separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE) |> 
+    as_tibble()
 
+# Sumarize the variants before filtering
+summary_before_filter <- maf |>
+    count(Tumor_Sample_Barcode, name = "n_variants_before") |>
+    summarise(
+        across(
+            n_variants_before,
+            list(
+                total = ~ sum(.x),
+                mean = ~ mean(.x, na.rm = TRUE),
+                median = ~ median(.x, na.rm = TRUE)
+            ),
+            .names = "before_filter_{.fn}"
+        )
+    )
+
+cat(
+    sprintf("Before-filter total variants    = %d", summary_before_filter$before_filter_total), "\n",
+    sprintf("Before-filter mean variants    = %.2f", summary_before_filter$before_filter_mean), "\n",
+    sprintf("Before-filter median variants  = %.2f", summary_before_filter$before_filter_median), "\n"
+)
+
+colnames(maf)
+unique(maf$Variant_Classification)
+unique(maf$ExonicFunc.refGene)
+unique(maf$Func.refGene)
+
+maf |> 
+    select(
+        Variant_Classification, Func.refGene, ExonicFunc.refGene,
+        VAD, DP, AF, gnomAD_exome_ALL
+    )
+
+maf <- maf |> 
+    mutate(
+        VAD = as.numeric(VAD),
+        DP = as.numeric(DP),
+        AF = as.numeric(AF),
+        gnomAD_exome_ALL = as.numeric(
+            replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
+        )
+    )
+
+# Use general filtering thresholds to filter out potenital sequencing errors
+# or artifacts while retaining true variants
+min_rd <- 8              # Minimum read depth
+min_vad <- 4             # Minimum variant allele depth, 3-10
+min_vaf <- 0.05          # Minimum variant allele frequency
+max_pop_freq <- 0.001    # Maximum population frequency (polymorphism)
+
+maf_filtered <- maf |> 
+    ## Filter out variants with low read depth, variant allele depth,
+    dplyr::filter(
+        is.na(DP) | DP >= min_rd,
+        is.na(VAD) | as.numeric(VAD) >= min_vad,
+        is.na(AF) | as.numeric(AF) >= min_vaf
+    ) |> 
+    ## Filter out variants with high population frequency
+    dplyr::filter(
+        is.na(gnomAD_exome_ALL) | gnomAD_exome_ALL <= max_pop_freq
+    ) |> 
+    arrange(gnomAD_exome_ALL) |> 
+    ## Filter out silent (synonymous) variants
+    dplyr::filter(
+        !(Variant_Classification %in% c("Silent")),
+        !(Func.refGene %in% c("synonymous_SNV")),
+        !(ExonicFunc.refGene %in% c("synonymous SNV"))
+
+    ) |> 
+    ## Inlcude Filter out non-exonic variants
+    dplyr::filter(
+        Func.refGene %in% c(
+            "exonic", "splicing", "UTR5"
+        )
+    )
+
+# Cancer hotspots fitlering to prioritize the most clinically relevant variants
+snv_hotspots <- read_xlsx(
+    here("data/clinical/hotspots_v2.xlsx"),
+    sheet ="SNV-hotspots"
+)
+
+indel_hotspots <- read_xlsx(
+    here("data/clinical/hotspots_v2.xlsx"),
+    sheet ="INDEL-hotspots"
+)

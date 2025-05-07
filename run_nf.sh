@@ -45,5 +45,5 @@ nextflow run workflows/mutation_calling/main.nf \
     -profile hpc \
     -resume \
     -work-dir work \
-    --step cnvkit \
+    --step mutect2 \
     --outdir results
