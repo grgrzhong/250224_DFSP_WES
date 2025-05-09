@@ -31,12 +31,18 @@ workflow PREPARE_GENOME {
         germline_resource_tbi= Channel.fromPath(params.genomes[genome_id].germline_resource_tbi, checkIfExists: true)
         
         // Map panel_of_normals (pon) and tbi
-        panel_of_normals     = params.genomes[genome_id].pon ? 
-                               Channel.fromPath(params.genomes[genome_id].pon, checkIfExists: true) : 
-                               Channel.empty()
-        panel_of_normals_tbi = params.genomes[genome_id].pon_tbi ? 
-                               Channel.fromPath(params.genomes[genome_id].pon_tbi, checkIfExists: true) : 
-                               Channel.empty()
+        // Map panel_of_normals (pon) and tbi
+        panel_of_normals      = params.panel_of_normals ? 
+                            Channel.fromPath(params.panel_of_normals, checkIfExists: true) :
+                            (params.genomes[genome_id].pon ? 
+                                Channel.fromPath(params.genomes[genome_id].pon, checkIfExists: true) : 
+                                Channel.empty())
+                            
+        panel_of_normals_tbi = params.panel_of_normals ? 
+                Channel.fromPath("${params.panel_of_normals}.tbi", checkIfExists: true) :
+                (params.genomes[genome_id].pon_tbi ? 
+                    Channel.fromPath(params.genomes[genome_id].pon_tbi, checkIfExists: true) : 
+                    Channel.empty())
         
         // Map pileup variants (contamination_variants)
         pileup_variants      = Channel.fromPath(params.genomes[genome_id].contamination_variants, checkIfExists: true)

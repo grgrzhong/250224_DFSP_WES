@@ -5,29 +5,29 @@ workflow PREPARE_SAMPLE {
     main:
         
         // Create a channel for fastq files
-        reads = Channel.fromPath(input_csv)
-            .ifEmpty { exit(1, "Sample sheet not found at ${input_csv}") }
-            .splitCsv(header: true)
-            .filter { row -> row.containsKey('fastq_1') && row.containsKey('fastq_2') }
-            .map { row ->
-                def meta = [:]
-                meta.id = row.sample
-                meta.patient_id = row.patient
-                meta.status = row.status.toInteger()
+        // reads = Channel.fromPath(input_csv)
+        //     .ifEmpty { exit(1, "Sample sheet not found at ${input_csv}") }
+        //     .splitCsv(header: true)
+        //     .filter { row -> row.containsKey('fastq_1') && row.containsKey('fastq_2') }
+        //     .map { row ->
+        //         def meta = [:]
+        //         meta.id = row.sample
+        //         meta.patient_id = row.patient
+        //         meta.status = row.status.toInteger()
 
-                // Check that the fastq files exist
-                def fastq_1 = file(row.fastq_1)
-                def fastq_2 = file(row.fastq_2)
+        //         // Check that the fastq files exist
+        //         def fastq_1 = file(row.fastq_1)
+        //         def fastq_2 = file(row.fastq_2)
 
-                if (!fastq_1.exists()) {
-                    error("Read 1 fastq file not found: ${row.fastq_1}")
-                }
-                if (!fastq_2.exists()) {
-                    error("Read 2 fastq file not found: ${row.fastq_2}")
-                }
+        //         if (!fastq_1.exists()) {
+        //             error("Read 1 fastq file not found: ${row.fastq_1}")
+        //         }
+        //         if (!fastq_2.exists()) {
+        //             error("Read 2 fastq file not found: ${row.fastq_2}")
+        //         }
 
-                return [meta, fastq_1, fastq_2]
-            }
+        //         return [meta, fastq_1, fastq_2]
+        //     }
 
         // Create a channel for BAM files
         input_samples = Channel.fromPath(input_csv)
@@ -156,7 +156,7 @@ workflow PREPARE_SAMPLE {
         }
 
     emit:
-        reads                   = reads
+        reads                   = null
         all_samples             = all_samples
         tumour_samples          = tumour_samples
         normal_samples          = normal_samples

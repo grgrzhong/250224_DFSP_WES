@@ -5,10 +5,9 @@
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=40
 #SBATCH --mem-per-cpu=4G
 #SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.out
-#SBATCH --error=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
@@ -24,13 +23,20 @@ export NXF_OPTS="-Xms512m -Xmx8g"
 
 # export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
 export NXF_LOG_FILE="${PWD}/.nextflow.log"
-rm -f ${NXF_LOG_FILE}
+rm -f .nextflow.log*
 
-# Test the mutation_calling workflow
-# nextflow run workflows/mutation_calling/main.nf \
+nextflow run subworkflows/mutation_calling/cnv_facets_old.nf \
+    -profile hpc \
+    -resume \
+    --outdir data/wes
+
+# Test the mutect2
+# export NXF_LOG_FILE="${PWD}/.nextflow.log"
+# rm -f ${NXF_LOG_FILE}
+# nextflow run subworkflows/mutation_calling/mutect2_call.nf \
 #     -profile hpc \
-#     --input /home/zhonggr/projects/250224_DFSP_WES/data/sarc/csv/samplesheet.csv \
-#     --outdir data/sarc
+#     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv \
+#     --outdir test/mutect2
 
 # # Run the workflow local
 # nextflow run workflows/mutation_calling/main.nf \
@@ -40,10 +46,33 @@ rm -f ${NXF_LOG_FILE}
 #     --outdir data/sarc
 
 # run testing
-rm -f ${NXF_LOG_FILE}
-nextflow run workflows/mutation_calling/main.nf \
-    -profile hpc \
-    -resume \
-    -work-dir work \
-    --step mutect2 \
-    --outdir results
+# rm -f ${NXF_LOG_FILE}
+# nextflow run workflows/mutation_calling/main.nf \
+#     -profile hpc \
+#     -resume \
+#     -work-dir work \
+#     --step mutect2 \
+#     --outdir results
+
+# Run marco
+# export NXF_LOG_FILE="${PWD}/marco.nextflow.log"
+# rm -f ${NXF_LOG_FILE}
+# nextflow run workflows/mutation_calling/main.nf \
+#     -work-dir work \
+#     -profile hpc \
+#     -resume \
+#     --input /lustre1/g/path_my/samplesheet.csv \
+#     --panel_of_normals /lustre1/g/path_my/30X_FT/SNVs/Mutect2-Call/PON-Mutect/pon.vcf.gz \
+#     --step mutect2 \
+#     --outdir test/macro
+
+# export NXF_LOG_FILE="${PWD}/marco2.nextflow.log"
+# rm -f ${NXF_LOG_FILE}
+# nextflow run workflows/mutation_calling/main.nf \
+#     -work-dir work \
+#     -profile hpc \
+#     -resume \
+#     --input /lustre1/g/path_my/samplesheet_P.csv \
+#     --panel_of_normals /lustre1/g/path_my/30X_cfdna/SNVs/Mutect2-Call/PON-Mutect/pon.vcf.gz \
+#     --step mutect2 \
+#     --outdir test/macro2

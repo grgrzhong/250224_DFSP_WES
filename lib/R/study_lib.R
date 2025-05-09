@@ -1,12 +1,16 @@
 
 ## Load required libraries
-suppressWarnings(library(maftools))
-suppressWarnings(library(qs))
-suppressWarnings(library(fs))
-suppressWarnings(library(here))
-suppressWarnings(library(tidyverse))
-suppressWarnings(library(readxl))
-suppressWarnings(library(writexl))
+suppressPackageStartupMessages(
+    suppressMessages({
+        library(maftools)
+        library(qs)
+        library(fs)
+        library(here)
+        library(tidyverse)
+        library(readxl)
+        library(writexl)
+    })
+)
 
 
 SavePlot <- function(
@@ -299,18 +303,17 @@ MafOncoPlot <- function(
     maf,
     genes = NULL,
     top_n_genes = 30,
-    clinical_features = NULL,
-    annotation_colors = NULL,
-    sort_by_annotation = TRUE,
-    show_sample_names = TRUE,
-    remove_non_mutated = FALSE,
-    title = "OncoPlot",
-    font_size = 0.7,
+    clinicalFeatures = NULL,
+    annotationColor = NULL,
+    sortByAnnotation = TRUE,
+    showTumorSampleBarcodes = TRUE,
+    removeNonMutated = FALSE,
+    titleText = "OncoPlot",
+    fontSize = 0.7,
     width = 10,
     height = 8,
-    fig_dir = "figures/oncoplots",
-    fig_name = "onco_plot",
-    is_pdf = FALSE
+    fig_dir = "figures/oncoplot",
+    fig_name = "oncoplot"
 ) {
     
     # Create directory if it doesn't exist
@@ -331,44 +334,42 @@ MafOncoPlot <- function(
         genes <- genes$Hugo_Symbol
     }
     
-    if (is_pdf) {
-        # Save PDF version
-        pdf_file <- file.path(here(fig_dir), paste0(fig_name, ".pdf"))
-        pdf(pdf_file, width = width, height = height)
-        
-        p <- oncoplot(
-            maf = maf,
-            genes = genes,
-            clinicalFeatures = clinical_features,
-            annotationColor = annotation_colors,
-            sortByAnnotation = sort_by_annotation,
-            showTumorSampleBarcodes = show_sample_names,
-            removeNonMutated = remove_non_mutated,
-            fontSize = font_size,
-            titleText = title
-        )
-        
-        dev.off()
-
-    }
+    # Save PDF version
+    pdf_file <- here(fig_dir, paste0(fig_name, ".pdf"))
+    pdf(pdf_file, width = width, height = height)
+    
+    p <- oncoplot(
+        maf = maf,
+        genes = genes,
+        clinicalFeatures = clinicalFeatures,
+        annotationColor = annotationColor,
+        sortByAnnotation = sortByAnnotation,
+        showTumorSampleBarcodes = showTumorSampleBarcodes,
+        removeNonMutated = removeNonMutated,
+        fontSize = fontSize,
+        titleText = titleText
+    )
+    
+    dev.off()
+    message(paste("Saved plots to:", pdf_file))
 
     # save PNG version
-    png_file <- file.path(here(fig_dir), paste0(fig_name, ".png"))
+    png_file <- here(fig_dir, paste0(fig_name, ".png"))
     png(png_file, width = width, height = height, res = 300, units = "in")
 
     oncoplot(
         maf = maf,
         genes = genes,
-        clinicalFeatures = clinical_features,
-        annotationColor = annotation_colors,
-        sortByAnnotation = sort_by_annotation,
-        showTumorSampleBarcodes = show_sample_names,
-        removeNonMutated = remove_non_mutated,
-        fontSize = font_size,
-        titleText = title
+        clinicalFeatures = clinicalFeatures,
+        annotationColor = annotationColor,
+        sortByAnnotation = sortByAnnotation,
+        showTumorSampleBarcodes = showTumorSampleBarcodes,
+        removeNonMutated = removeNonMutated,
+        fontSize = fontSize,
+        titleText = titleText
     )
     dev.off()
     
-    message(paste("Saved plots to:", here(fig_dir)))
+    message(paste("Saved plots to:", png_file))
 
 }

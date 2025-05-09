@@ -7,7 +7,7 @@ process CNV_FACETS {
     label "process_medium"
     
     input:
-    tuple val(meta), path(input_normal), path(input_normal_index), path(input_tumour), path(input_tumour_index)
+    tuple val(meta), path(input_tumour), path(input_tumour_index), path(input_normal), path(input_normal_index)
     path dbsnp
     path dbsnp_tbi
     
@@ -20,7 +20,7 @@ process CNV_FACETS {
     tuple val(meta), path("*.vcf.gz.tbi"),  emit: vcf_tbi
     
     script:
-    def prefix = meta.id
+    def prefix = meta.tumour_id
 
     """
     # Run CNV-FACETS for tumor-normal pair

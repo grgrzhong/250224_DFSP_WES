@@ -50,6 +50,7 @@ process GATK4_MUTECT2 {
     } else {
         avail_mem = (task.memory.mega*0.8).intValue()
     }
+        // $interval_command \\
 
     """
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
@@ -59,7 +60,6 @@ process GATK4_MUTECT2 {
         --reference $fasta \\
         $pon_command \\
         $gr_command \\
-        $interval_command \\
         --output ${prefix}.unfiltered.vcf.gz \\
         -bamout ${prefix}.realigned.bam \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\

@@ -15,16 +15,18 @@ params.step_options = [
     'preprocessing',
     'mutect2',
     "cnvkit",
+    "cnv_facets"
 ]
 
 // Default step (run full workflow)
-params.step         = null
+params.step = null
 
 // Define valid starting and ending points
 params.valid_steps  = [
     'preprocessing',
     'mutect2',
     "cnvkit",
+    "cnv_facets"
 ]
 
 // Import modules and subworkflows
@@ -34,6 +36,7 @@ include { PREPROCESSING             } from "../../subworkflows/mutation_calling/
 include { MUTECT2_SOMATIC_PON       } from '../../subworkflows/mutation_calling/mutect2_pon.nf'
 include { MUTECT2_CALL              } from "../../subworkflows/mutation_calling/mutect2_call.nf"
 include { VARIANT_CALLING_CNVKIT    } from "../../subworkflows/mutation_calling/cnvkit.nf"
+include { VARIANT_CALLING_CNV } from '../../subworkflows/mutation_calling/cnv_facets.nf'
 
 // Parameter validation for steps
 def validate_params() {
@@ -103,6 +106,7 @@ workflow {
     run_preprocessing = !params.step || params.step == 'preprocessing'
     run_mutect2 = !params.step || params.step == 'mutect2'
     run_cnvkit = !params.step || params.step == 'cnvkit'
+    run_cnv_facets = !params.step || params.step == 'cnv_facets'
 
     // Variables to hold intermediate results
     def preprocessed_results = null
@@ -196,6 +200,17 @@ workflow {
 
         // Capture CNVkit outputs for potential downstream use
         cnv_reference = VARIANT_CALLING_CNVKIT.out.cnv_reference
+    }
+
+    if(run_cnv_facets) {
+
+        log.info("Running CNV-FACETS variant calling")
+
+        VARIANT_CALLING_CNV(
+            paired_samples,
+            dbsnp,
+            dbsnp_tbi
+        )
     }
 
     workflow.onComplete = {
