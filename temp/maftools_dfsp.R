@@ -1,378 +1,552 @@
-library(maftools)
-library(tidyverse)
 
-dfsp.maf <- annovarToMaf(list.files("Y:/WES/DFSP - Pilot/Annovar", full.names = TRUE))
-dfsp.clin.path <- "G:/Sarcoma/GLI1/GLI1-Metadata.tsv"
-dfsp.clin<- read.delim("G:/Sarcoma/GLI1/GLI1-Metadata.tsv", sep = "\t")
-sample.classic <- dfsp.clin$Tumor_Sample_Barcode[dfsp.clin$Histology.Subtype=="Classic"]
-sample.pdgfb <- dfsp.clin$Tumor_Sample_Barcode[dfsp.clin$Histology.Subtype=="Classic" & dfsp.clin$Molecular.Subtype=="PDGFB"]
-sample.pdgfd <- dfsp.clin$Tumor_Sample_Barcode[dfsp.clin$Histology.Subtype=="Classic" & dfsp.clin$Molecular.Subtype=="PDGFD"]
-sample.fst <- dfsp.clin$Tumor_Sample_Barcode[dfsp.clin$Histology.Subtype=="FST"]
-sample.met <- dfsp.clin$Tumor_Sample_Barcode[dfsp.clin$Origin=="Metastasis"]
+# Load required libraries
+source(here::here("lib/R/study_lib.R"))
 
+##############################################################################
+## Merge the annovar output ----------------------
+##############################################################################
+input_dir <- here("data/wes/annotation/annovar")
 
-dfsp.maf.filtered <- dfsp.maf %>% separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE)
+input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*annovar.txt")
+# length(input_files)
+maf <- annovarToMaf(input_files)
 
-dfsp.maf.filtered <- dfsp.maf.filtered %>% filter(ExonicFunc.refGene!= "synonymous SNV" & 
-                                                    Func.refGene %in% c("exonic", "splicing") &
-                                                    AF>=0.05 & VAD >=5  & 
-                                                    DP >=10 & gnomAD_exome_ALL <0.001)
+## Clean the sample names
+maf <- maf |> 
+    mutate(
+        Tumor_Sample_Barcode = str_replace(Tumor_Sample_Barcode, "_annovar", "")
+    )
 
-cancerGeneList <- read.delim("G:/Sarcoma/cancerGeneList.tsv", sep = "\t")
-ActionableGene <- read.delim("G:/Sarcoma/oncokb_biomarker_drug_associations.tsv", sep = "\t")
-ActionableGene.CNV <- ActionableGene[ActionableGene$Alterations %in% c("Amplification", "Deletion"),]
+qsave(
+    maf,
+    here("data/wes/annotation/merged/annovar_maf_merged.qs")
+)
 
-dfsp.maf.filtered.hotspot <- dfsp.maf.filtered[dfsp.maf.filtered$Hugo_Symbol %in% cancerGeneList$Hugo.Symbol,]
+##############################################################################
+## Merge the funcotator output --------------
+##############################################################################
+# input_dir <- here("data/wes/annotation/funcotator")
+# input_files <- dir_ls(input_dir, recurse = TRUE, glob = "*annotated.tsv")
 
-CNV <- read.delim("G:/Sarcoma/GLI1/CNV-GATK/GLI-004-T.called.annotated.bed", sep = "\t")
-CNV_filtered <- CNV[CNV$X. != "0",]
-CNV_filtered <- CNV_filtered[CNV_filtered$KLHL17 %in% ActionableGene.CNV$Gene,]
+# input_data <- map2(
+#   input_files, names(input_files),
+#   ~ {
+#     maf_filtered <- read_tsv(.x, show_col_types = FALSE)
+#     maf_filtered$Tumor_Sample_Barcode <- basename(.y) |> str_remove("\\..*$")
 
-dfsp.maf.classic <- annovarToMaf(
-  list.files("G:/Sarcoma/DFSP/Annovar", full.names = TRUE) [unlist(strsplit(list.files("G:/Sarcoma/DFSP/Annovar"), split = ".txt")) %in% sample.classic])
-dfsp.maf.fst <- annovarToMaf(
-  list.files("G:/Sarcoma/DFSP/Annovar", full.names = TRUE) [unlist(strsplit(list.files("G:/Sarcoma/DFSP/Annovar"), split = ".txt")) %in% sample.fst])
-dfsp.maf.pdgfb <- annovarToMaf(
-  list.files("G:/Sarcoma/DFSP/Annovar", full.names = TRUE) [unlist(strsplit(list.files("G:/Sarcoma/DFSP/Annovar"), split = ".txt")) %in% sample.pdgfb])
-dfsp.maf.pdgfd <- annovarToMaf(
-  list.files("G:/Sarcoma/DFSP/Annovar", full.names = TRUE) [unlist(strsplit(list.files("G:/Sarcoma/DFSP/Annovar"), split = ".txt")) %in% sample.pdgfd])
-dfsp.maf.met <- annovarToMaf(
-  list.files("G:/Sarcoma/DFSP/Annovar", full.names = TRUE) [unlist(strsplit(list.files("G:/Sarcoma/DFSP/Annovar"), split = ".txt")) %in% sample.met])
+#     return(maf_filtered)
+#   }
+# )
 
+# maf <- merge_mafs(mafs = input_data, verbose = TRUE)
 
+# qsave(maf, here("data/wes/annotation/merged/funcotator_maf_merged.qs"))
 
-all.lesions <- "D:/Sarcoma/Methylation_profiling/DFSP/CNV/All/all_lesions.conf_99.txt"
-amp.genes <-"D:/Sarcoma/Methylation_profiling/DFSP/CNV/amp_genes.conf_99.txt"
-del.genes <- "D:/Sarcoma/Methylation_profiling/DFSP/CNV/del_genes.conf_99.txt"
-scores.gis <- "D:/Sarcoma/Methylation_profiling/DFSP/CNV/scores.gistic"
+##############################################################################
+## Filtering the variants --------------
+##############################################################################
+maf <- qread(here("data/wes/annotation/merged/annovar_maf_merged.qs")) |> 
+    separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE) |> 
+    as_tibble()
 
+colnames(maf)   
+unique(maf$Variant_Classification)
+unique(maf$Func.refGene)
+unique(maf$ExonicFunc.refGene)
 
-#**GisticOncoplot from EPIC CNV**#
+# Define filtering thresholds to filter out potenital sequencing errors or 
+# artifacts while retaining true variants
+filter_params <- list(
+    min_depth = 10,               # Minimum read depth
+    min_vaf = 0.05,               # Minimum variant allele frequency
+    min_vad = 5,                  # Minimum variant allele depth, 3-10
+    max_population_freq = 0.001,  # Maximum population frequency
+    # Variant classifications to exclude
+    exclude_classifications = c(
+    "Silent", "Intron"
+    ),
+    # Exonic functions to exclude
+    exclude_exonic_func = c(
+    "synonymous_SNV"
+    ),
+    # functions to include
+    include_func = c(             
+    "exonic", "splicing"
+    )
+)
 
-SampleSheet_DFSP <- read.csv("D:/Sarcoma/Methylation_profiling/DFSP/phenoData_DFSP_97pt_Meth_immune_CNV.csv", row.names = 1)
+# Create a grid of parameter combinations to test
+params_grid <- expand.grid(
+    min_vaf = c(0.01, 0.02, 0.03, 0.04, 0.05),
+    min_vad = c(3:10),
+    min_depth = c(8:15)
+)
 
-SampleSheet_DFSP <- read.csv("D:/Sarcoma/Methylation_profiling/DFSP/phenoData_DFSP_all.csv")
-SampleSheet_DFSP <- SampleSheet_DFSP %>% filter(Main == "Yes",
-                                                !(Specimen.Nature %in% c("Metastasis", "Recurrence (Post-imatinib)")),
-                                                Specimen.Class == "Tumour"
-                                                )
-colnames(SampleSheet_DFSP)[2] <- "Tumor_Sample_Barcode"
-SampleSheet_DFSP_Meth <- read.csv("D:/Sarcoma/Methylation_profiling/DFSP/phenoData_DFSP_96pt_Meth_immune.csv")
+# Create a directory to store all filter test results
+filter_res_dir <- here("results/variant_filtering")
+dir_create(filter_res_dir)
 
+filter_results <- list()
 
-colnames(SampleSheet_DFSP)[1] <- "Sample.ID"
-colnames(SampleSheet_DFSP)[1] <- "Tumor_Sample_Barcode"
+pre_filter_counts <- maf |>
+    count(Tumor_Sample_Barcode, name = "n_variants_before")
 
-gistic.dfsp = readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/All97pts")
-gistic.dfsp.pdgfb <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/PDGFB")
-gistic.dfsp.pdgfd <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/PDGFD")
-gistic.dfsp.pairedClassic <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/PairedClassic")
-gistic.dfsp.pairedFST <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/PairedFST")
-gistic.dfsp.AllFST <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/AllFST")
-gistic.dfsp.ClassicOnly <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/ClassicOnly")
-gistic.dfsp.Metastasis <- readGistic(gisticDir = "D:/Sarcoma/Methylation_profiling/DFSP/CNV/GISTIC/Metastasis")
+mean_pre_filter <- mean(
+    pre_filter_counts$n_variants_before, na.rm = TRUE
+)
+cat("Pre-filter mean variants: ", mean_pre_filter, "\n")
 
-gisticChromPlot(gistic = gistic.dfsp.pdgfb, markBands = "all", fdrCutOff = 0.25,
-                ref.build = "hg19")
+median_pre_filter <- median(
+    pre_filter_counts$n_variants_before, na.rm = TRUE
+)
+cat("Pre-filter median variants: ", median_pre_filter, "\n")
 
-coGisticChromPlot(gistic1 = gistic.dfsp.ClassicOnly, gistic2 = gistic.dfsp.Metastasis, 
-                  g1Name = "Classic", g2Name = "Metastasis", type = 'Del',
-                  txtSize = 0.8, rugTickSize = 0.2, mutGenesTxtSize = 2.6,
-                  fdrCutOff = 0.25, ref.build = "hg19")
-coGisticChromPlot(gistic1 = gistic.dfsp.pdgfb, gistic2 = gistic.dfsp.pdgfd, 
-                  g1Name = "PDGFB", g2Name = "PDGFD", type = 'Del', 
-                  fdrCutOff = 0.05)
+# Loop through all parameter combinations
+for (i in 1:nrow(params_grid)) {
 
-features <- c("CN.subgroup.WardD2", "Meth.subgroup.probesel", "Molecular.subtype", 
-              "Histology.Subtype", "Sex" ,"Age.Cat",
-              "Site.Category.Broad", "Local.recurrence","Metastasis")
+    # Create a new parameter set based on the base parameters
+    current_params <- filter_params
+    
+    # Update with the current grid values
+    current_params$min_vaf <- params_grid$min_vaf[i]
+    current_params$min_vad <- params_grid$min_vad[i]
+    current_params$min_depth <- params_grid$min_depth[i]
+    
+    # Create a descriptive name for this parameter combination
+    param_name <- paste0(
+        "vaf", current_params$min_vaf, 
+        "_vad", current_params$min_vad, 
+        "_depth", current_params$min_depth
+    )
+    
+    message(paste0("Testing parameter combination: ", param_name))
+    
+    # Run the filter test
+    filter_res <- TestVariantFilter(
+        filter_params = current_params,
+        maf = maf
+    )
+    
+    mean_post_filter <- mean(
+        filter_res$filter_res$n_variants_after, na.rm = TRUE
+    )
 
-phenoData$Tumor_Sample_Barcode <- phenoData$Sample.ID
+    cat("Post-filter mean variants: ", mean_post_filter, "\n")
 
-gisticOncoPlot(gistic = gistic.dfsp, clinicalData = phenoData, 
-               clinicalFeatures = features, sortByAnnotation = TRUE, top = 30,
-               gene_mar	= 10, barcode_mar = 10, sepwd_genes = 0.5, sepwd_samples = 0.25,
-               annotationFontSize = 1.2, legendFontSize = 1.2, fontSize = 0.3,
-               showTumorSampleBarcodes = FALSE, removeNonAltered = FALSE,
-               colors = colors)
+    median_post_filter <- median(
+        filter_res$filter_res$n_variants_after, na.rm = TRUE
+    )
 
-colors<- c("red","blue")
-names(colors) <- c("Amp","Del")
-gisticOncoPlot(gistic = gistic.dfsp.pdgfd, removeNonAltered = FALSE)
+    cat("Post-filter median variants: ", median_post_filter, "\n")
 
-cnv.df <- data.frame(t(gistic.dfsp@cnMatrix))
-cnv.df$Sample.ID <- rownames(cnv.df)
-SampleSheet_DFSP_CNV <- merge(SampleSheet_DFSP, cnv.df, by = "Tumor_Sample_Barcode", all.x = TRUE)
-write.csv(SampleSheet_DFSP_CNV, "D:/Sarcoma/Methylation_profiling/DFSP/phenoData_DFSP_97pt_Meth_immune_CNV.csv")
+    # Get summary metrics about this filter combination
+    filter_summary <- tibble(
+        param_name = param_name,
+        min_vaf = current_params$min_vaf,
+        min_vad = current_params$min_vad,
+        min_depth = current_params$min_depth,
+        total_variants = nrow(maf),
+        total_variants_retain = nrow(filter_res$maf_filtered),
+        total_percent_return = round(
+            total_variants_retain / total_variants * 100, 2
+        ),
+        mean_pre_filter = mean_pre_filter,
+        mean_post_filter = mean_post_filter,
+        mean_percent_retain = round(
+            mean_post_filter / mean_pre_filter * 100, 2
+        ),
+        median_pre_filter = median_pre_filter,
+        median_post_filter = median_post_filter,
+        median_percent_retain = round(
+            median_post_filter / median_pre_filter * 100, 2
+        )
+    )
+    
+    # Append to a summary file
+    if (i == 1) {
+        write_csv(
+            filter_summary, 
+            file.path(filter_res_dir, "variant_filter_summary.csv")
+        )
 
-library(clusterProfiler)
-library(org.Hs.eg.db)
-library(AnnotationDbi)
-library(dplyr)
-#GSEA analysis requires a ranked gene list, which contains three features:
-#numeric vector: fold change or other type of numerical variable
-#named vector: every number has a name, the corresponding gene ID
-#sorted vector: number should be sorted in decreasing order
+    } else {
+        write_csv(
+            filter_summary, 
+            file.path(filter_res_dir, "variant_filter_summary.csv"), 
+            append = TRUE
+        )
+    }
 
-d = data.frame(gistic.dfsp.pdgfb@gene.summary)
-## assume 1st column is ID
-## 2nd column is FC or other type of numerical variable
+    # Save the filtering results
+    filter_results[[param_name]] <- filter_res
+}
 
-## feature 1: numeric vector
-geneList = d[,2]
+## Find the optimal filtering parameters, target mean variants: 1000
+## we should use the median as the target value, as it is less affected by outliers
+optimal_res <- read_csv(
+    here(filter_res_dir, "variant_filter_summary.csv"),
+    show_col_types = FALSE
+) |> 
+    arrange(desc(median_post_filter)) |>
+    filter(param_name == "vaf0.01_vad3_depth10") |>
+    filter(
+        mean_post_filter > 1000 & 
+        median_post_filter > 500
+    )
 
-## feature 2: named vector
-names(geneList) = as.character(d[,1])
+## vaf = 0.01, vad =3, depth = 10
+maf_list <- list(
+    maf = maf,
+    maf_filtered = filter_results[["vaf0.01_vad3_depth10"]][["maf_filtered"]]
+)
 
-## feature 3: decreasing order
-geneList = sort(geneList, decreasing = TRUE)
+qsave(maf_list, here(filter_res_dir, "variant_filter_results.qs"))
 
-gene_ids <- AnnotationDbi::select(org.Hs.eg.db, keys = names(geneList), columns = "ENTREZID", keytype = "SYMBOL")
-names(geneList) <- gene_ids[,2]
-geneList <- geneList[!is.na(names(geneList))]
+# Create a MAF object from filtered data for further analysis
+maf_filtered <- read.maf(maf = filter_res$maf_filtered)
 
-ego.cc <- gseGO(geneList     = geneList,
-              OrgDb        = org.Hs.eg.db,
-              ont          = "CC",
-              keyType      = "ENTREZID",
-              minGSSize    = 100,
-              maxGSSize    = 500,
-              pvalueCutoff = 0.05,
-              verbose      = TRUE)
+# Save filtered data
+# qsave(
+#   maf_filtered, 
+#   here("data/wes/annotation/merged/annovar_maf_merged_filtered.qs")
+# )
 
-ego.bp <- gseGO(geneList     = geneList,
-                OrgDb        = org.Hs.eg.db,
-                ont          = "BP",
-                keyType      = "ENTREZID",
-                minGSSize    = 100,
-                maxGSSize    = 500,
-                pvalueCutoff = 0.05,
-                verbose      = TRUE)
+############################################################################
+## Explore sample groups --------------
+############################################################################
+variant_filter_results <- qread(
+    here(filter_res_dir, "variant_filter_results.qs")
+)
 
-ego.mf <- gseGO(geneList     = geneList,
-                OrgDb        = org.Hs.eg.db,
-                ont          = "MF",
-                keyType      = "SYMBOL",
-                minGSSize    = 100,
-                maxGSSize    = 500,
-                pvalueCutoff = 0.05,
-                verbose      = TRUE)
+# maf_filtered <- qread(
+#   here("data/wes/annotation/merged/annovar_maf_merged_filtered.qs")
+# )
 
-dotplot(ego.cc, showCategory=10) + ggtitle("dotplot for GSEA")
+maf_list <- list(
+    maf = read.maf(maf = variant_filter_results$maf),
+    maf_filtered = read.maf(maf = variant_filter_results$maf_filtered)
+)
 
-#Survival analysis
-library(survival)
-library(survminer)
+sample_info <- read_excel(
+    here("data/clinical/DFSP-Multiomics-Sample list (updated 2024.09).xlsx")
+) |> 
+    select(Sample.ID, Specimen.Class, Histology.Nature)
 
-# Convert survival months into numeric variables
-SampleSheet_DFSP_CNV$OS.time <- as.numeric(SampleSheet_DFSP_CNV$OS.time)
-SampleSheet_DFSP_CNV$RFS.time <- as.numeric(SampleSheet_DFSP_CNV$RFS.time)
-
-# Produce survival object
-survival_obj <- Surv(SampleSheet_DFSP_CNV$OS.time, SampleSheet_DFSP_CNV$OS.status == "1:DECEASED")
-survival_obj <- Surv(SampleSheet_DFSP_CNV$RFS.time, SampleSheet_DFSP_CNV$RFS.status== "1:Recurrence")
-
-km_curves <- survfit(survival_obj ~ AP_4.11q24.1, data = SampleSheet_DFSP_CNV)
-DP_12.22q13.33 AP_4.11q24.1
-SampleSheet_DFSP_CNV$AP_4.11q24.1
-
-surv_plot <- ggsurvplot(km_curves, data = SampleSheet_DFSP_CNV, conf.int = FALSE, pval = TRUE,
-                        pval.method = TRUE, risk.table = TRUE)
-surv_plot
-
-
-fisher.test(table(SampleSheet_DFSP_CNV$AP_4.11q24.1, SampleSheet_DFSP_CNV$FST))
-
-ddfsp <- read.maf(maf = dfsp.maf.filtered)
-
-, 
-                 gisticAllLesionsFile = all.lesions,
-                 gisticAmpGenesFile = amp.genes,
-                 gisticDelGenesFile = del.genes,
-                 gisticScoresFile = scores.gis,
-                 clinicalData = dfsp.clin.path)
-
-dfsp2 <- read.maf(maf = dfsp.maf, 
-                 gisticAllLesionsFile = all.lesions.fst,
-                 gisticAmpGenesFile = amp.genes.fst,
-                 gisticDelGenesFile = del.genes.fst,
-                 gisticScoresFile = scores.gis.fst,
-                 clinicalData = dfsp.clin.path)
-
-dfsp.gistic <- readGistic(gisticAllLesionsFile = all.lesions,
-                          gisticAmpGenesFile = amp.genes,
-                          gisticDelGenesFile = del.genes,
-                          gisticScoresFile = scores.gis)
-dfsp.classic <- read.maf(maf = dfsp.maf.classic, 
-                         gisticAllLesionsFile = all.lesions.classic,
-                         gisticAmpGenesFile = amp.genes.classic,
-                         gisticDelGenesFile = del.genes.classic,
-                         gisticScoresFile = scores.gis.classic,
-                         clinicalData = dfsp.clin.path)
-
-dfsp.classic <- read.maf(maf = dfsp.maf.classic, 
-                         clinicalData = dfsp.clin.path)
-dfsp.fst <- read.maf(maf = dfsp.maf.fst, 
-                     clinicalData = dfsp.clin.path)
-dfsp.paired <- read.maf(maf = dfsp.maf.paired, 
-                        clinicalData = dfsp.clin.path)
-
-dfsp.fst <- read.maf(maf = dfsp.maf.fst, 
-                     gisticAllLesionsFile = all.lesions.fst,
-                     gisticAmpGenesFile = amp.genes.fst,
-                     gisticDelGenesFile = del.genes.fst,
-                     gisticScoresFile = scores.gis.fst,
-                     clinicalData = dfsp.clin.path)
-
-dfsp.pdgfb <- read.maf(maf = dfsp.maf.pdgfb, 
-                     gisticAllLesionsFile = all.lesions.pdgfb,
-                     gisticAmpGenesFile = amp.genes.pdgfb,
-                     gisticDelGenesFile = del.genes.pdgfb,
-                     gisticScoresFile = scores.gis.pdgfb,
-                     clinicalData = dfsp.clin.path)
-
-dfsp.pdgfd <- read.maf(maf = dfsp.maf.pdgfd, 
-                       gisticAllLesionsFile = all.lesions.pdgfd,
-                       gisticAmpGenesFile = amp.genes.pdgfd,
-                       gisticDelGenesFile = del.genes.pdgfd,
-                       gisticScoresFile = scores.gis.pdgfd,
-                       clinicalData = dfsp.clin.path)
-
-dfsp.gistic <- readGistic(gisticAllLesionsFile = all.lesions,
-                                gisticAmpGenesFile = amp.genes,
-                                gisticDelGenesFile = del.genes,
-                                gisticScoresFile = scores.gis)
-
-dfsp.gistic.pdgfb <- readGistic(gisticAllLesionsFile = all.lesions.pdgfb,
-                               gisticAmpGenesFile = amp.genes.pdgfb,
-                               gisticDelGenesFile = del.genes.pdgfb,
-                               gisticScoresFile = scores.gis.pdgfb)
-
-dfsp.gistic.pdgfd <- readGistic(gisticAllLesionsFile = all.lesions.pdgfd,
-                                gisticAmpGenesFile = amp.genes.pdgfd,
-                                gisticDelGenesFile = del.genes.pdgfd,
-                                gisticScoresFile = scores.gis.pdgfd)
-
-dfsp.gistic.fst <- readGistic(gisticAllLesionsFile = all.lesions.fst,
-                              gisticAmpGenesFile = amp.genes.fst,
-                              gisticDelGenesFile = del.genes.fst,
-                              gisticScoresFile = scores.gis.fst)
-
-dfsp.gistic.classic <- readGistic( gisticAllLesionsFile = all.lesions.classic,
-                                   gisticAmpGenesFile = amp.genes.classic,
-                                   gisticDelGenesFile = del.genes.classic,
-                                   gisticScoresFile = scores.gis.classic)
+## Sample groups
+sample_groups <- list(
+  u_dfsp = c("Classic", "Myxoid", "Pigmented"),
   
+  pre_fst = c(
+    "Pretransformed classic",
+    "Pretransformed myxoid",
+    "Paired classic",
+    "Paired myxoid"
+  ),
+
+  post_fst = c(
+    "Posttransformed FST",
+    "Paired FST",
+    "Paired Pleomorphic"
+  ),
+
+  fs_dfsp = c("Unpaired FST")
+)
+
+## Two samples were not appeared in the maf data
+## "DFSP-139-T"    "DFSP-294-T-M1"
+setdiff(
+  sort(sample_info |> filter(Specimen.Class == "Tumour") |> pull(Sample.ID)),
+  sort(maf_list$maf_filtered@clinical.data$Tumor_Sample_Barcode)
+)
+
+## Add the sample groups to clincial data
+clinical_data <- maf_list$maf_filtered@clinical.data |> 
+  left_join(
+    sample_info |> 
+      filter(Specimen.Class == "Tumour") |>
+      rename(Tumor_Sample_Barcode = Sample.ID)
+    ) |> 
+  mutate(
+    sample_group = case_when(
+      Histology.Nature %in% sample_groups$u_dfsp ~ "u_dfsp",
+      Histology.Nature %in% sample_groups$pre_fst ~ "pre_fst",
+      Histology.Nature %in% sample_groups$post_fst ~ "post_fst",
+      Histology.Nature %in% sample_groups$fs_dfsp ~ "fs_dfsp",
+      TRUE ~ "other"
+    )
+  )
+
+maf_list$maf_filtered@clinical.data <- clinical_data
+maf_list$maf@clinical.data <- clinical_data
+
+## Create the sample lists for the comparison
+samples <- list(
+  entire_cohort = clinical_data |> 
+      pull(Tumor_Sample_Barcode),
+
+  pre_fst_vs_post_fst = clinical_data |> 
+      filter(sample_group %in% c("pre_fst", "post_fst")) |>
+      pull(Tumor_Sample_Barcode),
   
-getSampleSummary(dfsp) #Shows gene summary.
-getGeneSummary(dfsp) #shows clinical data associated with samples
-getClinicalData(dfsp) #Shows all fields in MAF
-getFields(dfsp) #Writes maf summary to an output file with basename laml.
-write.mafSummary(maf = dfsp, basename = 'dfsp')
+  pre_fst_vs_u_dfsp = clinical_data |> 
+      filter(sample_group %in% c("pre_fst", "u_dfsp")) |>
+      pull(Tumor_Sample_Barcode),
+  
+  post_fst_vs_u_dfsp = clinical_data |>
+      filter(sample_group %in% c("post_fst", "u_dfsp")) |>
+      pull(Tumor_Sample_Barcode)
+)
 
-plotmafSummary(maf = dfsp, rmOutlier = TRUE, addStat = 'median', dashboard = TRUE, titvRaw = FALSE)
+sample_group_colors <- list(
+  sample_group = c(
+    "u_dfsp" = "#3498db",    # Blue - for untransformed DFSP
+    "pre_fst" = "#2ecc71",   # Green - for pre-transformation samples
+    "post_fst" = "#e74c3c",  # Red - for post-transformation samples
+    "fs_dfsp" = "#9b59b6"    # Purple - for unpaired FST
+  )
+)
 
+# histology_colors <- list(
+#   Histology.Nature = c(
+#     # u_dfsp subtypes
+#     "Classic" = "#3498db",       # Blue
+#     "Myxoid" = "#2980b9",        # Darker blue
+#     "Pigmented" = "#85c1e9",     # Lighter blue
+    
+#     # pre_fst subtypes
+#     "Pretransformed classic" = "#2ecc71",  # Green
+#     "Pretransformed myxoid" = "#27ae60",   # Darker green
+#     "Paired classic" = "#58d68d",          # Lighter green
+#     "Paired myxoid" = "#82e0aa",           # Very light green
+    
+#     # post_fst subtypes
+#     "Posttransformed FST" = "#e74c3c",     # Red
+#     "Paired FST" = "#c0392b",              # Darker red
+#     "Paired Pleomorphic" = "#f1948a",      # Lighter red
+    
+#     # fs_dfsp subtype
+#     "Unpaired FST" = "#9b59b6"             # Purple
+#   )
+# )
 
-genes <- c("CDKN2A","CDKN2B","TP53", "TERT", "MYC", fst.df)
-del.genes.table <- read.delim(del.genes.fst, sep ="\t", header = TRUE)
-genes <- c(del.genes$X22q13.31[-(1:3)][1:6],del.genes$X22q13.33[-(1:3)][1:30])
-genes <- c(fst.df[2:11], del.genes.table$X22q13.31[-(1:3)][1:6], "CDKN2A","CDKN2B","TP53")
-genes <- c(fst.df2, del.genes.table$X22q13.31[-(1:3)][1:6], "CDKN2A","CDKN2B","TP53")
+group_compare_res <- list()
+top_n_genes <- 30
 
+for (obj in names(maf_list)) {
+    
+    maf_obj <- maf_list[[obj]]
 
-cols = RColorBrewer::brewer.pal(n = 6, name = 'Paired')
-hist_cols <- cols[1:2]
-names(hist_cols) <- c("Classic", "FST")
-hist_cols <- list(Histology.Subtype = hist_cols)
-mol_cols <- cols[3:4]
-names(mol_cols) <- c("PDGFB", "PDGFD")
-mol_cols <- list(Molecular.Subtype = mol_cols)
-ori_cols <- cols[5:6]
-names(ori_cols) <- c("Primary", "Metastasis")
-ori_cols <- list(Origin = ori_cols)
+    for (i in names(samples)) {
 
-oncoplot(maf = dfsp2, top = 20, 
-         clinicalFeatures = c("Histology.Subtype", "Molecular.Subtype", "Origin"), 
-         genes = genes,  removeNonMutated = FALSE,
-         annotationColor = c(hist_cols, mol_cols, ori_cols),
-         sortByAnnotation = TRUE, pathways = NULL, showTumorSampleBarcodes = TRUE,
-         anno_height = 1, legend_height = 4, gene_mar = 10, barcode_mar = 6,
-         showTitle = FALSE)
+        ## Get the current sample subset
+        sample_list <- samples[[i]]
 
+        maf_subset <- subsetMaf(
+            maf = maf_obj,
+            tsb = sample_list,
+            verbose = FALSE
+        )
 
+        n_samples <- nrow(maf_subset@clinical.data)
+            
+        ## Perform group comparison
+        if (grepl("_vs_", i)) {
 
-mol_cols <- c("#B2DF8A", "#33A02C")
-"#A6CEE3" "#1F78B4" "#B2DF8A" "#33A02C"
-"#FB9A99" "#E31A1C" "#FDBF6F" "#FF7F00"
-cols <- list(Histology.Subtype = hist_cols, Molecular.Subtype = mol_cols)
-cnv_cols <- c("#1F78B4", "#E31A1C")
-names(cnv_cols) <- c("Del", "Amp")
+            groups <- str_split(i, "_vs_")[[1]]
 
-gisticOncoPlot(gistic = dfsp.gistic, 
-               clinicalData = getClinicalData(x = dfsp), 
-               clinicalFeatures = c("Histology.Subtype", "Molecular.Subtype", "Origin"),
-               sortByAnnotation = TRUE, top = 10, removeNonAltered = FALSE, 
-               colors = cnv_cols,
-               annotationColor = c(hist_cols, mol_cols, ori_cols),
-               gene_mar = 10, barcode_mar = 6, SampleNamefontSize = 1, annotationFontSize = 1.5,
-               showTumorSampleBarcodes = TRUE)
+            group1 <- groups[1]
 
-gisticChromPlot(gistic = dfsp.gistic.pdgfb, ref.build = "hg38", txtSize = 1.5, cytobandTxtSize = 1.5)
-gisticChromPlot(gistic = dfsp.gistic.fst, ref.build = "hg38", markBands = "all",
-                txtSize = 1.5, cytobandTxtSize = 1, mutGenesTxtSize = 1.5)
+            group2 <- groups[2]
 
-gisticChromPlot(gistic = dfsp.gistic.pdgfd, ref.build = "hg38", txtSize = 1.5, cytobandTxtSize = 1.5)
-gisticChromPlot(gistic = dfsp.gistic.classic)
+            ## Extract sample IDs for each group
+            group1_samples <- maf_subset@clinical.data$Tumor_Sample_Barcode[
+                maf_subset@clinical.data[["sample_group"]] == group1]
 
-gisticChromPlot(gistic1 = dfsp.pdgfb, gistic2 = dfsp.fst, g1Name = "Classic", g2Name = "FST", type = 'Amp')
-coGisticChrom
+            group2_samples <- maf_subset@clinical.data$Tumor_Sample_Barcode[
+                maf_subset@clinical.data[["sample_group"]] == group2]
 
-fst.vs.classic <- mafCompare(m1 = dfsp.fst, m2 = dfsp.classic, 
-                             m1Name = 'FST', m2Name = 'Classic', 
-                             minMut = 1, useCNV = TRUE,
-                             pathways = FALSE)
-print(fst.vs.classic)
-fst.vs.classic$results[adjPval<0.05]
-forestPlot(mafCompareRes = fst.vs.classic, pVal = 0.1)
+            ## Check if we have enough samples in each group
+            if (length(group1_samples) == 0 || length(group2_samples) == 0) {
+                warning("Not enough samples in at least one group for comparison")
+                return(comparison_result = NULL)
+            }
 
-genes <- print(fst.vs.classic)$results$Hugo_Symbol[1:10]
-coOncoplot(m1 = dfsp.classic, m2 = dfsp.fst, m1Name = 'Classic', m2Name = 'FST', genes = genes, removeNonMutated = FALSE)
+            ## Perform statistical comparison
+            comparison_result <- mafCompare(
+                    m1 = subsetMaf(
+                        maf_subset, tsb = group1_samples, verbose = FALSE
+                    ),
+                    m2 = subsetMaf(
+                        maf_subset, tsb = group2_samples, verbose = FALSE
+                    ),
+                    m1Name = group1,
+                    m2Name = group2,
+                    minMut = 2
+                )
+        
+        ## Extract significant results (adjust p-value threshold as needed)
+        sig_res <- comparison_result$results |> 
+            filter(pval < 0.01 & or > 1) |> 
+            # filter(adjPval < 0.05) |>
+            arrange(adjPval)
+        
+        message(paste("Number of significant genes:", nrow(sig_res)))
 
-pdgfb.vs.pdgfd <- mafCompare(m1 = dfsp.pdgfb, m2 = dfsp.pdgfd, 
-                             m1Name = 'PDGFB', m2Name = 'PDGFD', 
-                             minMut = 2, useCNV = TRUE,
-                             pathways = FALSE)
-print(pdgfb.vs.pdgfd)
-coOncoplot(m1 = dfsp.pdgfb, m2 = dfsp.pdgfd, m1Name = 'PDGFB', m2Name = 'PDGFD', genes = genes, removeNonMutated = FALSE)
+        group_compare_res[[obj]][[i]] <- comparison_result$results
+        
+        ## Visualize the results
+        # pdf_file <- here(fig_dir, paste0("forestplot_", i ,".pdf"))
+        # pdf(file = pdf_file, width = 8, height = 6)
+        # forestPlot(mafCompareRes = comparison_result, pVal = 0.05)
+        # dev.off()
 
-pws = pathways(maf = dfsp, plotType = 'treemap')
-PlotOncogenicPathways(maf = dfsp, removeNonMutated = FALSE, pathways = c("MYC", "TP53"),  showTumorSampleBarcodes = TRUE)
-PlotOncogenicPathways()
+        }
+        
+        # Plot the oncoplot
+        MafOncoPlot(
+            maf = maf_subset,
+            top_n_genes = top_n_genes,
+            clinical_features = "sample_group",
+            annotation_colors = sample_group_colors,
+            sort_by_annotation = FALSE,
+            show_sample_names = FALSE,
+            remove_non_mutated = FALSE,
+            title = paste0(
+                "Mutation Landscape: ", i, 
+                " n = , ", n_samples, 
+                " top ", top_n_genes, "genes)"
+            ),
+            font_size = 0.7,
+            width = 10,
+            height = 8,
+            fig_dir = filter_res_dir,
+            fig_name = paste0("oncoplot_", obj, "_", i),
+            is_pdf = TRUE
+        )
+    }
+    
+    MafOncoPlot(
+            maf = maf_object,
+            top_n_genes = top_n_genes,
+            clinical_features = "sample_group",
+            annotation_colors = sample_group_colors,
+            sort_by_annotation = FALSE,
+            show_sample_names = FALSE,
+            remove_non_mutated = FALSE,
+            title = paste0(
+                "Mutation Landscape: ", i, 
+                " n = , ", n_samples, 
+                " top ", top_n_genes, "genes)"
+            ),
+            font_size = 0.7,
+            width = 10,
+            height = 8,
+            fig_dir = filter_res_dir,
+            fig_name = paste0("oncoplot_", obj, "_", i),
+            is_pdf = TRUE
+    )
+}
 
-fst.ce <- clinicalEnrichment(maf = dfsp, clinicalFeature = "Histology.Subtype", 
-                             annotationDat = getClinicalData(x = dfsp),
-                             useCNV = TRUE,
-                             pathways = FALSE)
-fst.ce$groupwise_comparision[p_value <0.05]
-fst.df <- fst.ce$pairwise_comparision[fdr<0.05]$Hugo_Symbol
-fst.df2 <- fst.ce2$pairwise_comparision[fdr<0.05]$Hugo_Symbol
-plotEnrichmentResults(enrich_res = fst.ce, pVal = 0.05, 
-                      geneFontSize = 1.5, 
-                      annoFontSize = 0.8, 
-                      legendFontSize = 1.8)
+# Save the group comparison results
+write_xlsx(
+    group_compare_res$maf_filtered, 
+    here(filter_res_dir, "post_filter_group_comparison_results.xlsx")
+)
 
+write_xlsx(
+    group_compare_res$maf, 
+    here(filter_res_dir, "pre_filter_group_comparison_results.xlsx")
+)
 
+############################################################################
+## General variants filtering --------------
+############################################################################
+maf <- qread(here("data/wes/annotation/merged/annovar_maf_merged.qs")) |> 
+    separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE) |> 
+    as_tibble()
 
-#Mutational signature
-library("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE)
-BSgenome.Hsapiens.UCSC.hg38
-dfsp.tnm = trinucleotideMatrix(maf = dfsp, prefix = 'chr', add = TRUE, ref_genome = "BSgenome.Hsapiens.UCSC.hg38")
-library('NMF')
-dfsp.sign = estimateSignatures(mat = dfsp.tnm, nTry = 6)
-plotCophenetic(res = dfsp.sign)
-dfsp.sig = extractSignatures(mat = dfsp.tnm, n = 3)
-dfsp.v3.cosm = compareSignatures(nmfRes = dfsp.sig, sig_db = "SBS")
-library('pheatmap')
-pheatmap::pheatmap(mat = dfsp.v3.cosm$cosine_similarities, cluster_rows = FALSE, 
-                   main = "cosine similarity against validated signatures")
-maftools::plotSignatures(nmfRes = dfsp.sig, title_size = 1.2, sig_db = "SBS")
+# Sumarize the variants before filtering
+summary_before_filter <- maf |>
+    count(Tumor_Sample_Barcode, name = "n_variants_before") |>
+    summarise(
+        across(
+            n_variants_before,
+            list(
+                total = ~ sum(.x),
+                mean = ~ mean(.x, na.rm = TRUE),
+                median = ~ median(.x, na.rm = TRUE)
+            ),
+            .names = "before_filter_{.fn}"
+        )
+    )
+
+cat(
+    sprintf("Before-filter total variants    = %d", summary_before_filter$before_filter_total), "\n",
+    sprintf("Before-filter mean variants    = %.2f", summary_before_filter$before_filter_mean), "\n",
+    sprintf("Before-filter median variants  = %.2f", summary_before_filter$before_filter_median), "\n"
+)
+
+colnames(maf)
+unique(maf$Variant_Classification)
+unique(maf$ExonicFunc.refGene)
+unique(maf$Func.refGene)
+
+maf |> 
+    select(
+        Variant_Classification, Func.refGene, ExonicFunc.refGene,
+        VAD, DP, AF, gnomAD_exome_ALL
+    )
+
+maf <- maf |> 
+    mutate(
+        VAD = as.numeric(VAD),
+        DP = as.numeric(DP),
+        AF = as.numeric(AF),
+        gnomAD_exome_ALL = as.numeric(
+            replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
+        )
+    )
+
+# Use general filtering thresholds to filter out potenital sequencing errors
+# or artifacts while retaining true variants
+min_rd <- 8              # Minimum read depth
+min_vad <- 4             # Minimum variant allele depth, 3-10
+min_vaf <- 0.05          # Minimum variant allele frequency
+max_pop_freq <- 0.001    # Maximum population frequency (polymorphism)
+
+maf_filtered <- maf |> 
+    ## Filter out variants with low read depth, variant allele depth,
+    dplyr::filter(
+        is.na(DP) | DP >= min_rd,
+        is.na(VAD) | as.numeric(VAD) >= min_vad,
+        is.na(AF) | as.numeric(AF) >= min_vaf
+    ) |> 
+    ## Filter out variants with high population frequency
+    dplyr::filter(
+        is.na(gnomAD_exome_ALL) | gnomAD_exome_ALL <= max_pop_freq
+    ) |> 
+    arrange(gnomAD_exome_ALL) |> 
+    ## Filter out silent (synonymous) variants
+    dplyr::filter(
+        !(Variant_Classification %in% c("Silent")),
+        !(Func.refGene %in% c("synonymous_SNV")),
+        !(ExonicFunc.refGene %in% c("synonymous SNV"))
+
+    ) |> 
+    ## Inlcude Filter out non-exonic variants
+    dplyr::filter(
+        Func.refGene %in% c(
+            "exonic", "splicing", "UTR5"
+        )
+    )
+
+# Cancer hotspots fitlering to prioritize the most clinically relevant variants
+snv_hotspots <- read_xlsx(
+    here("data/clinical/hotspots_v2.xlsx"),
+    sheet ="SNV-hotspots"
+)
+
+indel_hotspots <- read_xlsx(
+    here("data/clinical/hotspots_v2.xlsx"),
+    sheet ="INDEL-hotspots"
+)

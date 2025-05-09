@@ -1,7 +1,6 @@
-
 ## Load required libraries
 suppressPackageStartupMessages(
-    suppressMessages({
+    suppressWarnings({
         library(maftools)
         library(qs)
         library(fs)
@@ -12,11 +11,8 @@ suppressPackageStartupMessages(
     })
 )
 
-
 SavePlot <- function(
-    plot, width = 8, height = 6, only_png = TRUE, dir, filename
-) {
-
+    plot, width = 8, height = 6, only_png = TRUE, dir, filename) {
     ### Save png or pdf plots using ggplot2
 
     fs::dir_create(here(dir))
@@ -33,7 +29,6 @@ SavePlot <- function(
             dpi = 300,
             device = ifelse(img_type == ".png", png, cairo_pdf)
         )
-
     } else {
         ### Save both png and pdf
         for (img_type in c(".png", ".pdf")) {
@@ -60,7 +55,7 @@ figure_theme <- function(line_width = 0.3, base_size = 8) {
     ) +
         theme(
             plot.title = element_text(
-                face = "plain", #"bold", 
+                face = "plain", # "bold",
                 hjust = 0.5, size = base_size
             ),
             strip.background = element_blank(),
@@ -72,7 +67,7 @@ figure_theme <- function(line_width = 0.3, base_size = 8) {
                 # face = "bold"
             ),
             legend.key.size = unit(0.3, "cm"),
-            legend.text = element_text(size = base_size -1),
+            legend.text = element_text(size = base_size - 1),
             legend.box = "vertical",
             # legend.box = "horizontal",
             legend.box.just = "left", # Align legend box to the left,
@@ -112,7 +107,7 @@ figure_theme2 <- function() {
                 # face = "bold"
             ),
             legend.key.size = unit(0.3, "cm"),
-            legend.text = element_text(size = base_size -1),
+            legend.text = element_text(size = base_size - 1),
             legend.box = "vertical",
             # legend.box = "horizontal",
             legend.box.just = "left", # Align legend box to the left,
@@ -120,7 +115,7 @@ figure_theme2 <- function() {
             axis.text = element_text(color = "black"),
             # panel.grid = element_blank(),
             axis.ticks = element_line(
-                linewidth = line_width, #color = "black"
+                linewidth = line_width, # color = "black"
             ),
             # axis.line = element_line(color = "black", linewidth = line_width),
             # axis.line = element_blank(),
@@ -134,38 +129,35 @@ figure_theme2 <- function() {
 plot_theme <- function() {
     # theme_classic(base_size = 10, base_family = "Arial") +
     # theme_classic() +
-        theme(
-            plot.title = element_text(face = "bold", hjust = 0.5, size = 9),
-            # strip.background = element_blank(),
-            # axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-            legend.position = "top",
-            legend.title = element_text(
-                hjust = 0, 
-                size = 8
-                # face = "bold"
-            ),
-            legend.key.size = unit(0.3, "cm"),
-            legend.text = element_text(size = 8),
-            legend.box = "vertical",
-            # legend.box = "horizontal",
-            legend.box.just = "left", # Align legend box to the left,
-            text = element_text(size = 11),
-            axis.text = element_text(color = "black"),
-            # axis.ticks = element_line(linewidth = 0.3, color = "black"),    # Set the thickness of axis ticks
-            # axis.line = element_line(color = "black", linewidth = 0.5),
-            # axis.line = element_blank(),
-            # axis.line = element_line(linewidth = 0.5, color = "black"),     # Set the thickness of axis lines
-            # panel.border = element_rect(linewidth = 0.5, color = "black", fill = NA),
-            plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), units = "cm")
-        )
-
+    theme(
+        plot.title = element_text(face = "bold", hjust = 0.5, size = 9),
+        # strip.background = element_blank(),
+        # axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top",
+        legend.title = element_text(
+            hjust = 0,
+            size = 8
+            # face = "bold"
+        ),
+        legend.key.size = unit(0.3, "cm"),
+        legend.text = element_text(size = 8),
+        legend.box = "vertical",
+        # legend.box = "horizontal",
+        legend.box.just = "left", # Align legend box to the left,
+        text = element_text(size = 11),
+        axis.text = element_text(color = "black"),
+        # axis.ticks = element_line(linewidth = 0.3, color = "black"),    # Set the thickness of axis ticks
+        # axis.line = element_line(color = "black", linewidth = 0.5),
+        # axis.line = element_blank(),
+        # axis.line = element_line(linewidth = 0.5, color = "black"),     # Set the thickness of axis lines
+        # panel.border = element_rect(linewidth = 0.5, color = "black", fill = NA),
+        plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), units = "cm")
+    )
 }
 
 TestVariantFilter <- function(
     filter_params,
-    maf
-) {
-    
+    maf) {
     # Apply filtering with parameters
     maf_filtered <- maf |>
         ## Filter by sequencing quality
@@ -202,7 +194,7 @@ TestVariantFilter <- function(
             n_variants_after = replace_na(n_variants_after, 0),
             # percent_retained = round(n_variants_after / n_variants_before * 100, 1)
         )
-    
+
     list(
         maf_filtered = maf_filtered,
         filter_res = filter_res
@@ -212,9 +204,8 @@ TestVariantFilter <- function(
 PlotVariantFilter <- function(
     is_save = FALSE,
     fig_dir = "figures/variant_filtering",
-    fig_name = "filter_params"
-) {
-     # Create comparison visualizations
+    fig_name = "filter_params") {
+    # Create comparison visualizations
     ## 1. Bar plot of variant counts before/after by sample
     p <- filter_res |>
         pivot_longer(
@@ -255,19 +246,19 @@ PlotVariantFilter <- function(
         geom_text(
             data = data.frame(
                 filter_status = "Before filtering",
-                x = 20000,  # Adjust this position as needed
-                y = I(0.3)    # Use relative position on y-axis
+                x = 20000, # Adjust this position as needed
+                y = I(0.3) # Use relative position on y-axis
             ),
             aes(x = x, y = y, label = sprintf(
                 "Filter params:\nread depth >= %d\nvaf >= %.2f\nvad >= %d\npop_freq <= %.4f",
-                filter_params$min_depth, 
+                filter_params$min_depth,
                 filter_params$min_vaf,
                 filter_params$min_vad,
                 filter_params$max_population_freq
             )),
-            hjust = 0,  # Left-aligned text
-            vjust = 0,  # Top-aligned text
-            size = 6, 
+            hjust = 0, # Left-aligned text
+            vjust = 0, # Top-aligned text
+            size = 6,
             size.unit = "pt",
             color = "black",
             fontface = "plain"
@@ -287,7 +278,6 @@ PlotVariantFilter <- function(
         )
 
     if (is_save) {
-    
         SavePlot(
             plot = p,
             width = 4,
@@ -296,7 +286,6 @@ PlotVariantFilter <- function(
             filename = fig_name
         )
     }
-
 }
 
 MafOncoPlot <- function(
@@ -313,31 +302,29 @@ MafOncoPlot <- function(
     width = 10,
     height = 8,
     fig_dir = "figures/oncoplot",
-    fig_name = "oncoplot"
-) {
-    
+    fig_name = "oncoplot") {
     # Create directory if it doesn't exist
     fs::dir_create(here(fig_dir))
-    
+
     # If no genes specified, get top mutated ones
     if (is.null(genes)) {
         gene_summary <- getGeneSummary(maf)
         n_genes <- min(top_n_genes, nrow(gene_summary))
-        
+
         # Check if we have enough genes
         if (n_genes < 2) {
             warning("Not enough genes for oncoplot (minimum 2 required)")
             return(NULL)
         }
-        
+
         genes <- gene_summary[1:n_genes, "Hugo_Symbol"]
         genes <- genes$Hugo_Symbol
     }
-    
+
     # Save PDF version
     pdf_file <- here(fig_dir, paste0(fig_name, ".pdf"))
     pdf(pdf_file, width = width, height = height)
-    
+
     p <- oncoplot(
         maf = maf,
         genes = genes,
@@ -349,7 +336,7 @@ MafOncoPlot <- function(
         fontSize = fontSize,
         titleText = titleText
     )
-    
+
     dev.off()
     message(paste("Saved plots to:", pdf_file))
 
@@ -369,7 +356,198 @@ MafOncoPlot <- function(
         titleText = titleText
     )
     dev.off()
-    
-    message(paste("Saved plots to:", png_file))
 
+    message(paste("Saved plots to:", png_file))
+}
+
+LoadSampleInfo <- function() {
+    read_xlsx(
+        here(
+            "data/clinical/DFSP_multiomics_sample_list_updated_20250509.xlsx"
+        )
+    )
+}
+
+AddCancerHotspot <- function(
+    maf,                           # maf data in dataframe format
+    hotspot = NULL,                # path to the hotspot file
+    qvalue = NULL,                 # qvalue threshold
+    median_allele_freq_rank = NULL, # median Allele Frequency Rank threshold 
+    log10_pvalue = NULL           # log10 pvalue threshold
+
+) {
+    if (is.null(hotspot)) {
+
+        snv_hotspots <- read_xlsx(
+            here("data/clinical/hotspots_v2.xlsx"),
+            sheet = "SNV-hotspots"
+        )
+        
+
+        indel_hotspots <- read_xlsx(
+            here("data/clinical/hotspots_v2.xlsx"),
+            sheet = "INDEL-hotspots"
+        ) 
+        
+    } else {
+        
+        snv_hotspots <- read_xlsx(
+            here(hotspot),
+            sheet = "SNV-hotspots"
+        )
+        
+
+        indel_hotspots <- read_xlsx(
+            here(hotspot),
+            sheet = "INDEL-hotspots"
+        )
+    }
+
+    snv_hotspots <- snv_hotspots |>
+        select(
+            Hugo_Symbol, Amino_Acid_Position, Reference_Amino_Acid, Variant_Amino_Acid, qvalue, Median_Allele_Freq_Rank
+        ) |>
+        mutate(
+            ref_aa = str_extract(Reference_Amino_Acid, "^[A-Z*]"),
+            pos_aa = as.character(Amino_Acid_Position),
+            var_aa = str_extract(Variant_Amino_Acid, "^[A-Z*]"),
+            aaChange = paste0("p.", ref_aa, pos_aa, var_aa)
+        ) |>
+        distinct() |>
+        mutate(
+            snv_hotspot = paste(
+                Hugo_Symbol, aaChange,
+                sep = "_"
+            )
+        )
+    
+    indel_hotspots <- indel_hotspots |>
+        select(
+            Hugo_Symbol, Amino_Acid_Position, Reference_Amino_Acid, Variant_Amino_Acid, qvalue, Median_Allele_Freq_Rank
+        ) |>
+        mutate(
+            aaChange = str_extract(Variant_Amino_Acid, "^[^:]+")
+        ) |>
+        mutate(
+            aaChange = paste0("p.", aaChange)
+        ) |>
+        distinct() |>
+        mutate(
+            indel_hotspot = paste0(
+                Hugo_Symbol, "_", aaChange
+            )
+        )
+    
+    ## Match the variant info from the aaChange column in maf and
+    ## Variant_Amino_Acid column in the hotspot data
+    hotspots <- list(
+        snv_hotspots = snv_hotspots,
+        indel_hotspots = indel_hotspots
+    )
+
+    message(
+        sprintf(
+            "Total SNV hotspots: %d", nrow(hotspots$snv_hotspots)
+        ), "\n",
+        sprintf(
+            "Total INDEL hotspots: %d", nrow(hotspots$indel_hotspots)
+        )
+    )
+
+    ## Apply filtering only if filter parameters are provided
+    if (
+        !is.null(qvalue) || !is.null(median_allele_freq_rank) ||
+        !is.null(log10_pvalue)
+    ) {
+        ## build filter conditions
+        filter_expr <- list()
+    
+        if (!is.null(qvalue)) {
+            
+            filter_expr <- append(
+                filter_expr, rlang::expr(qvalue < !!qvalue)
+            )
+        }
+        
+        if (!is.null(median_allele_freq_rank)) {
+            filter_expr <- append(
+                filter_expr, 
+                rlang::expr(Median_Allele_Freq_Rank > !!median_allele_freq_rank)
+            )
+        }
+        
+        if (!is.null(log10_pvalue)) {
+            
+            filter_expr <- append(
+                filter_expr, rlang::expr(log10_pvalue > !!log10_pvalue)
+            )
+        }
+
+        ## Apply filtering to select the high confidence hotspot variants
+        hotspots <- map(
+            hotspots,
+            ~ .x |> filter(!!!filter_expr)
+        )
+
+        message("Applied filters:")
+        if (!is.null(qvalue)) message("  - qvalue < ", qvalue)
+        if (!is.null(median_allele_freq_rank)) message("  - Median_Allele_Freq_Rank > ", median_allele_freq_rank)
+        if (!is.null(log10_pvalue)) message("  - log10_pvalue > ", log10_pvalue)
+
+        message(
+            sprintf(
+                "After filtering SNV hotspots: %d", nrow(hotspots$snv_hotspots)
+            ), "\n",
+            sprintf(
+                "After filtering INDEL hotspots: %d", nrow(hotspots$indel_hotspots)
+            )
+        )
+
+    } else {
+
+        message("No filters applied - using all hotspots")
+    }
+
+    all_hotspots <- c(
+        hotspots$snv_hotspots |> pull(snv_hotspot),
+        hotspots$indel_hotspots |> pull(indel_hotspot)
+    )
+
+    maf_hotspot <- maf |>
+        # select(
+        #     Tumor_Sample_Barcode, Variant_Classification, Hugo_Symbol, aaChange
+        # ) |>
+        # filter(
+        #     # Variant_Classification == "Missense_Mutation"
+        #     Variant_Classification == "Nonsense_Mutation"
+        # ) |>
+        mutate(match_change = paste0(Hugo_Symbol, "_", aaChange)) |>
+        mutate(
+            is_hotspot = if_else(
+                match_change %in% all_hotspots,
+                TRUE,
+                FALSE
+            )
+        ) |>
+        arrange(desc(is_hotspot)) |>
+        select(-match_change) |>
+        relocate(
+            is_hotspot,
+            .after = aaChange
+        )
+    
+    is_hotspot_data <- maf_hotspot |>
+        filter(is_hotspot) |>
+        select(
+            Tumor_Sample_Barcode, Variant_Classification, Hugo_Symbol, aaChange,
+            is_hotspot
+        )
+    
+    message(
+        sprintf(
+            "Number of hotspot variants in the maf: %d", nrow(is_hotspot_data)
+        )
+    )
+
+    return(maf_hotspot)
 }
