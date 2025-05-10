@@ -19,16 +19,12 @@ cd /home/zhonggr/projects/250224_DFSP_WES
 # export NXF_HOME=$HOME/.nextflow
 export NXF_DISABLE_CHECK_LATEST=true
 export NXF_OPTS="-Xms512m -Xmx8g"
-# export NXF_ANSI_LOG=true
-
-# export NXF_LOG_FILE="${PWD}/logs/nextflow/.nextflow.log"
-export NXF_LOG_FILE="${PWD}/.nextflow.log"
+# export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f .nextflow.log*
 
-nextflow run subworkflows/mutation_calling/prepare_sample_new.nf \
-    -profile local \
+nextflow run subworkflows/mutation_calling/mutect2_call.nf \
+    -profile hpc \
     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv
-
 
 ## Test the cnv_facets
 # nextflow run subworkflows/mutation_calling/cnv_facets_old.nf \

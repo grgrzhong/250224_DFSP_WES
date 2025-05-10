@@ -38,10 +38,8 @@ process GATK4_MUTECT2 {
     // Handle normal sample if provided
     def normal_command = ""
     if (normal && normal.toString() != "null" && normal.name != "null") {
-        log.info "Running Mutect2 in paired tumor-normal mode for ${meta.id} with normal ${meta2.id}"
+        
         normal_command = "--input ${normal} --normal ${meta2.normal_id}"
-    } else {
-        log.info "Running Mutect2 in tumor-only mode for ${meta.id} (no matching normal sample)"
     }
 
     def avail_mem = 3072

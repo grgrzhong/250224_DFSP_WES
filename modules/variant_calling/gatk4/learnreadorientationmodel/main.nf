@@ -8,7 +8,7 @@ process GATK4_LEARNREADORIENTATIONMODEL {
     tuple val(meta), path(f1r2)
 
     output:
-    tuple val(meta), path("*.tar.gz"), emit: artifactprior
+    tuple val(meta), path("*.readorientationmodel.tar.gz"), emit: orientation
     path "versions.yml"              , emit: versions
 
     when:
@@ -29,7 +29,6 @@ process GATK4_LEARNREADORIENTATIONMODEL {
         LearnReadOrientationModel \\
         -I ${f1r2} \\
         --output ${prefix}.readorientationmodel.tar.gz \\
-        --tmp-dir . \\
         $args
 
     cat <<-END_VERSIONS > versions.yml

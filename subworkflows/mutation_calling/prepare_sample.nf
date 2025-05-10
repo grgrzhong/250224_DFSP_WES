@@ -3,166 +3,199 @@ workflow PREPARE_SAMPLE {
         input_csv  // Path to the input CSV file
 
     main:
-        
-        // Create a channel for fastq files
-        // reads = Channel.fromPath(input_csv)
-        //     .ifEmpty { exit(1, "Sample sheet not found at ${input_csv}") }
-        //     .splitCsv(header: true)
-        //     .filter { row -> row.containsKey('fastq_1') && row.containsKey('fastq_2') }
-        //     .map { row ->
-        //         def meta = [:]
-        //         meta.id = row.sample
-        //         meta.patient_id = row.patient
-        //         meta.status = row.status.toInteger()
-
-        //         // Check that the fastq files exist
-        //         def fastq_1 = file(row.fastq_1)
-        //         def fastq_2 = file(row.fastq_2)
-
-        //         if (!fastq_1.exists()) {
-        //             error("Read 1 fastq file not found: ${row.fastq_1}")
-        //         }
-        //         if (!fastq_2.exists()) {
-        //             error("Read 2 fastq file not found: ${row.fastq_2}")
-        //         }
-
-        //         return [meta, fastq_1, fastq_2]
-        //     }
-
-        // Create a channel for BAM files
-        input_samples = Channel.fromPath(input_csv)
+        // Create unified channel from the CSV with support for both input types
+        sample_list = Channel.fromPath(input_csv)
             .ifEmpty { exit(1, "Samplesheet not found: ${input_csv}") }
             .splitCsv(header: true)
-            .map { row ->
+        
+        input_samples = sample_list
+            .map { 
+                row ->
                 // Extract sample info
                 def patient_id = row.patient ? row.patient.trim() : null
                 def sample_id = row.sample ? row.sample.trim() : null
                 def status = row.status ? row.status.trim() : null
 
                 // Validate required fields
-                if (!patient_id) {
-                    error("Missing or empty 'patient' field in row: ${row}")
-                }
-                if (!sample_id) {
-                    error("Missing or empty 'sample' field in row: ${row}")
-                }
-                if (!status) {
-                    error("Missing or empty 'status' field in row: ${row}")
-                }
-                if (!row.bam) {
-                    error("Missing 'bam' field in row: ${row}")
-                }
+                if (!patient_id) error("Missing or empty 'patient' field in row: ${row}")
+                if (!sample_id) error("Missing or empty 'sample' field in row: ${row}")
+                if (!status) error("Missing or empty 'status' field in row: ${row}")
 
-                // Process BAM and BAI paths
-                def bam = file(row.bam)
-                def bai = row.bai ? file(row.bai) : file("${row.bam}.bai")
+                // Determine available input types
+                def has_fastq = row.containsKey('fastq_1') && 
+                                row.containsKey('fastq_2') && 
+                                row.fastq_1 && row.fastq_2
 
-                // Check if files exist
-                if (!bam.exists()) {
-                    error("BAM file not found: ${bam}")
-                }
-                if (!bai.exists()) {
-                    error("BAI file not found: ${bai}")
-                }
+                def has_bam = row.containsKey('bam') && row.bam
 
-                // Return a tuple with patient_id, sample_id, status, bam, and bai
-                [
+                // Exit if no input is provided
+                if (!has_fastq && !has_bam) {
+                    
+                    error("Either FASTQ or BAM files must be provided for sample ${sample_id}")
+                }
+                
+                def status_int = status.toInteger()
+                
+                def meta = [
                     patient_id: patient_id,
                     sample_id: sample_id,
-                    status: status.toInteger(),
-                    bam: bam,
-                    bai: bai,
+                    status: status_int
                 ]
+                
+                // Initialize all file variables with null
+                def fastq_1 = null
+                def fastq_2 = null
+                def bam = null
+                def bai = null
+
+                if (has_fastq) {
+                    fastq_1 = file(row.fastq_1)
+                    fastq_2 = file(row.fastq_2)
+                }
+                
+                if (has_bam) {
+                    bam = file(row.bam)
+                    bai = file(row.bai)
+                }
+
+                // Return unified format with all possible inputs
+                return [meta, fastq_1, fastq_2, bam, bai]
+        
             }
 
-        // Split samples into tumour and normal
-        tumour_samples = input_samples.filter { it.status == 1 }
-        normal_samples = input_samples.filter { it.status == 0 }
+        input_samples
+            .count()
+            .subscribe { count ->
+                
+                log.info("Total samples =  ${count} ")
+            }
 
-        // Create paired samples channel
-        paired_samples = tumour_samples
-            .map { tumour -> [ tumour.patient_id, tumour] }
-            .combine(
-                normal_samples.map { normal -> [normal.patient_id, normal] },
-                by: 0
-            )
-            .map {
-                patient_id, tumour, normal -> 
-                def meta = [
-                    id: "${tumour.sample_id}_vs_${normal.sample_id}",
-                    patient_id: patient_id,
-                    tumour_id: tumour.sample_id,
-                    normal_id: normal.sample_id,
-                    is_paired: true
-                ]
-                [meta, tumour.bam, tumour.bai, normal.bam, normal.bai]
+        // Prepare the fastq channel for preprocessing and mapping
+        fastq = input_samples
+            .map { 
+                meta, fastq_1, fastq_2, _bam, _bai ->
+                [meta, fastq_1, fastq_2]
+                
+            }
+
+        tumour_samples = input_samples
+            .filter { 
+                meta, _fastq_1, _fastq_2, _bam, _bai ->
+                meta.status == 1 
+            }
+
+        tumour_samples
+            .count()
+            .subscribe { count ->
+                
+                log.info("Total tumour samples = ${count}")
+            }
+
+        normal_samples = input_samples
+            .filter { 
+                meta, _fastq_1, _fastq_2, _bam, _bai ->
+                meta.status == 0 
             }
         
-        // Create tumour-only samples channel
+        normal_samples
+            .count()
+            .subscribe { count ->
+                
+                log.info("Total normal samples = ${count}")
+            }
+
+        // Prepare bam input for tumour_normal paired samples
+        bam_tumour_normal = tumour_samples
+            .map {
+                meta, fastq_1, fastq_2, bam, bai -> 
+                [meta.patient_id, [meta, fastq_1, fastq_2, bam, bai]] 
+            }
+            .combine(
+                normal_samples
+                    .map { 
+                        meta, fastq_1, fastq_2, bam, bai -> 
+                        [meta.patient_id, [meta, fastq_1, fastq_2, bam, bai]] 
+                    },
+                by: 0
+            )
+            .map { 
+                patient_id, tumour, normal ->
+
+                def tumour_meta = tumour[0]
+                def normal_meta = normal[0]
+
+                def meta = [
+                    id: "${tumour_meta.sample_id}_vs_${normal_meta.sample_id}",
+                    patient_id: patient_id,
+                    tumour_id: tumour_meta.sample_id,
+                    normal_id: normal_meta.sample_id,
+                    is_paired: true
+                ]
+                
+                return [meta, tumour[3], tumour[4], normal[3], normal[4]]
+            }
+
+        bam_tumour_normal
+            .count()
+            .subscribe { count ->
+                
+                log.info("Total tumour-normal samples =  ${count}")
+            }
+
+        // Prepare bam input for tumour only samples
         normal_patient_ids = normal_samples
-            .map { it.patient_id }
+            .map { 
+                meta, _fastq_1, _fastq_2, _bam, _bai ->
+                meta.patient_id 
+            }
             .unique()
             .collect()
             .map { ids -> ids.sort() }
 
-        unpaired_samples = tumour_samples
+        bam_tumour_only = tumour_samples
             .branch {
+                meta, _fastq_1, _fastq_2, _bam, _bai ->
+                
                 def normal_ids = normal_patient_ids.val
-                paired: normal_ids.contains(it.patient_id)
+                paired: normal_ids.contains(meta.patient_id)
                 unpaired: true
             }
             .unpaired
-            .map {
-                tumour -> def meta = [
-                    id: tumour.sample_id,
-                    patient_id: tumour.patient_id,
-                    tumour_id: tumour.sample_id,
+            .map { 
+                _meta, _fastq_1, _fastq_2, bam, bai -> 
+                def meta = [
+                    id: _meta.sample_id,
+                    patient_id: _meta.patient_id,
+                    tumour_id: _meta.sample_id,
                     normal_id: null,
                     is_paired: false
                 ]
-                [meta, tumour.bam, tumour.bai, null, null]
+                
+                return [meta, bam, bai, null, null]
+            }
+
+        bam_tumour_only
+            .count()
+            .subscribe { count ->
+                
+                log.info("Total tumour-only samples = ${count}")
             }
         
         // Combine paired and unpaired samples
-        all_samples = paired_samples.mix(unpaired_samples)
+        bam_all_samples = bam_tumour_normal.mix(bam_tumour_only)
         
-        // Extract tumor samples from paired samples for various analyses
-        paired_tumour_samples = paired_samples
-            .map { meta, tumour_bam, tumour_bai, _normal_bam, _normal_bai ->
-                [meta, tumour_bam, tumour_bai]
-            }
-
-        // Extract normal samples from paired samples
-        paired_normal_samples = paired_samples
-            .map { meta, _tumour_bam, _tumour_bai, normal_bam, normal_bai ->
-                def normal_meta = meta.clone()
-                normal_meta.tumour_id = normal_meta.normal_id
-                [normal_meta, normal_bam, normal_bai]
-            }
-
-        // Extract tumor samples for unpaired analysis
-        unpaired_tumour_samples = unpaired_samples
-            .map { meta, tumor_bam, tumor_bai, _normal_bam, _normal_bai ->
-                [meta, tumor_bam, tumor_bai]
-            }
-
-        // Log sample counts
-        paired_samples.count().subscribe { count ->
-            log.info("Found ${count} paired samples.")
-        }
-        
-        unpaired_samples.count().subscribe { count ->
-            log.info("Found ${count} unpaired samples.")
-        }
-
     emit:
-        reads                   = null
-        all_samples             = all_samples
-        tumour_samples          = tumour_samples
-        normal_samples          = normal_samples
-        paired_samples          = paired_samples
-        unpaired_samples        = unpaired_samples
-        paired_tumour_samples   = paired_tumour_samples
-        paired_normal_samples   = paired_normal_samples
-        unpaired_tumour_samples = unpaired_tumour_samples
+        input_samples       = input_samples
+        tumour_samples      = tumour_samples
+        normal_samples      = normal_samples
+        fastq               = fastq
+        bam_tumour_normal   = bam_tumour_normal
+        bam_tumour_only     = bam_tumour_only
+        bam_all_samples     = bam_all_samples
+}
+
+workflow  {
+    
+    PREPARE_SAMPLE(params.input)
+    
 }

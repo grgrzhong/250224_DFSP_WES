@@ -4,7 +4,7 @@ process GATK4_FILTERMUTECTCALLS {
     label 'process_low'
 
     input:
-    tuple val(meta), path(vcf), path(vcf_tbi), path(stats), path(orientationmodel), path(contamination), path(segmentation)
+    tuple val(meta), path(vcf), path(vcf_tbi), path(stats), path(orientation), path(contamination), path(segmentation)
     path(fasta)
     path(fai)
     path(dict)
@@ -34,14 +34,13 @@ process GATK4_FILTERMUTECTCALLS {
         FilterMutectCalls \\
         --variant $vcf \\
         --reference $fasta \\
-        --ob-priors $orientationmodel \\
+        --ob-priors $orientation \\
         --contamination-table $contamination \\
         --tumor-segmentation $segmentation \\
         --min-allele-fraction 0.01 \\
         --unique-alt-read-count 1 \\
         --stats ${prefix}.unfiltered.vcf.gz.stats \\
         --output ${prefix}.filtered.vcf.gz \\
-        --tmp-dir . \\
         $args \\
         2> ${prefix}.filtermutectcalls.log
 

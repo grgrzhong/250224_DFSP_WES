@@ -6,8 +6,7 @@
 */
 
 // IMPORT MODULES/SUBWORKFLOWS
-include { FASTP_TRIM } from '../../modules/variant_calling/fastp/main.nf'
-
+include { FASTP_TRIM                               } from '../../modules/variant_calling/fastp/main.nf'
 include { FASTQC                                   } from '../../modules/variant_calling/fastqc'
 include { BWA_MEM                                  } from '../../modules/variant_calling/bwa/mem'
 include { TAG_UMI                                  } from '../../modules/variant_calling/tagumi'

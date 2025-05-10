@@ -18,21 +18,21 @@ workflow PREPARE_GENOME {
         }
 
         // Setup reference channels - map to variables in genome.config
-        fasta                = Channel.fromPath(params.genomes[genome_id].fasta, checkIfExists: true)
-        fai                  = Channel.fromPath(params.genomes[genome_id].fai, checkIfExists: true)
-        dict                 = Channel.fromPath(params.genomes[genome_id].dict, checkIfExists: true)
+        fasta = Channel.fromPath(params.genomes[genome_id].fasta, checkIfExists: true)
+        fai = Channel.fromPath(params.genomes[genome_id].fai, checkIfExists: true)
+        dict = Channel.fromPath(params.genomes[genome_id].dict, checkIfExists: true)
         
         // Map dbSNP and tbi
-        dbsnp               = Channel.fromPath(params.genomes[genome_id].dbsnp, checkIfExists: true)
-        dbsnp_tbi           = Channel.fromPath(params.genomes[genome_id].dbsnp_tbi, checkIfExists: true)
+        dbsnp = Channel.fromPath(params.genomes[genome_id].dbsnp, checkIfExists: true)
+        dbsnp_tbi = Channel.fromPath(params.genomes[genome_id].dbsnp_tbi, checkIfExists: true)
         
         // Map germline_resource and tbi
-        germline_resource    = Channel.fromPath(params.genomes[genome_id].germline_resource, checkIfExists: true)
-        germline_resource_tbi= Channel.fromPath(params.genomes[genome_id].germline_resource_tbi, checkIfExists: true)
+        germline_resource = Channel.fromPath(params.genomes[genome_id].germline_resource, checkIfExists: true)
+        germline_resource_tbi = Channel.fromPath(params.genomes[genome_id].germline_resource_tbi, checkIfExists: true)
         
         // Map panel_of_normals (pon) and tbi
         // Map panel_of_normals (pon) and tbi
-        panel_of_normals      = params.panel_of_normals ? 
+        panel_of_normals = params.panel_of_normals ? 
                             Channel.fromPath(params.panel_of_normals, checkIfExists: true) :
                             (params.genomes[genome_id].pon ? 
                                 Channel.fromPath(params.genomes[genome_id].pon, checkIfExists: true) : 
@@ -45,40 +45,39 @@ workflow PREPARE_GENOME {
                     Channel.empty())
         
         // Map pileup variants (contamination_variants)
-        pileup_variants      = Channel.fromPath(params.genomes[genome_id].contamination_variants, checkIfExists: true)
+        pileup_variants = Channel.fromPath(params.genomes[genome_id].contamination_variants, checkIfExists: true)
         pileup_variants_tbi  = Channel.fromPath(params.genomes[genome_id].contamination_variants_tbi, checkIfExists: true)
         
         // Map intervals
-        intervals            = Channel.fromPath(params.genomes[genome_id].intervals, checkIfExists: true)
-        bait_intervals       = Channel.fromPath(params.genomes[genome_id].bait_intervals, checkIfExists: true)
-        target_intervals     = Channel.fromPath(params.genomes[genome_id].target_intervals, checkIfExists: true)
+        intervals = Channel.fromPath(params.genomes[genome_id].intervals, checkIfExists: true)
+        bait_intervals = Channel.fromPath(params.genomes[genome_id].bait_intervals, checkIfExists: true)
+        target_intervals = Channel.fromPath(params.genomes[genome_id].target_intervals, checkIfExists: true)
 
-        targets            = Channel.fromPath(params.genomes[genome_id].targets, checkIfExists: true)
+        targets = Channel.fromPath(params.genomes[genome_id].targets, checkIfExists: true)
         // Additional resources
         funcotator_resources = params.genomes[genome_id].funcotator ? 
-                               Channel.fromPath(params.genomes[genome_id].funcotator, checkIfExists: true) :
-                               Channel.empty()
-        annovar_db           = params.genomes[genome_id].annovar_db ? 
-                               Channel.fromPath(params.genomes[genome_id].annovar_db, checkIfExists: true) :
-                               Channel.empty()
+                            Channel.fromPath(params.genomes[genome_id].funcotator, checkIfExists: true) :
+                            Channel.empty()
+        annovar_db = params.genomes[genome_id].annovar_db ? 
+                            Channel.fromPath(params.genomes[genome_id].annovar_db, checkIfExists: true) :
+                            Channel.empty()
 
          // Print genome resource information similar to nf-core/sarek
-        log.info"""
         
-        Fasta                : ${params.genomes[genome_id].fasta}
-        Fasta index          : ${params.genomes[genome_id].fai}
-        Dict                 : ${params.genomes[genome_id].dict}
-        Germline resource    : ${params.genomes[genome_id].germline_resource}
-        Panel of normals     : ${params.genomes[genome_id].containsKey('pon') ? params.genomes[genome_id].pon : 'Not provided'}
-        Pileup variants      : ${params.genomes[genome_id].contamination_variants}
-        Intervals            : ${params.genomes[genome_id].intervals}
-        Targets              : ${params.genomes[genome_id].targets}
-        Bait intervals       : ${params.genomes[genome_id].bait_intervals}
-        Target intervals     : ${params.genomes[genome_id].target_intervals}
-        dbSNP                : ${params.genomes[genome_id].dbsnp}
-        dbSNP index          : ${params.genomes[genome_id].dbsnp_tbi}
-        Funcotator resources : ${params.genomes[genome_id].containsKey('funcotator') ? params.genomes[genome_id].funcotator : 'Not provided'}
-        Annovar database     : ${params.genomes[genome_id].containsKey('annovar_db') ? params.genomes[genome_id].annovar_db : 'Not provided'}
+        log.info """
+        
+            Fasta                : ${fasta}
+            Dict                 : ${dict}
+            dbSNP                : ${dbsnp}
+            Germline resource    : ${germline_resource}
+            Panel of normals     : ${panel_of_normals}
+            Pileup variants      : ${pileup_variants}
+            Intervals            : ${intervals}
+            Bait intervals       : ${bait_intervals}
+            Target intervals     : ${target_intervals}
+            Targets              : ${targets}
+            Funcotator resources : ${funcotator_resources}
+            Annovar database     : ${annovar_db}
         
         """
 
