@@ -24,6 +24,7 @@ rm -f .nextflow.log*
 
 nextflow run subworkflows/mutation_calling/mutect2_call.nf \
     -profile local \
+    -resume \
     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv
 
 # nextflow run subworkflows/mutation_calling/cnv_facets.nf \

@@ -19,7 +19,7 @@ include { BCFTOOLS_NORM                                              } from '../
 include { BCFTOOLS_VIEW                                              } from '../../modules/variant_calling/bcftools/view'
 include { BCFTOOLS_ANNOTATE_REPEATMASKER                             } from '../../modules/variant_calling/bcftools/annotate/repeatmasker'
 include { BCFTOOLS_ANNOTATE_BLACKLIST                                } from '../../modules/variant_calling/bcftools/annotate/blacklist'
-include { BCFTOOLS_FILTER                                } from '../../modules/variant_calling/bcftools/filter'
+include { BCFTOOLS_FILTER                               } from '../../modules/variant_calling/bcftools/filter'
 include { TABIX                                                      } from '../../modules/variant_calling/tabix/tabix'
 include { GATK4_FUNCOTATOR as FUNCOTATOR                             } from '../../modules/variant_calling/gatk4/funcotator'
 
