@@ -17,7 +17,7 @@ process GATK4_CALCULATECONTAMINATION {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def matched_command = matched ? "--matched-normal $matched" : ''
 
     def avail_mem = 3072
@@ -43,7 +43,7 @@ process GATK4_CALCULATECONTAMINATION {
     """
 
     stub:
-    prefix   = task.ext.prefix ?: "${meta.tumour_id}"
+    prefix   = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.contamination.table
     touch ${prefix}.segmentation.table

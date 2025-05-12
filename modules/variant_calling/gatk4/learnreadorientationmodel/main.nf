@@ -16,7 +16,7 @@ process GATK4_LEARNREADORIENTATIONMODEL {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
 
     def avail_mem = 3072
     if (!task.memory) {

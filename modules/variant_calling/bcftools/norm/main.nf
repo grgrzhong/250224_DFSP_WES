@@ -19,7 +19,7 @@ process BCFTOOLS_NORM {
     
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     
     """
     bcftools norm \\

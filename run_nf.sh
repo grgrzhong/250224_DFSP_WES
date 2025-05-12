@@ -22,9 +22,8 @@ export NXF_OPTS="-Xms512m -Xmx8g"
 # export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f .nextflow.log*
 
-nextflow run subworkflows/mutation_calling/mutect2_call.nf \
-    -profile hpc \
-    -resume \
+nextflow run subworkflows/mutation_calling/mutect2_call_new.nf \
+    -profile local \
     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv
 
 # nextflow run subworkflows/mutation_calling/cnv_facets.nf \

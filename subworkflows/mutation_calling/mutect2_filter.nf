@@ -1,12 +1,10 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                GATK4 Mutect2 SNV/Indels somatic variant calling workflow
+                GATK4 Mutect2 SNV/Indels somatic variant filtering workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 // Load required modules
-include { GATK4_MUTECT2_TUMOUR as MUTECT2_TUMOUR                     } from '../../modules/variant_calling/gatk4/mutect2/tumour'
-include { GATK4_MUTECT2_PAIRED as MUTECT2_PAIRED                     } from '../../modules/variant_calling/gatk4/mutect2/paired'
 include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUP_PAIRED_TUMOUR    } from '../../modules/variant_calling/gatk4/getpileupsummaries/tumour'
 include { GATK4_GETPILEUPSUMMARIES_NORMAL as PILEUP_PAIRED_NORMAL    } from '../../modules/variant_calling/gatk4/getpileupsummaries/normal'
 include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUPS_UNPAIRED_TUMOUR } from '../../modules/variant_calling/gatk4/getpileupsummaries/tumour'
@@ -19,7 +17,7 @@ include { BCFTOOLS_NORM                                              } from '../
 include { BCFTOOLS_VIEW                                              } from '../../modules/variant_calling/bcftools/view'
 include { BCFTOOLS_ANNOTATE_REPEATMASKER                             } from '../../modules/variant_calling/bcftools/annotate/repeatmasker'
 include { BCFTOOLS_ANNOTATE_BLACKLIST                                } from '../../modules/variant_calling/bcftools/annotate/blacklist'
-include { BCFTOOLS_FILTER                                } from '../../modules/variant_calling/bcftools/filter'
+include { BCFTOOLS_FILTER                                            } from '../../modules/variant_calling/bcftools/filter'
 include { TABIX                                                      } from '../../modules/variant_calling/tabix/tabix'
 include { GATK4_FUNCOTATOR as FUNCOTATOR                             } from '../../modules/variant_calling/gatk4/funcotator'
 

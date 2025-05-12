@@ -29,7 +29,7 @@ process GATK4_MUTECT2_PAIRED {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     
     def pon_command = panel_of_normals ? "--panel-of-normals $panel_of_normals" : ""
     def gr_command = germline_resource ? "--germline-resource $germline_resource" : ""
