@@ -43,7 +43,7 @@ process GATK4_CALCULATECONTAMINATION {
     """
 
     stub:
-    prefix   = task.ext.prefix ?: "${meta.id}"
+    prefix   = task.ext.prefix ?: "${meta.tumour_id}"
     """
     touch ${prefix}.contamination.table
     touch ${prefix}.segmentation.table

@@ -4,7 +4,7 @@ process GATK4_FILTERMUTECTCALLS {
     label 'process_low'
 
     input:
-    tuple val(meta), path(vcf), path(vcf_tbi), path(stats), path(orientation), path(contamination), path(segmentation)
+    tuple val(meta), path(vcf), path(vcf_tbi), path(orientation), path(contamination), path(segmentation)
     path(fasta)
     path(fai)
     path(dict)
@@ -12,7 +12,7 @@ process GATK4_FILTERMUTECTCALLS {
     output:
     tuple val(meta), path("*.vcf.gz")      , emit: vcf
     tuple val(meta), path("*.vcf.gz.tbi")  , emit: tbi
-    tuple val(meta), path("*.stats")       , emit: stats
+    tuple val(meta), path("*.vcf.gz.stats"), emit: stats
     tuple val(meta), path("*.log")         , emit: log 
     path "versions.yml"                    , emit: versions
 

@@ -1,5 +1,3 @@
-
-// Process: Run CNV-FACETS on paired tumor-normal
 process CNV_FACETS {
     
     tag "${meta.id}"

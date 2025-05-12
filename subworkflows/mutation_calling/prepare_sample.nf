@@ -193,9 +193,3 @@ workflow PREPARE_SAMPLE {
         bam_tumour_only     = bam_tumour_only
         bam_all_samples     = bam_all_samples
 }
-
-workflow  {
-    
-    PREPARE_SAMPLE(params.input)
-    
-}

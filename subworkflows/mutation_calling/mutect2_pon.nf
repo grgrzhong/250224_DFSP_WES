@@ -6,20 +6,18 @@
 */
 
 // Load the required modules
-include { GATK4_MUTECT2_NORMAL } from '../../modules/variant_calling/gatk4/mutect2/normal/main.nf'
-include { GATK4_GENOMICSDBIMPORT } from '../../modules/variant_calling/gatk4/genomicsdbimport/main.nf'
-include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/variant_calling/gatk4/createsomaticpanelofnormals/main.nf'
+include { GATK4_MUTECT2_NORMAL } from '../../modules/variant_calling/gatk4/mutect2/normal'
+include { GATK4_GENOMICSDBIMPORT } from '../../modules/variant_calling/gatk4/genomicsdbimport'
+include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/variant_calling/gatk4/createsomaticpanelofnormals'
 
-workflow MUTECT2_SOMATIC_PON {
+workflow MUTECT2_PON {
     
     take:
-        // Reference genome files
+        normal_samples
         fasta
         fai
         dict
         interval
-        // Normal samples
-        normal_samples
 
     main: 
         // Run Mutect2 on each normal sample

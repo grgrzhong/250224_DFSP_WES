@@ -63,23 +63,19 @@ workflow PREPARE_GENOME {
                             Channel.empty()
 
          // Print genome resource information similar to nf-core/sarek
-        
-        log.info """
-        
-            Fasta                : ${fasta}
-            Dict                 : ${dict}
-            dbSNP                : ${dbsnp}
-            Germline resource    : ${germline_resource}
-            Panel of normals     : ${panel_of_normals}
-            Pileup variants      : ${pileup_variants}
-            Intervals            : ${intervals}
-            Bait intervals       : ${bait_intervals}
-            Target intervals     : ${target_intervals}
-            Targets              : ${targets}
-            Funcotator resources : ${funcotator_resources}
-            Annovar database     : ${annovar_db}
-        
-        """
+        fasta.subscribe                { path -> log.info "Fasta                : $path" }
+        dict.subscribe                 { path -> log.info "Dict                 : $path" }
+        dbsnp.subscribe                { path -> log.info "dbSNP                : $path" }
+        germline_resource.subscribe    { path -> log.info "Germline resource    : $path" }
+        panel_of_normals.subscribe     { path -> log.info "Panel of normals     : $path" }
+        pileup_variants.subscribe      { path -> log.info "Pileup variants      : $path" }
+        intervals.subscribe            { path -> log.info "Intervals            : $path" }
+        bait_intervals.subscribe       { path -> log.info "Bait intervals       : $path" }
+        target_intervals.subscribe     { path -> log.info "Target intervals     : $path" }
+        targets.subscribe              { path -> log.info "Targets              : $path" }
+        funcotator_resources.subscribe { path -> log.info "Funcotator resources : $path" }
+        annovar_db.subscribe           { path -> log.info "Annovar database     : $path" }
+
 
     emit:
         fasta                = fasta

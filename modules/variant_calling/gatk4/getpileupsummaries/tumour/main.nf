@@ -1,6 +1,6 @@
-process GATK4_GETPILEUPSUMMARIES {
+process GATK4_GETPILEUPSUMMARIES_TUMOUR {
     
-    tag "$meta.id"
+    tag "$meta.tumour_id"
     
     label 'process_low'
 

@@ -20,7 +20,6 @@ process GATK4_MUTECT2_PAIRED {
     tuple val(meta), path("*.vcf.gz")     , emit: vcf
     tuple val(meta), path("*.tbi")        , emit: tbi
     tuple val(meta), path("*.bam")        , emit: bam
-    tuple val(meta), path("*.stats")      , emit: stats
     tuple val(meta), path("*.f1r2.tar.gz"), optional:true, emit: f1r2
     tuple val(meta), path("*.log")        , emit: log  
     path "versions.yml"                   , emit: versions

@@ -1,42 +1,55 @@
 #!/usr/bin/env nextflow
 
+// Nextflow DSL2
 nextflow.enable.dsl = 2
 
-// input
-params.input        = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv"
-// params.input = "/home/zhonggr/projects/250224_DFSP_WES/data/test_data/csv/test.csv"
+// Import modules and subworkflows
+include { PREPARE_SAMPLE         } from "../../subworkflows/mutation_calling/prepare_sample.nf"
+include { PREPROCESSING          } from "../../subworkflows/mutation_calling/preprocessing.nf"
+include { MUTECT2_PON    } from "../../subworkflows/mutation_calling/mutect2_pon.nf"
+include { MUTECT2_CALL           } from "../../subworkflows/mutation_calling/mutect2_call.nf"
+include { VARIANT_CALLING_CNVKIT } from "../../subworkflows/mutation_calling/cnvkit.nf"
 
-// test the preprocesing
-// params.input            = params.input ?: "/home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test.csv"
-
+// Input csv file
+params.input = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv"
 
 // Define workflow steps and their dependencies as parameters
 params.step_options = [
-    'preprocessing',
+    "preprocessing",
     'mutect2',
     "cnvkit",
-    "cnv_facets"
+    "cnv_facets",
 ]
 
 // Default step (run full workflow)
 params.step = null
 
 // Define valid starting and ending points
-params.valid_steps  = [
+params.valid_steps = [
     'preprocessing',
     'mutect2',
     "cnvkit",
-    "cnv_facets"
+    "cnv_facets",
 ]
 
-// Import modules and subworkflows
-include { PREPARE_GENOME            } from "../../subworkflows/mutation_calling/prepare_genome.nf"
-include { PREPARE_SAMPLE            } from "../../subworkflows/mutation_calling/prepare_sample.nf"
-include { PREPROCESSING             } from "../../subworkflows/mutation_calling/preprocessing.nf"
-include { MUTECT2_SOMATIC_PON       } from '../../subworkflows/mutation_calling/mutect2_pon.nf'
-include { MUTECT2_CALL              } from "../../subworkflows/mutation_calling/mutect2_call.nf"
-include { VARIANT_CALLING_CNVKIT    } from "../../subworkflows/mutation_calling/cnvkit.nf"
-include { VARIANT_CALLING_CNV } from '../../subworkflows/mutation_calling/cnv_facets.nf'
+//  Reference genome and resources
+params.fasta                 = params.genomes[params.genome]?.fasta
+params.fai                   = params.genomes[params.genome]?.fai
+params.dict                  = params.genomes[params.genome]?.dict
+params.dbsnp                 = params.genomes[params.genome]?.dbsnp
+params.dbsnp_tbi             = params.genomes[params.genome]?.dbsnp_tbi
+params.germline_resource     = params.genomes[params.genome]?.germline_resource
+params.germline_resource_tbi = params.genomes[params.genome]?.germline_resource_tbi
+params.panel_of_normals      = params.genomes[params.genome]?.pon
+params.panel_of_normals_tbi  = params.genomes[params.genome]?.pon_tbi
+params.pileup_variants       = params.genomes[params.genome]?.contamination_variants
+params.pileup_variants_tbi   = params.genomes[params.genome]?.contamination_variants_tbi
+params.intervals             = params.genomes[params.genome]?.intervals
+params.bait_intervals        = params.genomes[params.genome]?.bait_intervals
+params.target_intervals      = params.genomes[params.genome]?.target_intervals
+params.targets               = params.genomes[params.genome]?.targets
+params.funcotator_resources  = params.genomes[params.genome]?.funcotator
+params.annovar_db            = params.genomes[params.genome]?.annovar_db
 
 // Parameter validation for steps
 def validate_params() {
@@ -49,51 +62,29 @@ def validate_params() {
     }
 }
 
-// Main workflow logic
+// Main workflow
 workflow {
 
     /*
-        ======================================================================
-                    Prepare the genome and resource files
-        ======================================================================
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Prepare the genome and resource files
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
-
-    PREPARE_GENOME(params.genome)
-
-    // Extract reference channels from PREPARE_GENOME
-    fasta = PREPARE_GENOME.out.fasta
-    fai = PREPARE_GENOME.out.fai
-    dict = PREPARE_GENOME.out.dict
-    germline_resource = PREPARE_GENOME.out.germline_resource
-    germline_resource_tbi = PREPARE_GENOME.out.germline_resource_tbi
-    panel_of_normals = PREPARE_GENOME.out.panel_of_normals
-    panel_of_normals_tbi = PREPARE_GENOME.out.panel_of_normals_tbi
-    pileup_variants = PREPARE_GENOME.out.pileup_variants
-    pileup_variants_tbi = PREPARE_GENOME.out.pileup_variants_tbi
-    dbsnp = PREPARE_GENOME.out.dbsnp
-    dbsnp_tbi = PREPARE_GENOME.out.dbsnp_tbi
-    intervals = PREPARE_GENOME.out.intervals
-    bait_intervals = PREPARE_GENOME.out.bait_intervals
-    target_intervals = PREPARE_GENOME.out.target_intervals
-    targets = PREPARE_GENOME.out.targets
-
+    
     /*
-        ======================================================================
-                    Prepare the input samples and their metadata
-        ======================================================================
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Prepare the samples and metadata
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
-    if (params.input == null) {
-        error("Please provide an input CSV file with --input")
-    }
-
-    PREPARE_SAMPLE(params.input)
-    reads                   = PREPARE_SAMPLE.out.reads
-    paired_samples          = PREPARE_SAMPLE.out.paired_samples
-    unpaired_samples        = PREPARE_SAMPLE.out.unpaired_samples
-    paired_tumour_samples   = PREPARE_SAMPLE.out.paired_tumour_samples
-    paired_normal_samples   = PREPARE_SAMPLE.out.paired_normal_samples
-    unpaired_tumour_samples = PREPARE_SAMPLE.out.unpaired_tumour_samples
-    all_samples             = PREPARE_SAMPLE.out.all_samples
+    samples = PREPARE_SAMPLE(params.input)
+    
+    input_samples       = samples.input_samples
+    tumour_samples      = samples.tumour_samples
+    normal_samples      = samples.normal_samples
+    fastq               = samples.fastq
+    bam_tumour_normal   = samples.bam_tumour_normal
+    bam_tumour_only     = samples.bam_tumour_only
+    bam_all_samples     = samples.bam_all_samples
 
     /*
         ======================================================================
@@ -177,39 +168,35 @@ workflow {
         log.info("Running CNVkit variant calling step")
 
         // Run CNVkit variant calling
-        normal_bams = paired_normal_samples.map(
-            { _meta, normal_bam, _normal_bai -> 
-                normal_bam
-                }
-        )
-        
-        normal_bais = paired_normal_samples.map(
-            { _meta, _normal_bam, normal_bai -> 
-                normal_bai
-                }
-        )
-        
+        normal_bams = paired_normal_samples.map { _meta, normal_bam, _normal_bai ->
+            normal_bam
+        }
+
+        normal_bais = paired_normal_samples.map { _meta, _normal_bam, normal_bai ->
+            normal_bai
+        }
+
         VARIANT_CALLING_CNVKIT(
             normal_bams,
             normal_bais,
             fasta,
             fai,
             dict,
-            targets
+            targets,
         )
 
         // Capture CNVkit outputs for potential downstream use
         cnv_reference = VARIANT_CALLING_CNVKIT.out.cnv_reference
     }
 
-    if(run_cnv_facets) {
+    if (run_cnv_facets) {
 
         log.info("Running CNV-FACETS variant calling")
 
         VARIANT_CALLING_CNV(
             paired_samples,
             dbsnp,
-            dbsnp_tbi
+            dbsnp_tbi,
         )
     }
 

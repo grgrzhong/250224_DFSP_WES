@@ -7,10 +7,6 @@ process GATK4_MUTECT2_NORMAL {
     path(fasta)
     path(fai)
     path(dict)
-    path(germline_resource)
-    path(germline_resource_tbi)
-    path(panel_of_normals)
-    path(panel_of_normals_tbi)
     path(intervals)
 
     output:

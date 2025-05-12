@@ -20,7 +20,6 @@ include { GATK4_APPLYBQSR                          } from '../../modules/variant
 include { GATK4_COLLECTHSMETRICS                   } from '../../modules/variant_calling/gatk4/collecthsmetrics'
 include { BAMTOOLS_STATS                           } from '../../modules/variant_calling/bamtools/stats'
 
-
 /*
 ========================================================================================
     WORKFLOW

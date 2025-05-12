@@ -1,6 +1,6 @@
-process GATK4_GETPILEUPSUMMARIES {
+process GATK4_GETPILEUPSUMMARIES_NORMAL {
     
-    tag "$meta.id"
+    tag "$meta.normal_id"
     
     label 'process_low'
 
@@ -18,7 +18,7 @@ process GATK4_GETPILEUPSUMMARIES {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.normal_id}"
 
     def avail_mem = 3072
     if (!task.memory) {
