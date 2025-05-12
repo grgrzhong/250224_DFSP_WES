@@ -69,14 +69,12 @@ workflow MUTECT2_CALL {
  // Initialize empty channels for results
     tumour_normal_vcf = Channel.empty()
     tumour_normal_tbi = Channel.empty()
-    tumour_normal_stats = Channel.empty()
     tumour_normal_orientation = Channel.empty()
     tumour_normal_contamination = Channel.empty()
     tumour_normal_segmentation = Channel.empty()
     
     tumour_only_vcf = Channel.empty()
     tumour_only_tbi = Channel.empty()
-    tumour_only_stats = Channel.empty()
     tumour_only_orientation = Channel.empty()
     tumour_only_contamination = Channel.empty()
     tumour_only_segmentation = Channel.empty()
