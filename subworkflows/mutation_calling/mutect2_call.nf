@@ -69,12 +69,14 @@ workflow MUTECT2_CALL {
  // Initialize empty channels for results
     tumour_normal_vcf = Channel.empty()
     tumour_normal_tbi = Channel.empty()
+    tumour_normal_stats = Channel.empty()
     tumour_normal_orientation = Channel.empty()
     tumour_normal_contamination = Channel.empty()
     tumour_normal_segmentation = Channel.empty()
     
     tumour_only_vcf = Channel.empty()
     tumour_only_tbi = Channel.empty()
+    tumour_only_stats = Channel.empty()
     tumour_only_orientation = Channel.empty()
     tumour_only_contamination = Channel.empty()
     tumour_only_segmentation = Channel.empty()
@@ -152,6 +154,7 @@ workflow MUTECT2_CALL {
     // Store output channels
     tumour_normal_vcf = paired_mutect2.vcf
     tumour_normal_tbi = paired_mutect2.tbi
+    tumour_normal_stats = paired_mutect2.stats
     tumour_normal_orientation = paired_orientation.orientation
     tumour_normal_contamination = paired_contamination.contamination
     tumour_normal_segmentation = paired_contamination.segmentation
@@ -200,6 +203,7 @@ workflow MUTECT2_CALL {
     // Store output channels
     tumour_only_vcf = unpaired_mutect2.vcf
     tumour_only_tbi = unpaired_mutect2.tbi
+    tumour_only_stats = unpaired_mutect2.stats
     tumour_only_orientation = unpaired_orientation.orientation
     tumour_only_contamination = unpaired_contamination.contamination
     tumour_only_segmentation = unpaired_contamination.segmentation
@@ -207,6 +211,7 @@ workflow MUTECT2_CALL {
     // Combine all Mutect2 outputs for further processing
     mutect2_vcf = tumour_normal_vcf.mix(tumour_only_vcf)
     mutect2_tbi = tumour_normal_tbi.mix(tumour_only_tbi)
+    mutect2_stats = tumour_normal_tbi.mix(tumour_only_stats)
     mutect2_orientation = tumour_normal_orientation.mix(tumour_only_orientation)
     mutect2_contamination = tumour_normal_contamination.mix(tumour_only_contamination)
     mutect2_segmentation = tumour_normal_segmentation.mix(tumour_only_segmentation)
@@ -214,13 +219,16 @@ workflow MUTECT2_CALL {
     // Prepare inputs for FilterMutectCalls
     filter_input = mutect2_vcf
         .join(mutect2_tbi)
+        .join(mutect2_stats)
         .join(mutect2_orientation)
         .join(mutect2_contamination)
         .join(mutect2_segmentation)
-        .map { meta, vcf, tbi, orientation, contamination, segmentation ->
-            [meta, vcf, tbi, orientation, contamination, segmentation]
+        .map { meta, vcf, tbi, stats, orientation, contamination, segmentation ->
+            [meta, vcf, tbi, stats, orientation, contamination, segmentation]
         }
     
+    filter_input.view()
+
     // Filter Mutect2 calls
     filtered_calls = FILTERMUTECTCALLS(
         filter_input,
@@ -230,11 +238,8 @@ workflow MUTECT2_CALL {
     )
     
     // Normalize variants with bcftools
-    normalized_input = filtered_calls.vcf
-        .join(filtered_calls.tbi)
-    
     normalized_vcf = BCFTOOLS_NORM(
-        normalized_input,
+        filtered_calls.vcf.join(filtered_calls.tbi),
         fasta,
         fai,
         dict

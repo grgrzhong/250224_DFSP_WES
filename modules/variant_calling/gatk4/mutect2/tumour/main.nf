@@ -16,9 +16,9 @@ process GATK4_MUTECT2_TUMOUR {
     output:
     tuple val(meta), path("*.vcf.gz")     , emit: vcf
     tuple val(meta), path("*.tbi")        , emit: tbi
-    tuple val(meta), path("*.bam")        , emit: bam
-    tuple val(meta), path("*.f1r2.tar.gz"), optional:true, emit: f1r2
-    tuple val(meta), path("*.log")        , emit: log  
+    tuple val(meta), path("*.stats")      , emit: stats
+    tuple val(meta), path("*.f1r2.tar.gz"), emit: f1r2
+    // tuple val(meta), path("*.log")        , emit: log  
     path "versions.yml"                   , emit: versions
 
     when:
@@ -26,7 +26,7 @@ process GATK4_MUTECT2_TUMOUR {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     
     def pon_command = panel_of_normals ? "--panel-of-normals $panel_of_normals" : ""
     def gr_command = germline_resource ? "--germline-resource $germline_resource" : ""
@@ -54,8 +54,22 @@ process GATK4_MUTECT2_TUMOUR {
         -bamout ${prefix}.realigned.bam \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
         --native-pair-hmm-threads ${task.cpus} \\
-        $args \\
-        2> ${prefix}.mutect2.log
+        --tmp-dir . \\
+        $args
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        gatk4: \$(echo \$(gatk --version 2>&1) | sed 's/^.*(GATK) v//; s/ .*\$//')
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.vcf.gz
+    touch ${prefix}.vcf.gz.tbi
+    touch ${prefix}.vcf.gz.stats
+    touch ${prefix}.f1r2.tar.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
