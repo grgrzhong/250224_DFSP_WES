@@ -36,8 +36,20 @@ process BCFTOOLS_ANNOTATE_BLACKLIST {
         --header-lines blacklist.header \\
         --output-type z \\
         --write-index=tbi \\
-        --output ${prefix}.vcf.gz \\
+        --output ${prefix}.blacklist.vcf.gz \\
         $input
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: \$( bcftools --version |& sed '1!d; s/^.*bcftools //' )
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.blacklist.vcf.gz
+    touch ${prefix}.blacklist.vcf.gz.tbi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

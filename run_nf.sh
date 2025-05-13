@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem-per-cpu=4G
 #SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.out
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
 # Setup the working directory

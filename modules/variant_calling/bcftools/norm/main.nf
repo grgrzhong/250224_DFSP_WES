@@ -11,7 +11,7 @@ process BCFTOOLS_NORM {
     path dict
     
     output:
-    tuple val(meta), path("*normalized.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.vcf.gz"), emit: vcf
     path "versions.yml", emit: versions
     
     when:

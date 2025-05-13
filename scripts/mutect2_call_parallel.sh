@@ -233,14 +233,14 @@ find "$vcf_dir" -name "*_unfiltered.vcf.gz" | sort | sed 's|.*/||' | sed 's/_unf
 # cat "${work_dir}/sample_list.txt"
 
 # Number of parallel processes to run (adjust based on your system's capacity)
-PARALLEL_JOBS=3
+PARALLEL_JOBS=1
 
 # Run the processing in parallel
 echo "Starting parallel processing of samples with $PARALLEL_JOBS jobs..."
 cat "${work_dir}/sample_list.txt" | parallel \
     --jobs $PARALLEL_JOBS \
     --progress \
-    --eta \
+    --joblog ${work_dir}/parallel.log \
     mutect_call_filter {} "$ref_dir" "$bam_dir" "$vcf_dir" "$work_dir" "$REFERENCE" "$GERMLINE" "$ANNOTATION_FILE" "$INTERVAL" "$PON"
 
 echo "All samples processed successfully."

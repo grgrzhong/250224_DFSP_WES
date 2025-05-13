@@ -33,9 +33,8 @@ process BCFTOOLS_ANNOTATE_REPEATMASKER {
         $args \\
         $annotations_file \\
         --header-lines repeatmasker.header \\
-        --output ${prefix}.vcf.gz \\
+        --output ${prefix}.repeatmasker.vcf.gz \\
         --threads $task.cpus \\
-        --write-index=tbi \\
         $input
 
     cat <<-END_VERSIONS > versions.yml
@@ -45,23 +44,10 @@ process BCFTOOLS_ANNOTATE_REPEATMASKER {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
-                    args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
-                    args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
-                    args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
-                    "vcf"
-    def index_extension = args.contains("--write-index=tbi") || args.contains("-W=tbi") ? "tbi" :
-                        args.contains("--write-index=csi") || args.contains("-W=csi") ? "csi" :
-                        args.contains("--write-index") || args.contains("-W") ? "csi" :
-                        ""
-    def create_cmd = extension.endsWith(".gz") ? "echo '' | gzip >" : "touch"
-    def create_index = extension.endsWith(".gz") && index_extension.matches("csi|tbi") ? "touch ${prefix}.${extension}.${index_extension}" : ""
-
     """
-    ${create_cmd} ${prefix}.${extension}
-    ${create_index}
+    touch ${prefix}.repeatmasker.vcf.gz
+    touch ${prefix}.repeatmasker.vcf.gz.tbi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
