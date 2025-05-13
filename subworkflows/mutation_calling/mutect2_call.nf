@@ -211,7 +211,7 @@ workflow MUTECT2_CALL {
     // Combine all Mutect2 outputs for further processing
     mutect2_vcf = tumour_normal_vcf.mix(tumour_only_vcf)
     mutect2_tbi = tumour_normal_tbi.mix(tumour_only_tbi)
-    mutect2_stats = tumour_normal_tbi.mix(tumour_only_stats)
+    mutect2_stats = tumour_normal_stats.mix(tumour_only_stats)
     mutect2_orientation = tumour_normal_orientation.mix(tumour_only_orientation)
     mutect2_contamination = tumour_normal_contamination.mix(tumour_only_contamination)
     mutect2_segmentation = tumour_normal_segmentation.mix(tumour_only_segmentation)
@@ -227,7 +227,7 @@ workflow MUTECT2_CALL {
             [meta, vcf, tbi, stats, orientation, contamination, segmentation]
         }
     
-    filter_input.view()
+    // filter_input.view()
 
     // Filter Mutect2 calls
     filtered_calls = FILTERMUTECTCALLS(
