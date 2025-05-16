@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem-per-cpu=4G
 #SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.out
+#SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
@@ -22,7 +23,7 @@ export NXF_OPTS="-Xms512m -Xmx8g"
 export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f .nextflow.log*
 
-nextflow run subworkflows/mutation_calling/mutect2_call.nf \
+nextflow run subworkflows/mutation_calling/variant_annotation_test.nf \
     -profile local \
-    -resume \
-    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv
+    -resume
+    # --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv

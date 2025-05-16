@@ -27,17 +27,34 @@ gunzip Homo_sapiens.GRCh38.109.gtf.gz
 
 
 ## ======================== repeatmasker regions ========================
-url="https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=1237006675_NR5drEgvZ85edZVWA5an0D0VQBC4&boolshad.hgta_printCustomTrackHeaders=0&hgta_ctName=tb_rmsk&hgta_ctDesc=table+browser+query+on+rmsk&hgta_ctVis=pack&hgta_ctUrl=&fbQual=whole&fbUpBases=200&fbDownBases=200&hgta_doGetBed=get+BED"
-wget  -O- -q  "$url" | 
-grep -v "#" | 
-sort -k1,1 -k2,2n -k3,3n -t$'\t' | 
-bgzip -c > repeatmasker.GRCh38.bed.gz
-tabix -p bed repeatmasker.GRCh38.bed.gz
+# url="https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=1237006675_NR5drEgvZ85edZVWA5an0D0VQBC4&boolshad.hgta_printCustomTrackHeaders=0&hgta_ctName=tb_rmsk&hgta_ctDesc=table+browser+query+on+rmsk&hgta_ctVis=pack&hgta_ctUrl=&fbQual=whole&fbUpBases=200&fbDownBases=200&hgta_doGetBed=get+BED"
+# wget  -O- -q  "$url" | 
+# grep -v "#" | 
+# sort -k1,1 -k2,2n -k3,3n -t$'\t' | 
+# bgzip -c > repeatmasker.GRCh38.bed.gz
+# tabix -p bed repeatmasker.GRCh38.bed.gz
 
-## Sort the
-gunzip ${ref_dir}/RepeatMasker.bed.gz
-# grep -v "#" ${ref_dir}/RepeatMasker.bed
+# Sort the repeatmasker bed file and create index
+# gunzip ${ref_dir}/RepeatMasker.bed.gz
+# bgzip ${ref_dir}/RepeatMasker.bed
+# sort -k1,1 -k2,2n ${ref_dir}/RepeatMasker.bed -o ${ref_dir}/RepeatMasker.sorted.bed
+# bgzip -c ${ref_dir}/RepeatMasker.sorted.bed > ${ref_dir}/RepeatMasker.sorted.bed.gz
+# tabix -p bed ${ref_dir}/RepeatMasker.sorted.bed.gz
 
-sort -k1,1 -k2,2n -k3,3n -t$'\t' ${ref_dir}/RepeatMasker.bed -o ${ref_dir}/RepeatMasker.sorted.bed
-bgzip ${ref_dir}/RepeatMasker.sorted.bed
-tabix -p bed ${ref_dir}/RepeatMasker.bed.gz
+# # Sort the blacklist bed file and create index
+# gunzip ${ref_dir}/blacklist.bed.gz
+# bgzip ${ref_dir}/blacklist.bed
+# sort -k1,1 -k2,2n ${ref_dir}/blacklist.bed -o ${ref_dir}/blacklist.sorted.bed
+# bgzip -c ${ref_dir}/blacklist.sorted.bed > ${ref_dir}/blacklist.sorted.bed.gz
+# tabix -p bed ${ref_dir}/blacklist.sorted.bed.gz
+
+## InterVar
+intervar_dir="$PWD/data/reference/InterVar-2.2.1"
+wget -P ${intervar_dir}/intervardb https://www.omim.org/static/omim/data/mim2gene.txt
+
+## annovar
+annovar_dir="$PWD/data/annovar"
+wget -P ${annovar_dir}/annovar http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
+tar -xzf ${annovar_dir}/annovar.latest.tar.gz -C ${annovar_dir}/annovar
+
+wget https://repo.bioserver.ieo.it/dima/hg38/humandb/hg38_ALL.sites.2015_08.txt

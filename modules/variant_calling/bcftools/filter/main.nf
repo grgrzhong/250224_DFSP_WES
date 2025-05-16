@@ -23,9 +23,14 @@ process BCFTOOLS_FILTER {
         -e 'INFO/RepeatMasker != "." || INFO/EncodeDacMapability != "."' \\
         -Oz \\
         ${vcf} \\
-        --write-index=tbi \\
-        --output ${prefix}.vcf.gz \\
+        --output ${prefix}.final.vcf.gz \\
         $args
 
+    tabix ${prefix}.final.vcf.gz
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: \$( bcftools --version |& sed '1!d; s/^.*bcftools //' )
+    END_VERSIONS
     """
 }

@@ -5,10 +5,11 @@ process BCFTOOLS_VIEW {
     label 'process_low'
     
     input:
-    tuple val(meta), path(vcf)
+    tuple val(meta), path(vcf), path(vcf_index)
     
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.vcf.gz.tbi"), emit: tbi
     path "versions.yml", emit: versions
     
     when:
@@ -25,6 +26,8 @@ process BCFTOOLS_VIEW {
         -o ${prefix}.filtered.normalized.vcf.gz \\
         $args
     
+    tabix ${prefix}.filtered.normalized.vcf.gz
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')

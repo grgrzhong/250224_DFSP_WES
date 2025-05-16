@@ -5,13 +5,12 @@ process BCFTOOLS_ANNOTATE_REPEATMASKER {
     label 'process_low'
 
     input:
-    tuple val(meta), path(input), path(index)
+    tuple val(meta), path(input), path(input_index)
     path annotations
-    path annotations_index
 
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
-    tuple val(meta), path("*.tbi")   , emit: tbi, optional: true
+    tuple val(meta), path("*.tbi")   , emit: tbi
     path "versions.yml"              , emit: versions
 
     when:
@@ -21,22 +20,21 @@ process BCFTOOLS_ANNOTATE_REPEATMASKER {
     def args    = task.ext.args ?: ''
     def prefix  = task.ext.prefix ?: "${meta.id}"
     def annotations_file = annotations ? "--annotations ${annotations}" : ''
-    def index_command = !index ? "bcftools index $input" : ''
     """
-    
-    $index_command
-
     echo -e "##INFO=<ID=RepeatMasker,Number=1,Type=String,Description=\"RepeatMasker\">" > repeatmasker.header
 
     bcftools \\
         annotate \\
-        $args \\
+        $input \\
         $annotations_file \\
         --header-lines repeatmasker.header \\
+        --columns CHROM,FROM,TO,RepeatMasker \\
         --output ${prefix}.repeatmasker.vcf.gz \\
         --threads $task.cpus \\
-        $input
+        $args
 
+    tabix ${prefix}.repeatmasker.vcf.gz
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bcftools: \$( bcftools --version |& sed '1!d; s/^.*bcftools //' )

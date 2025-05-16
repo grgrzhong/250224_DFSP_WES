@@ -358,6 +358,8 @@ MafOncoPlot <- function(
     dev.off()
 
     message(paste("Saved plots to:", png_file))
+
+    print(p)
 }
 
 LoadSampleInfo <- function() {
@@ -550,4 +552,264 @@ AddCancerHotspot <- function(
     )
 
     return(maf_hotspot)
+}
+
+MergeAnnovarOutput <- function(
+    annovar_dir,
+    is_save = FALSE,
+    save_dir = "data/wes/annotation/merged"
+) {
+    # 
+    # annovar_dir <- here("data/wes/annotation/annovar")
+    annovar_dir <- here(annovar_dir)
+
+    input_files <- dir_ls(annovar_dir, recurse = TRUE, glob = "*annovar.txt")
+    
+    message(
+        "    Collecting ", length(input_files),
+        " annovar output files from: ", annovar_dir
+    )
+    
+    maf <- annovarToMaf(input_files)
+
+    ## Clean the sample names and Clean the AD column
+    maf_tbl <- maf |> 
+        as_tibble() |> 
+        mutate(
+            Tumor_Sample_Barcode = str_replace(Tumor_Sample_Barcode, "_annovar", "")
+        ) |> 
+        separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE) |>
+        mutate(
+            VAD = as.numeric(VAD),
+            DP = as.numeric(DP),
+            AF = as.numeric(AF),
+            gnomAD_exome_ALL = as.numeric(
+                replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
+            )
+        )
+
+    if (is_save && !is.null(save_dir)) {
+        # Save the merged maf file
+        file_name <- "annovar_maf_merged.qs"
+        
+        message(
+            "Saving merged maf file: ", here(save_dir, file_name)
+        )
+
+        fs::dir_create(here(save_dir))
+        
+        qsave(maf_tbl, here(save_dir, file_name))
+    }
+    
+    # Return a tibble
+    maf_tbl
+
+}
+
+LoadMergedAnnovar <- function(annovar_dir = "data/wes/annotation/merged") {
+
+    # Load the merged maf file
+    file_name <- "annovar_maf_merged.qs"
+
+    merged_maf <- here(annovar_dir, file_name)
+    
+    if (!file.exists(merged_maf)) {
+    
+        stop("Merged maf file not found: ", merged_maf)
+    }
+    
+    message("Loading merged maf file: ", merged_maf)
+
+    # Load the merged maf file and Clean the AD column
+    maf_tbl <- qread(merged_maf)
+
+    # Return a tibble
+    maf_tbl
+}
+
+FilterMergedMaf <- function(
+    maf_tbl,
+    # Filtering parameters by selected maf columns
+    filter_params = list(
+        # Minimum read depth
+        DP = list(op = ">=", value = 8),
+        # Minimum variant allele depth
+        VAD = list(op = ">=", value = 4),
+        # Minimum variant allele frequency
+        AF = list(op = ">=", value = 0.05),
+        # Maximum population frequency
+        gnomAD_exome_ALL = list(op = "<=", value = 0.01),
+        
+        # Exclude these classifications
+        Variant_Classification = list(op = "out", value = c("Silent")),
+        
+        # Exclude these functional annotations
+        Func.refGene = list(op = "out", value = c("synonymous_SNV"))
+    ),
+    print_summary = TRUE
+) {
+
+    # Summary variants before filtering
+    summary_before <- maf_tbl |>
+        group_by(Tumor_Sample_Barcode) |>
+        summarise(n_variants = n()) |>
+        summarise(
+            across(
+                n_variants,
+                list(
+                    total = ~ sum(.x),
+                    mean = ~ mean(.x, na.rm = TRUE),
+                    median = ~ median(.x, na.rm = TRUE)
+                ),
+                .names = "{.fn}_variants_before"
+            )
+        )
+
+    # # Glimplese the maf data
+    # colnames(maf_tbl)
+    # unique(maf_tbl$Variant_Classification)
+    # unique(maf_tbl$ExonicFunc.refGene)
+    # unique(maf_tbl$Func.refGene)
+
+    # ## Functional prediction
+    # unique(maf_tbl$SIFT_pred)
+    # unique(maf_tbl$Polyphen2_HDIV_pred)
+    # unique(maf_tbl$MutationTaster_pred)
+    # unique(maf_tbl$MutationAssessor_pred)
+    # unique(maf_tbl$FATHMM_pred)
+    # unique(maf_tbl$PROVEAN_pred)
+    # unique(maf_tbl$MetaSVM_pred)
+    # unique(maf_tbl$`M-CAP_pred`)
+
+    maf_filter <- maf_tbl
+
+    # Dynamically apply filters based on the provided filter_params
+    for (param in names(filter_params)) {
+        
+        filter_rule <- filter_params[[param]]
+        
+        op <- filter_rule$op
+        
+        value <- filter_rule$value
+        
+        # Apply numeric filters
+        if (is.numeric(value)) {
+
+            if (op == ">=") {
+
+                maf_filter <- maf_filter |> 
+                    dplyr::filter(
+                        is.na(.data[[param]]) | .data[[param]] >= value
+                    )
+
+            } else if (op == "<=") {
+
+                maf_filter <- maf_filter |> 
+                    dplyr::filter(
+                        is.na(.data[[param]]) | .data[[param]] <= value
+                    )
+            }
+        }
+        
+        # Apply categorical filters
+        if (is.character(value) || is.factor(value)) {
+            
+            if (op == "in") {
+                
+                maf_filter <- maf_filter |> 
+                    dplyr::filter(.data[[param]] %in% value)
+
+            } else if (op == "out") {
+
+                maf_filter <- maf_filter |> 
+                    dplyr::filter(!(.data[[param]] %in% value))
+            }
+        }
+    }
+    
+    # maf_filtered <- maf_tbl |> 
+    #     ## Filter out variants with low read depth, variant allele depth,
+    #     dplyr::filter(
+    #         is.na(DP) | DP >= min_rd,
+    #         is.na(VAD) | as.numeric(VAD) >= min_vad,
+    #         is.na(AF) | as.numeric(AF) >= min_vaf
+    #     ) |> 
+    #     ## Filter out variants with high population frequency
+    #     dplyr::filter(
+    #         is.na(gnomAD_exome_ALL) | gnomAD_exome_ALL <= max_pop_freq
+    #     ) |> 
+    #     arrange(gnomAD_exome_ALL) |> 
+    #     ## Filter out silent (synonymous) variants
+    #     dplyr::filter(
+    #         (Variant_Classification %in% c("Silent")),
+    #         (Func.refGene %in% c("synonymous_SNV")),
+    #         (ExonicFunc.refGene %in% c("synonymous SNV"))
+
+    #     ) |> 
+    #     ## Inlcude Filter out non-exonic variants
+    #     dplyr::filter(
+    #         Func.refGene %in% c(
+    #             "exonic", "splicing", "UTR5"
+    #         )
+    #     )
+
+    summary_after <- maf_filter |>
+        group_by(Tumor_Sample_Barcode) |>
+        summarise(n_variants = n()) |>
+        summarise(
+            across(
+                n_variants,
+                list(
+                    total = ~ sum(.x),
+                    mean = ~ mean(.x, na.rm = TRUE),
+                    median = ~ median(.x, na.rm = TRUE)
+                ),
+                .names = "{.fn}_variants_after"
+            )
+        )
+
+    # Print summary if requested
+    if (print_summary) {
+        message("Variant filtering summary:")
+        message("---------------------------------------------------")
+        message(
+            sprintf(
+                "Total variants before filtering: %d",
+                summary_before$total_variants_before
+            )
+        )
+        message(
+            sprintf(
+                "Total variants after filtering:  %d",
+                summary_after$total_variants_after
+            )
+        )
+        message(
+            sprintf(
+                "\nMean variants before:            %.2f",
+                summary_before$mean_variants_before
+            )
+        )
+        message(
+            sprintf(
+                "Mean variants after:             %.2f",
+                summary_after$mean_variants_after
+            )
+        )
+        message(
+            sprintf(
+                "\nMedian variants before:          %.2f",
+                summary_before$median_variants_before
+            )
+        )
+        message(
+            sprintf(
+                "Median variants after:           %.2f",
+                summary_after$median_variants_after
+            )
+        )
+    }
+    
+    # Return the filtered maf
+    return(maf_filter)
 }

@@ -12,6 +12,7 @@ process BCFTOOLS_NORM {
     
     output:
     tuple val(meta), path("*.vcf.gz"), emit: vcf
+    tuple val(meta), path("*.vcf.gz.tbi"), emit: tbi
     path "versions.yml", emit: versions
     
     when:
@@ -29,6 +30,8 @@ process BCFTOOLS_NORM {
         -o ${prefix}.normalized.vcf.gz \\
         $vcf \\
         $args
+    
+    tabix -p vcf ${prefix}.normalized.vcf.gz
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

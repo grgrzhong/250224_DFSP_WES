@@ -177,10 +177,9 @@ workflow PREPARE_SAMPLE {
         bam_tumour_only
             .count()
             .subscribe { count ->
-                
                 log.info("Total tumour-only samples = ${count}")
             }
-        
+
         // Combine paired and unpaired samples
         bam_all_samples = bam_tumour_normal.mix(bam_tumour_only)
         

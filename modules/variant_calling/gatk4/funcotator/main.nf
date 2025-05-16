@@ -5,18 +5,19 @@ process GATK4_FUNCOTATOR {
     label 'process_medium'
 
     input:
-    tuple val(meta), path(vcf)
+    tuple val(meta), path(vcf), path(vcf_index)
     path  fasta
     path  fai
     path  dict
+    path  intervals
     path  funcotator_source
-    val   genome_ver
-    val   output_format
+    val   funcotator_ref_version
 
     output:
-    tuple val(meta), path("*.{maf.gz,vcf.gz}"), emit: annotated_variants
-    tuple val(meta), path("*.{maf.gz.tbi,vcf.gz.tbi}"), optional:true, emit: index
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.maf.gz"), emit: maf
+    tuple val(meta), path("*.tsv"), emit: tsv
+    tuple val(meta), path("*.log")   , emit: log
+    path "versions.yml"              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,17 +25,21 @@ process GATK4_FUNCOTATOR {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def extension = output_format == "MAF" ? "maf.gz" : "vcf.gz"
     
     """
     gatk Funcotator \\
-        --variant $vcf \\
         --reference $fasta \\
-        --ref-version $genome_ver \\
+        --variant $vcf \\
+        --output ${prefix}.annotated.maf.gz \\
+        -L $intervals \\
+        --output-file-format MAF \\
         --data-sources-path $funcotator_source \\
-        --output ${prefix}.funcotator.$extension \\
-        --output-file-format $output_format \\
-        $args
+        --ref-version $funcotator_ref_version \\
+        --remove-filtered-variants true \\
+        $args \\
+        &> ${prefix}.funcotator.log
+
+    cat ${prefix}.annotated.maf.gz | grep -v "#" > ${prefix}.annotated.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
