@@ -55,7 +55,7 @@ process GATK4_MUTECT2_PAIRED {
         $pon_command \\
         $gr_command \\
         --callable-depth 20 \\
-        --output ${prefix}.unfiltered.vcf.gz \\
+        --output ${prefix}.mutect2.vcf.gz \\
         -bamout ${prefix}.realigned.bam \\
         --f1r2-tar-gz ${prefix}.f1r2.tar.gz \\
         --native-pair-hmm-threads ${task.cpus} \\

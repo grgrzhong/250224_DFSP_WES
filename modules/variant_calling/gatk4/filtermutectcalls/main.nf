@@ -40,7 +40,7 @@ process GATK4_FILTERMUTECTCALLS {
         --min-allele-fraction 0.01 \\
         --unique-alt-read-count 1 \\
         --stats ${stats} \\
-        --output ${prefix}.filtered.vcf.gz \\
+        --output ${prefix}.filtermutectcalls.vcf.gz \\
         --tmp-dir . \\
         $args
 

@@ -23,10 +23,10 @@ process BCFTOOLS_VIEW {
     bcftools view \\
         -f PASS \\
         $vcf \\
-        -o ${prefix}.filtered.normalized.vcf.gz \\
+        -o ${prefix}.passed.vcf.gz \\
         $args
     
-    tabix ${prefix}.filtered.normalized.vcf.gz
+    tabix ${prefix}.passed.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

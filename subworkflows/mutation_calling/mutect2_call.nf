@@ -18,8 +18,9 @@ include { GATK4_FILTERMUTECTCALLS as FILTERMUTECTCALLS               } from '../
 include { BCFTOOLS_NORM                                              } from '../../modules/variant_calling/bcftools/norm'
 include { BCFTOOLS_VIEW                                              } from '../../modules/variant_calling/bcftools/view'
 include { BCFTOOLS_ANNOTATE_REPEATMASKER as ANNOTATE_REPEATMASKER    } from '../../modules/variant_calling/bcftools/annotate/repeatmasker'
-include { BCFTOOLS_ANNOTATE_BLACKLIST as ANNOTATE_BLACKLIST } from '../../modules/variant_calling/bcftools/annotate/blacklist'
+include { BCFTOOLS_ANNOTATE_BLACKLIST as ANNOTATE_BLACKLIST          } from '../../modules/variant_calling/bcftools/annotate/blacklist'
 include { BCFTOOLS_FILTER as FILTER_REPEATMASKER_BLACKLIST           } from '../../modules/variant_calling/bcftools/filter'
+include { ANNOVAR                                                    } from "../../modules/variant_calling/annovar/main.nf"
 
 workflow MUTECT2_CALL {
     take:
@@ -37,6 +38,11 @@ workflow MUTECT2_CALL {
         intervals
         repeatmasker
         blacklist
+        annovar_db
+        annovar_buildver
+        annovar_protocol
+        annovar_operation
+        annovar_xreffile
 
     main:
     // Initialize empty channels for results
@@ -235,15 +241,24 @@ workflow MUTECT2_CALL {
         repeatmasker
     )
 
-    repeatmasker_blacklist_vcf = ANNOTATE_BLACKLIST(
+    blacklist_vcf = ANNOTATE_BLACKLIST(
         repeatmasker_vcf.vcf.join(repeatmasker_vcf.tbi),
         blacklist
     )
 
     // Filter out variants in RepeatMasker or Mapability
     final_vcf = FILTER_REPEATMASKER_BLACKLIST(
-        repeatmasker_blacklist_vcf.vcf
-        .join(repeatmasker_blacklist_vcf.tbi)
+        blacklist_vcf.vcf.join(blacklist_vcf.tbi)
+    )
+
+    // Annotate variants with ANNOVAR
+    ANNOVAR(
+        final_vcf.vcf.join(final_vcf.tbi),
+        annovar_db,
+        annovar_buildver,
+        annovar_protocol,
+        annovar_operation,
+        annovar_xreffile
     )
 
     emit:

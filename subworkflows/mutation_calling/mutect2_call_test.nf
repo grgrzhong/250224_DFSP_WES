@@ -3,6 +3,8 @@
 include { PREPARE_SAMPLE } from '../../subworkflows/mutation_calling/prepare_sample.nf'
 include { MUTECT2_CALL } from '../../subworkflows/mutation_calling/mutect2_call.nf'
 
+params.input = "/lustre1/g/path_my/250224_DFSP_WES/data/wes/csv/samplesheet.csv"
+
 params.fasta                    = params.genomes[params.genome]?.fasta
 params.fai                      = params.genomes[params.genome]?.fai
 params.dict                     = params.genomes[params.genome]?.dict
@@ -26,6 +28,11 @@ params.repeatmasker_tbi       = params.genomes[params.genome]?.repeatmasker_tbi
 params.blacklist              = params.genomes[params.genome]?.blacklist
 params.blacklist_tbi          = params.genomes[params.genome]?.blacklist_tbi
 
+params.annovar_db               = params.genomes[params.genome]?.annovar_db
+params.annovar_buildver         = params.genomes[params.genome]?.annovar_buildver
+params.annovar_protocol         = params.genomes[params.genome]?.annovar_protocol
+params.annovar_operation        = params.genomes[params.genome]?.annovar_operation
+params.annovar_xreffile         = params.genomes[params.genome]?.annovar_xreffile
 
 workflow {
     
@@ -49,6 +56,12 @@ workflow {
     repeatmasker            = params.repeatmasker ? file(params.repeatmasker) : null
     blacklist               = params.blacklist ? file(params.blacklist) : null
 
+    annovar_db              = params.annovar_db ? file(params.annovar_db) : null
+    annovar_buildver        = params.annovar_buildver
+    annovar_protocol        = params.annovar_protocol
+    annovar_operation       = params.annovar_operation
+    annovar_xreffile        = params.annovar_xreffile ? file(params.annovar_xreffile) : null
+
     samples = PREPARE_SAMPLE(params.input)
 
     MUTECT2_CALL(
@@ -65,6 +78,11 @@ workflow {
         panel_of_normals_tbi,
         intervals,
         repeatmasker,
-        blacklist
+        blacklist,
+        annovar_db,
+        annovar_buildver,
+        annovar_protocol,
+        annovar_operation,
+        annovar_xreffile
     )
 }
