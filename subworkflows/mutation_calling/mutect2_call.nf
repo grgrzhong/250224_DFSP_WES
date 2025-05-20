@@ -5,22 +5,22 @@
 */
 
 // Load required modules
-include { GATK4_MUTECT2_TUMOUR as MUTECT2_TUMOUR                     } from '../../modules/variant_calling/gatk4/mutect2/tumour'
-include { GATK4_MUTECT2_PAIRED as MUTECT2_PAIRED                     } from '../../modules/variant_calling/gatk4/mutect2/paired'
-include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUP_PAIRED_TUMOUR    } from '../../modules/variant_calling/gatk4/getpileupsummaries/tumour'
-include { GATK4_GETPILEUPSUMMARIES_NORMAL as PILEUP_PAIRED_NORMAL    } from '../../modules/variant_calling/gatk4/getpileupsummaries/normal'
-include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUPS_UNPAIRED_TUMOUR } from '../../modules/variant_calling/gatk4/getpileupsummaries/tumour'
-include { GATK4_CALCULATECONTAMINATION as CONTAMINATION_PAIRED       } from '../../modules/variant_calling/gatk4/calculatecontamination'
-include { GATK4_CALCULATECONTAMINATION as CONTAMINATION_UNPAIRED     } from '../../modules/variant_calling/gatk4/calculatecontamination'
-include { GATK4_LEARNREADORIENTATIONMODEL as LEARNMODEL_PAIRED       } from '../../modules/variant_calling/gatk4/learnreadorientationmodel'
-include { GATK4_LEARNREADORIENTATIONMODEL as LEARNMODEL_UNPAIRED     } from '../../modules/variant_calling/gatk4/learnreadorientationmodel'
-include { GATK4_FILTERMUTECTCALLS as FILTERMUTECTCALLS               } from '../../modules/variant_calling/gatk4/filtermutectcalls'
-include { BCFTOOLS_NORM                                              } from '../../modules/variant_calling/bcftools/norm'
-include { BCFTOOLS_VIEW                                              } from '../../modules/variant_calling/bcftools/view'
-include { BCFTOOLS_ANNOTATE_REPEATMASKER as ANNOTATE_REPEATMASKER    } from '../../modules/variant_calling/bcftools/annotate/repeatmasker'
-include { BCFTOOLS_ANNOTATE_BLACKLIST as ANNOTATE_BLACKLIST          } from '../../modules/variant_calling/bcftools/annotate/blacklist'
-include { BCFTOOLS_FILTER as FILTER_REPEATMASKER_BLACKLIST           } from '../../modules/variant_calling/bcftools/filter'
-include { ANNOVAR                                                    } from "../../modules/variant_calling/annovar/main.nf"
+include { GATK4_MUTECT2_TUMOUR as MUTECT2_TUMOUR                     } from '../../modules/local/gatk4/mutect2/tumour'
+include { GATK4_MUTECT2_PAIRED as MUTECT2_PAIRED                     } from '../../modules/local/gatk4/mutect2/paired'
+include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUP_PAIRED_TUMOUR    } from '../../modules/local/gatk4/getpileupsummaries/tumour'
+include { GATK4_GETPILEUPSUMMARIES_NORMAL as PILEUP_PAIRED_NORMAL    } from '../../modules/local/gatk4/getpileupsummaries/normal'
+include { GATK4_GETPILEUPSUMMARIES_TUMOUR as PILEUPS_UNPAIRED_TUMOUR } from '../../modules/local/gatk4/getpileupsummaries/tumour'
+include { GATK4_CALCULATECONTAMINATION as CONTAMINATION_PAIRED       } from '../../modules/local/gatk4/calculatecontamination'
+include { GATK4_CALCULATECONTAMINATION as CONTAMINATION_UNPAIRED     } from '../../modules/local/gatk4/calculatecontamination'
+include { GATK4_LEARNREADORIENTATIONMODEL as LEARNMODEL_PAIRED       } from '../../modules/local/gatk4/learnreadorientationmodel'
+include { GATK4_LEARNREADORIENTATIONMODEL as LEARNMODEL_UNPAIRED     } from '../../modules/local/gatk4/learnreadorientationmodel'
+include { GATK4_FILTERMUTECTCALLS as FILTERMUTECTCALLS               } from '../../modules/local/gatk4/filtermutectcalls'
+include { BCFTOOLS_NORM                                              } from '../../modules/local/bcftools/norm'
+include { BCFTOOLS_VIEW                                              } from '../../modules/local/bcftools/view'
+include { BCFTOOLS_ANNOTATE_REPEATMASKER as ANNOTATE_REPEATMASKER    } from '../../modules/local/bcftools/annotate/repeatmasker'
+include { BCFTOOLS_ANNOTATE_BLACKLIST as ANNOTATE_BLACKLIST          } from '../../modules/local/bcftools/annotate/blacklist'
+include { BCFTOOLS_FILTER as FILTER_REPEATMASKER_BLACKLIST           } from '../../modules/local/bcftools/filter'
+include { ANNOVAR                                                    } from "../../modules/local/annovar/main.nf"
 
 workflow MUTECT2_CALL {
     take:

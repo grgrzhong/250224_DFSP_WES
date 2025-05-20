@@ -63,12 +63,12 @@ workflow PREPARE_SAMPLE {
         
             }
 
-        input_samples
-            .count()
-            .subscribe { count ->
+        // input_samples
+        //     .count()
+        //     .subscribe { count ->
                 
-                log.info("Total samples =  ${count} ")
-            }
+        //         log.info("Total samples =  ${count} ")
+        //     }
 
         // Prepare the fastq channel for preprocessing and mapping
         fastq = input_samples
@@ -97,12 +97,12 @@ workflow PREPARE_SAMPLE {
                 meta.status == 0 
             }
         
-        normal_samples
-            .count()
-            .subscribe { count ->
+        // normal_samples
+        //     .count()
+        //     .subscribe { count ->
                 
-                log.info("Total normal samples = ${count}")
-            }
+        //         log.info("Total normal samples = ${count}")
+        //     }
 
         // Prepare bam input for tumour_normal paired samples
         bam_tumour_normal = tumour_samples
@@ -135,12 +135,12 @@ workflow PREPARE_SAMPLE {
                 return [meta, tumour[3], tumour[4], normal[3], normal[4]]
             }
 
-        bam_tumour_normal
-            .count()
-            .subscribe { count ->
+        // bam_tumour_normal
+        //     .count()
+        //     .subscribe { count ->
                 
-                log.info("Total tumour-normal samples =  ${count}")
-            }
+        //         log.info("Total tumour-normal samples =  ${count}")
+        //     }
 
         // Prepare bam input for tumour only samples
         normal_patient_ids = normal_samples
@@ -174,14 +174,23 @@ workflow PREPARE_SAMPLE {
                 return [meta, bam, bai, null, null]
             }
 
-        bam_tumour_only
-            .count()
-            .subscribe { count ->
-                log.info("Total tumour-only samples = ${count}")
-            }
+        // bam_tumour_only
+        //     .count()
+        //     .subscribe { count ->
+        //         log.info("Total tumour-only samples = ${count}")
+        //     }
 
         // Combine paired and unpaired samples
         bam_all_samples = bam_tumour_normal.mix(bam_tumour_only)
+
+        // Print out the sample iformation summary
+        log.info "================== Sample information =================="
+        log.info "Total number of samples          = ${input_samples.count()}"
+        log.info "Total number of tumour samples   = ${tumour_samples.count()}"
+        log.info "Total number of normal samples   = ${normal_samples.count()}"
+        log.info "Total number of paired samples   = ${bam_tumour_normal.count()}"
+        log.info "Total number of unpaired samples = ${bam_tumour_only.count()}"
+
         
     emit:
         input_samples       = input_samples

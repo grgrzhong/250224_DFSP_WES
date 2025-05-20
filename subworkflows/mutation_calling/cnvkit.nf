@@ -5,11 +5,11 @@
 */
 
 // Load required modules
-include { CNVKIT_REFERENCE } from '../../modules/variant_calling/cnvkit/reference/main'
-include { CNVKIT_BATCH       } from '../../modules/variant_calling/cnvkit/batch/main'
-include { CNVKIT_CALL        } from '../../modules/variant_calling/cnvkit/call/main'
-include { CNVKIT_EXPORT      } from '../../modules/variant_calling/cnvkit/export/main'
-include { CNVKIT_GENEMETRICS } from '../../modules/variant_calling/cnvkit/genemetrics/main'
+include { CNVKIT_REFERENCE   } from '../../modules/local/cnvkit/reference/main'
+include { CNVKIT_BATCH       } from '../../modules/local/cnvkit/batch/main'
+include { CNVKIT_CALL        } from '../../modules/local/cnvkit/call/main'
+include { CNVKIT_EXPORT      } from '../../modules/local/cnvkit/export/main'
+include { CNVKIT_GENEMETRICS } from '../../modules/local/cnvkit/genemetrics/main'
 
 workflow CNV_CNVKIT {
 

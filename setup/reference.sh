@@ -58,3 +58,30 @@ wget -P ${annovar_dir}/annovar http://www.openbioinformatics.org/annovar/downloa
 tar -xzf ${annovar_dir}/annovar.latest.tar.gz -C ${annovar_dir}/annovar
 
 wget https://repo.bioserver.ieo.it/dima/hg38/humandb/hg38_ALL.sites.2015_08.txt
+
+
+# Download COSMIC (requires license, but a free subset is available)
+cosmic_dir="$PWD/data/reference/cosmic"
+wget https://cancer.sanger.ac.uk/cosmic/file_download/GRCh38/cosmic/vXX/CosmicMutantExport.tsv.gz
+
+# Download ClinVar (public)
+clinvar_dir="$PWD/data/reference/clinvar"
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+
+# Download OncoKB (free version available)
+oncokb_dir="$PWD/data/reference/OncoKB"
+mkdir -p ${oncokb_dir}
+wget https://www.oncokb.org/api/v1/utils/allAnnotatedVariants.tsv -O oncokb_dir/allAnnotatedVariants.tsv
+
+wget https://www.oncokb.org/api/v1/utils/allAnnotatedVariants.tsv -O oncokb_variants.tsv
+
+# Cancer Hotspots (pre-processed)
+cancer_hotspots_dir="$PWD/data/reference/cancer_hotspots"
+mkdir -p ${cancer_hotspots_dir}
+cd ${cancer_hotspots_dir}
+wget https://www.cancerhotspots.org/files/hotspots_v2.xls
+
+# From Google DeepMind (choose GRCh38 or GRCh37)
+cancer_hotspots_dir="$PWD/data/reference/AlphaMissense"
+wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz
+gunzip AlphaMissense_hg38.tsv.gz

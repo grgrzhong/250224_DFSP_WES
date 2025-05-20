@@ -6,9 +6,9 @@
 */
 
 // Load the required modules
-include { GATK4_MUTECT2_NORMAL } from '../../modules/variant_calling/gatk4/mutect2/normal'
-include { GATK4_GENOMICSDBIMPORT } from '../../modules/variant_calling/gatk4/genomicsdbimport'
-include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/variant_calling/gatk4/createsomaticpanelofnormals'
+include { GATK4_MUTECT2_NORMAL              } from '../../modules/local/gatk4/mutect2/normal'
+include { GATK4_GENOMICSDBIMPORT            } from '../../modules/local/gatk4/genomicsdbimport'
+include { GATK4_CREATESOMATICPANELOFNORMALS } from '../../modules/local/gatk4/createsomaticpanelofnormals'
 
 workflow MUTECT2_PON {
     

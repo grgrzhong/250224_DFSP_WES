@@ -6,19 +6,19 @@
 */
 
 // IMPORT MODULES/SUBWORKFLOWS
-include { FASTP_TRIM                               } from '../../modules/variant_calling/fastp/main.nf'
-include { FASTQC                                   } from '../../modules/variant_calling/fastqc'
-include { BWA_MEM                                  } from '../../modules/variant_calling/bwa/mem'
-include { TAG_UMI                                  } from '../../modules/variant_calling/tagumi'
-include { SAMTOOLS_SORT                            } from '../../modules/variant_calling/samtools/sort'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_MARKDUP } from '../../modules/variant_calling/samtools/index'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_RECAL   } from '../../modules/variant_calling/samtools/index'
-include { SAMTOOLS_INDEX                           } from '../../modules/variant_calling/samtools/index'
-include { GATK4_MARKDUPLICATES                     } from '../../modules/variant_calling/gatk4/markduplicates'
-include { GATK4_BASERECALIBRATOR                   } from '../../modules/variant_calling/gatk4/baserecalibrator'
-include { GATK4_APPLYBQSR                          } from '../../modules/variant_calling/gatk4/applybqsr'
-include { GATK4_COLLECTHSMETRICS                   } from '../../modules/variant_calling/gatk4/collecthsmetrics'
-include { BAMTOOLS_STATS                           } from '../../modules/variant_calling/bamtools/stats'
+include { FASTP_TRIM                               } from '../../modules/local/fastp/main.nf'
+include { FASTQC                                   } from '../../modules/local/fastqc'
+include { BWA_MEM                                  } from '../../modules/local/bwa/mem'
+include { TAG_UMI                                  } from '../../modules/local/tagumi'
+include { SAMTOOLS_SORT                            } from '../../modules/local/samtools/sort'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_MARKDUP } from '../../modules/local/samtools/index'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_RECAL   } from '../../modules/local/samtools/index'
+include { SAMTOOLS_INDEX                           } from '../../modules/local/samtools/index'
+include { GATK4_MARKDUPLICATES                     } from '../../modules/local/gatk4/markduplicates'
+include { GATK4_BASERECALIBRATOR                   } from '../../modules/local/gatk4/baserecalibrator'
+include { GATK4_APPLYBQSR                          } from '../../modules/local/gatk4/applybqsr'
+include { GATK4_COLLECTHSMETRICS                   } from '../../modules/local/gatk4/collecthsmetrics'
+include { BAMTOOLS_STATS                           } from '../../modules/local/bamtools/stats'
 
 /*
 ========================================================================================

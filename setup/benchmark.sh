@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Benchmark data directory 
-cd /home/zhonggr/projects/250224_DFSP_WES/data/Benchmark/NA12878
+cd /home/zhonggr/projects/250224_DFSP_WES/data/reference/NA12878
 
 ##############################################################################
 # NA12878 (HG001) benchmark data from the GIAB

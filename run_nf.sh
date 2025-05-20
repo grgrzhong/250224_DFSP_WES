@@ -20,10 +20,10 @@ cd /home/zhonggr/projects/250224_DFSP_WES
 # export NXF_HOME=$HOME/.nextflow
 export NXF_DISABLE_CHECK_LATEST=true
 export NXF_OPTS="-Xms512m -Xmx8g"
-export NXF_LOG_FILE="${PWD}/.nextflow.log"
+# export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f .nextflow.log*
 
-nextflow run subworkflows/mutation_calling/mutect2_call_test.nf \
-    -profile hpc \
-    -resume
-    # --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv
+nextflow run workflows/somatic_variant_calling.nf \
+    -profile local \
+    -resume \
+    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/samplesheet.csv

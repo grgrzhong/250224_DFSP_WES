@@ -1,7 +1,7 @@
 
 // Load required subworkflows
 include { PREPARE_SAMPLE } from '../../subworkflows/mutation_calling/prepare_sample.nf'
-include { MUTECT2_CALL } from '../../subworkflows/mutation_calling/mutect2_call.nf'
+include { MUTECT2_CALL   } from '../../subworkflows/mutation_calling/mutect2_call.nf'
 
 params.input = "/lustre1/g/path_my/250224_DFSP_WES/data/wes/csv/samplesheet.csv"
 

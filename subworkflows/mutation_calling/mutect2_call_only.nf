@@ -5,8 +5,8 @@
 */
 
 // Load required modules
-include { GATK4_MUTECT2_TUMOUR as MUTECT2_TUMOUR                     } from '../../modules/variant_calling/gatk4/mutect2/tumour'
-include { GATK4_MUTECT2_PAIRED as MUTECT2_PAIRED                     } from '../../modules/variant_calling/gatk4/mutect2/paired'
+include { GATK4_MUTECT2_TUMOUR as MUTECT2_TUMOUR } from '../../modules/local/gatk4/mutect2/tumour'
+include { GATK4_MUTECT2_PAIRED as MUTECT2_PAIRED } from '../../modules/local/gatk4/mutect2/paired'
 
 params.fasta                    = params.genomes[params.genome]?.fasta
 params.fai                      = params.genomes[params.genome]?.fai

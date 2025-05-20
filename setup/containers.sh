@@ -10,7 +10,7 @@ mkdir -p ${container_dir}
 singularity pull --force --dir ${container_dir} bamtools.sif oras://community.wave.seqera.io/library/bamtools:2.5.2--ec8f9631801f9901
 singularity pull --force --dir ${container_dir} bcftools.sif oras://community.wave.seqera.io/library/bcftools:1.21--21573c18b3ab6bcb
 singularity pull --force --dir ${container_dir} bwa.sif oras://community.wave.seqera.io/library/bwa_samtools:3f723aba7e77ee82
-singularity pull --force --dir ${container_dir} cnv_facets.sif oras://community.wave.seqera.io/library/cnv_facets:0.16.1--279b2b94c5e037b9
+singularity pull --force --dir ${container_dir} cnvfacets.sif oras://community.wave.seqera.io/library/cnv_facets:0.16.1--279b2b94c5e037b9
 singularity pull --force --dir ${container_dir} cnvkit.sif oras://community.wave.seqera.io/library/cnvkit:0.9.12--8f4ba584e385f393
 singularity pull --force --dir ${container_dir} controlfreec.sif oras://community.wave.seqera.io/library/control-freec:11.6--b8904bfc98b3c9ba
 singularity pull --force --dir ${container_dir} delly.sif oras://community.wave.seqera.io/library/delly:1.3.3--6a757953473b323c
@@ -23,6 +23,7 @@ singularity pull --force --dir ${container_dir} manta.sif oras://community.wave.
 singularity pull --force --dir ${container_dir} multiqc.sif oras://community.wave.seqera.io/library/multiqc:1.28--d466e41d58d6d704
 singularity pull --force --dir ${container_dir} pysam.sif oras://community.wave.seqera.io/library/pysam_python:65ddcfde3934cade
 singularity pull --force --dir ${container_dir} samtools.sif oras://community.wave.seqera.io/library/samtools:1.21--84c9d77c3901e90b
+singularity pull --force --dir ${container_dir} sequenzautils.sif oras://community.wave.seqera.io/library/samtools_sequenza-utils_tabix_python:0ed695c1d671ea87
 singularity pull --force --dir ${container_dir} tabix.sif oras://community.wave.seqera.io/library/tabix:1.11--dba91ce963b95ef9
 singularity pull --force --dir ${container_dir} vcf2maf.sif oras://community.wave.seqera.io/library/ensembl-vep_vcf2maf:df9fb21816c1659e
 
