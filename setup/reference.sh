@@ -25,7 +25,6 @@ gunzip gencode.v43.basic.annotation.gtf.gz
 wget https://ftp.ensembl.org/pub/release-109/gtf/homo_sapiens/Homo_sapiens.GRCh38.109.gtf.gz
 gunzip Homo_sapiens.GRCh38.109.gtf.gz
 
-
 ## ======================== repeatmasker regions ========================
 # url="https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=1237006675_NR5drEgvZ85edZVWA5an0D0VQBC4&boolshad.hgta_printCustomTrackHeaders=0&hgta_ctName=tb_rmsk&hgta_ctDesc=table+browser+query+on+rmsk&hgta_ctVis=pack&hgta_ctUrl=&fbQual=whole&fbUpBases=200&fbDownBases=200&hgta_doGetBed=get+BED"
 # wget  -O- -q  "$url" | 

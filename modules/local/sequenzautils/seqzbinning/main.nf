@@ -17,7 +17,7 @@ process SEQUENZAUTILS_SEQZBINNING {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.tumour_id}"
     """
     sequenza-utils \\
         seqz_binning \\

@@ -36,7 +36,7 @@ params.annovar_operation        = params.genomes[params.genome]?.annovar_operati
 params.annovar_xreffile         = params.genomes[params.genome]?.annovar_xreffile
 params.funcotator_ref_version   = params.genomes[params.genome]?.funcotator_ref_version
 params.wigfile                  = params.genomes[params.genome]?.wigfile
-params.window_size             = params.genomes[params.genome]?.window_size
+params.window_size              = params.genomes[params.genome]?.window_size
 
 // Main workflow
 workflow {
@@ -82,26 +82,26 @@ workflow {
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
     log.info "================== Genome & Resources =================="
-    log.info "Reference genome          = ${fasta}"
-    log.info "FASTA index               = ${fai}"
-    log.info "Dictionary                = ${dict}"
-    log.info "dbSNP                     = ${dbsnp}"
-    log.info "dbSNP index               = ${dbsnp_tbi}"
-    log.info "Germline resource         = ${germline_resource}"
-    log.info "Germline resource index   = ${germline_resource_tbi}"
-    log.info "Panel of normals          = ${panel_of_normals}"
-    log.info "Panel of normals index    = ${panel_of_normals_tbi}"
-    log.info "Pileup variants           = ${pileup_variants}"
-    log.info "Pileup variants index     = ${pileup_variants_tbi}"
-    log.info "Intervals file            = ${intervals}"
-    log.info "Bait intervals            = ${bait_intervals}"
-    log.info "Target intervals          = ${target_intervals}"
-    log.info "Targets                   = ${targets}"
-    log.info "RepeatMasker              = ${repeatmasker}"
-    log.info "Blacklist                 = ${blacklist}"
-    log.info "Funcotator resources      = ${funcotator_resources}"
-    log.info "ANNOVAR resources         = ${annovar_db}"
-    log.info "Wigfile                   = ${wigfile}"
+    log.info "Reference genome           = ${fasta}"
+    log.info "FASTA index                = ${fai}"
+    log.info "Dictionary                 = ${dict}"
+    log.info "dbSNP                      = ${dbsnp}"
+    log.info "dbSNP index                = ${dbsnp_tbi}"
+    log.info "Germline resource          = ${germline_resource}"
+    log.info "Germline resource index    = ${germline_resource_tbi}"
+    log.info "Panel of normals           = ${panel_of_normals}"
+    log.info "Panel of normals index     = ${panel_of_normals_tbi}"
+    log.info "Pileup variants            = ${pileup_variants}"
+    log.info "Pileup variants index      = ${pileup_variants_tbi}"
+    log.info "Intervals file             = ${intervals}"
+    log.info "Bait intervals             = ${bait_intervals}"
+    log.info "Target intervals           = ${target_intervals}"
+    log.info "Targets                    = ${targets}"
+    log.info "RepeatMasker               = ${repeatmasker}"
+    log.info "Blacklist                  = ${blacklist}"
+    log.info "Funcotator resources       = ${funcotator_resources}"
+    log.info "ANNOVAR resources          = ${annovar_db}"
+    log.info "Wigfile                    = ${wigfile}"
 
     /*
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,28 +136,30 @@ workflow {
     //     intervals
     // )
 
-    // // Run Mutect2 SNV/indels variant calling
-    // MUTECT2_CALL(
-    //     bam_tumour_normal,
-    //     bam_tumour_only,
-    //     fasta,
-    //     fai,
-    //     dict,
-    //     pileup_variants,
-    //     pileup_variants_tbi,
-    //     germline_resource,
-    //     germline_resource_tbi,
-    //     panel_of_normals,
-    //     panel_of_normals_tbi,
-    //     intervals,
-    //     repeatmasker,
-    //     blacklist,
-    //     annovar_db,
-    //     annovar_buildver,
-    //     annovar_protocol,
-    //     annovar_operation,
-    //     annovar_xreffile
-    // )
+    // Run Mutect2 SNV/indels variant calling and annotation
+    MUTECT2_CALL(
+        bam_tumour_normal,
+        bam_tumour_only,
+        fasta,
+        fai,
+        dict,
+        pileup_variants,
+        pileup_variants_tbi,
+        germline_resource,
+        germline_resource_tbi,
+        panel_of_normals,
+        panel_of_normals_tbi,
+        intervals,
+        repeatmasker,
+        blacklist,
+        funcotator_resources,
+        funcotator_ref_version,
+        annovar_db,
+        annovar_buildver,
+        annovar_protocol,
+        annovar_operation,
+        annovar_xreffile
+    )
 
     // annotation_input = MUTECT2_CALL.out.vcf.join(MUTECT2_CALL.out.tbi)
 
@@ -169,11 +171,11 @@ workflow {
     // )
 
     // Run CNV analysis using Sequenza
-    CNV_SEQUENZA(
-        bam_tumour_normal,
-        fasta,
-        wigfile,
-        window_size
-    )
+    // CNV_SEQUENZA(
+    //     bam_tumour_normal,
+    //     fasta,
+    //     wigfile,
+    //     window_size
+    // )
 
 }

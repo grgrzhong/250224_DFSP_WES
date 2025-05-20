@@ -84,12 +84,12 @@ workflow PREPARE_SAMPLE {
                 meta.status == 1 
             }
 
-        tumour_samples
-            .count()
-            .subscribe { count ->
+        // tumour_samples
+        //     .count()
+        //     .subscribe { count ->
                 
-                log.info("Total tumour samples = ${count}")
-            }
+        //         log.info("Total tumour samples = ${count}")
+        //     }
 
         normal_samples = input_samples
             .filter { 
@@ -185,11 +185,12 @@ workflow PREPARE_SAMPLE {
 
         // Print out the sample iformation summary
         log.info "================== Sample information =================="
-        log.info "Total number of samples          = ${input_samples.count()}"
-        log.info "Total number of tumour samples   = ${tumour_samples.count()}"
-        log.info "Total number of normal samples   = ${normal_samples.count()}"
-        log.info "Total number of paired samples   = ${bam_tumour_normal.count()}"
-        log.info "Total number of unpaired samples = ${bam_tumour_only.count()}"
+        input_samples.count().subscribe { countVal -> log.info "Number of samples          = ${countVal}" }
+        tumour_samples.count().subscribe { countVal -> log.info "Number of tumour samples   = ${countVal}" }
+        normal_samples.count().subscribe { countVal -> log.info "Number of normal samples   = ${countVal}" }
+        bam_tumour_normal.count().subscribe { countVal -> log.info "Number of paired samples   = ${countVal}" }
+        bam_tumour_only.count().subscribe { countVal -> log.info "Number of unpaired samples = ${countVal}" }
+
 
         
     emit:

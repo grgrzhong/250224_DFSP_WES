@@ -21,6 +21,7 @@ include { BCFTOOLS_ANNOTATE_REPEATMASKER as ANNOTATE_REPEATMASKER    } from '../
 include { BCFTOOLS_ANNOTATE_BLACKLIST as ANNOTATE_BLACKLIST          } from '../../modules/local/bcftools/annotate/blacklist'
 include { BCFTOOLS_FILTER as FILTER_REPEATMASKER_BLACKLIST           } from '../../modules/local/bcftools/filter'
 include { ANNOVAR                                                    } from "../../modules/local/annovar/main.nf"
+include { GATK4_FUNCOTATOR as FUNCOTATOR                             } from "../../modules/local/gatk4/funcotator/main.nf"
 
 workflow MUTECT2_CALL {
     take:
@@ -38,6 +39,8 @@ workflow MUTECT2_CALL {
         intervals
         repeatmasker
         blacklist
+        funcotator_resources
+        funcotator_ref_version
         annovar_db
         annovar_buildver
         annovar_protocol
@@ -249,6 +252,17 @@ workflow MUTECT2_CALL {
     // Filter out variants in RepeatMasker or Mapability
     final_vcf = FILTER_REPEATMASKER_BLACKLIST(
         blacklist_vcf.vcf.join(blacklist_vcf.tbi)
+    )
+
+    // Annotate variants with GATK Funcotator
+    FUNCOTATOR(
+        final_vcf.vcf.join(final_vcf.tbi),
+        fasta,
+        fai,
+        dict,
+        intervals,
+        funcotator_resources,
+        funcotator_ref_version
     )
 
     // Annotate variants with ANNOVAR

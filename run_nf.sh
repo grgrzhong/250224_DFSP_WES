@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Test_NF
 #SBATCH --partition=amd
-#SBATCH --time=48:00:00
+#SBATCH --time=72:00:00
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -23,7 +23,14 @@ export NXF_OPTS="-Xms512m -Xmx8g"
 # export NXF_LOG_FILE="${PWD}/.nextflow.log"
 rm -f .nextflow.log*
 
+# Run the Nextflow pipeline in local mode
+# nextflow run workflows/somatic_variant_calling.nf \
+#     -profile local \
+#     -resume \
+#     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/samplesheet.csv
+
+# Run the Nextflow pipeline in hpc mode
 nextflow run workflows/somatic_variant_calling.nf \
-    -profile local \
+    -profile hpc \
     -resume \
     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/samplesheet.csv
