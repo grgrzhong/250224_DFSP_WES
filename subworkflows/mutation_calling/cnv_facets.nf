@@ -32,28 +32,34 @@ workflow CNV_FACETS {
 
     
     // Extract normal_id from the defined_normal channel - needs to be fixed
-    normal_id = Channel.fromPath(defined_normal)
-        .map { file ->
-            return file.getName().replaceAll(/\.bam$/, "")
-        }
-        .first()
+    // normal_id = Channel.fromPath(defined_normal)
+    //     .map { file ->
+    //         return file.getName().replaceAll(/\.bam$/, "")
+    //     }
+    //     .first()
 
-    // Log the normal_id for debugging
-    normal_id.view { "Using normal sample: $it" }
+    // // Log the normal_id for debugging
+    // normal_id.view { "Using normal sample: $it" }
 
-    // Run FACETS for unpaired samples if all requirements are met
-    unpaired_ch = normal_id
-        .combine(bam_tumour_only)
-        .map { n_id, meta, t, t_idx, n, n_idx ->
-            def new_meta = [
-                id: "${meta.tumour_id}_vs_${n_id}",
-                patient_id: meta.patient_id,
-                tumour_id: meta.tumour_id,
-                normal_id: n_id,
-                is_paired: false
-            ]
+    // // Run FACETS for unpaired samples if all requirements are met
+    // unpaired_ch = normal_id
+    //     .combine(bam_tumour_only)
+    //     .map { n_id, meta, t, t_idx, n, n_idx ->
+    //         def new_meta = [
+    //             id: "${meta.tumour_id}_vs_${n_id}",
+    //             patient_id: meta.patient_id,
+    //             tumour_id: meta.tumour_id,
+    //             normal_id: n_id,
+    //             is_paired: false
+    //         ]
 
-            [new_meta, t, t_idx]
+    //         [new_meta, t, t_idx]
+    //     }
+
+    unpaired_ch = bam_tumour_only
+        .map { meta, tumour_bam, tumour_bai, normal_bam, normal_bai ->
+            // Create proper tuple structure expected by FACETS_UNPAIRED
+            [meta, tumour_bam, tumour_bai]
         }
 
     FACETS_UNPAIRED(
