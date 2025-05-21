@@ -4,8 +4,8 @@
 include { PREPARE_SAMPLE     } from "../subworkflows/mutation_calling/prepare_sample.nf"
 include { PREPROCESSING      } from "../subworkflows/mutation_calling/preprocessing.nf"
 include { MUTECT2_CALL       } from "../subworkflows/mutation_calling/mutect2_call.nf"
-include { CNV_FACETS         } from '../modules/local/facets/main.nf'
 include { CNV_SEQUENZA       } from "../subworkflows/mutation_calling/cnv_sequenza.nf"
+include { CNV_FACETS         } from "../subworkflows/mutation_calling/cnv_facets.nf"
 
 // Input csv file
 params.input = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv"
@@ -76,6 +76,10 @@ workflow {
     wigfile                 = params.wigfile ? file(params.wigfile) : null
     window_size             = params.window_size
 
+    // Manuall defined normal sample for the toumour sample without normal
+    defined_normal          = params.defined_normal ? file(params.defined_normal) : null
+    defined_normal_index    = params.defined_normal_index ? file(params.defined_normal_index) : null
+
     /*
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         Print Genome and Resource File Information
@@ -102,6 +106,7 @@ workflow {
     log.info "Funcotator resources       = ${funcotator_resources}"
     log.info "ANNOVAR resources          = ${annovar_db}"
     log.info "Wigfile                    = ${wigfile}"
+    log.info "Definied normal            = ${defined_normal}"
 
     /*
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,38 +142,41 @@ workflow {
     // )
 
     // Run Mutect2 SNV/indels variant calling and annotation
-    MUTECT2_CALL(
-        bam_tumour_normal,
-        bam_tumour_only,
-        fasta,
-        fai,
-        dict,
-        pileup_variants,
-        pileup_variants_tbi,
-        germline_resource,
-        germline_resource_tbi,
-        panel_of_normals,
-        panel_of_normals_tbi,
-        intervals,
-        repeatmasker,
-        blacklist,
-        funcotator_resources,
-        funcotator_ref_version,
-        annovar_db,
-        annovar_buildver,
-        annovar_protocol,
-        annovar_operation,
-        annovar_xreffile
-    )
+    // MUTECT2_CALL(
+    //     bam_tumour_normal,
+    //     bam_tumour_only,
+    //     fasta,
+    //     fai,
+    //     dict,
+    //     pileup_variants,
+    //     pileup_variants_tbi,
+    //     germline_resource,
+    //     germline_resource_tbi,
+    //     panel_of_normals,
+    //     panel_of_normals_tbi,
+    //     intervals,
+    //     repeatmasker,
+    //     blacklist,
+    //     funcotator_resources,
+    //     funcotator_ref_version,
+    //     annovar_db,
+    //     annovar_buildver,
+    //     annovar_protocol,
+    //     annovar_operation,
+    //     annovar_xreffile
+    // )
 
     // annotation_input = MUTECT2_CALL.out.vcf.join(MUTECT2_CALL.out.tbi)
 
-    // // Run CNV analysis using FACETS
-    // CNV_FACETS(
-    //     bam_tumour_normal,
-    //     dbsnp,
-    //     dbsnp_tbi
-    // )
+    // Run CNV analysis using FACETS
+    CNV_FACETS(
+        bam_tumour_normal,
+        bam_tumour_only,
+        dbsnp,
+        dbsnp_tbi,
+        defined_normal,
+        defined_normal_index
+    )
 
     // Run CNV analysis using Sequenza
     // CNV_SEQUENZA(

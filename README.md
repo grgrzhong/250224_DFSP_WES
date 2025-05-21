@@ -7,6 +7,11 @@ conda activate varcall
 conda install -c bioconda gatk4 samtools bcftools parallel nextflow singularity
 ```
 
+## Reference & Resource
+```bash
+## Add execuate permissions
+chmod -R u+rwx,go+rx data/reference
+```
 ## Input data
 
 `data/WES/SARC/`: Internal reference samples that used to test pipeline

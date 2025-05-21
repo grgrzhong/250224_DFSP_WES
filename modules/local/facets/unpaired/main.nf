@@ -1,11 +1,13 @@
-process CNV_FACETS {
+process CNV_FACETS_UNPAIRED {
     
     tag "${meta.id}"
 
     label "process_medium"
     
     input:
-    tuple val(meta), path(input_tumour), path(input_tumour_index), path(input_normal), path(input_normal_index)
+    tuple val(meta), path(input_tumour), path(input_tumour_index)
+    path defined_normal
+    path defined_normal_index
     path dbsnp
     path dbsnp_tbi
     
@@ -23,7 +25,7 @@ process CNV_FACETS {
     """
     # Run CNV-FACETS for tumor-normal pair
     cnv_facets.R \\
-        --snp-normal ${input_normal} \\
+        --snp-normal ${defined_normal} \\
         --snp-tumour ${input_tumour} \\
         --snp-vcf ${dbsnp} \\
         --snp-nprocs ${task.cpus} \\

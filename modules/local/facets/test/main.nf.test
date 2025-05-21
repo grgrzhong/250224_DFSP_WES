@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 
-include { CNV_FACETS } from '../main.nf'
+include { CNV_FACETS_PAIRED } from '../main.nf'
 
 // Default parameters
-params.input_tumour_bam = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bam"
-params.input_tumour_bai = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bai"
-params.input_normal_bam = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bam"
-params.input_normal_bai = "${launchDir}/data/WES/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bai"
+params.input_tumour_bam = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bam"
+params.input_tumour_bai = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/preprocessing/recalibrated/DFSP-161-T/DFSP-161-T_recalibrated.bai"
+params.input_normal_bam = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bam"
+params.input_normal_bai = "/home/zhonggr/projects/250224_DFSP_WES/data/wes/preprocessing/recalibrated/DFSP-161-N/DFSP-161-N_recalibrated.bai"
 
 params.dbsnp = params.genomes[params.genome].dbsnp
 params.dbsnp_tbi = params.genomes[params.genome].dbsnp_tbi

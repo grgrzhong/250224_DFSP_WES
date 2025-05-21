@@ -24,13 +24,13 @@ export NXF_OPTS="-Xms512m -Xmx8g"
 rm -f .nextflow.log*
 
 # Run the Nextflow pipeline in local mode
-# nextflow run workflows/somatic_variant_calling.nf \
-#     -profile local \
-#     -resume \
-#     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/samplesheet.csv
+nextflow run workflows/somatic_variant_calling.nf \
+    -profile local \
+    -resume \
+    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv
 
 # Run the Nextflow pipeline in hpc mode
-nextflow run workflows/somatic_variant_calling.nf \
-    -profile hpc \
-    -resume \
-    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/samplesheet.csv
+# nextflow run workflows/somatic_variant_calling.nf \
+#     -profile hpc \
+#     -resume \
+#     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv

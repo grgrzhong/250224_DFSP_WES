@@ -134,6 +134,10 @@ workflow PREPARE_SAMPLE {
                 
                 return [meta, tumour[3], tumour[4], normal[3], normal[4]]
             }
+            .ifEmpty {
+                log.info("No paired samples found")
+                Channel.empty()
+            }
 
         // bam_tumour_normal
         //     .count()
@@ -172,6 +176,10 @@ workflow PREPARE_SAMPLE {
                 ]
                 
                 return [meta, bam, bai, null, null]
+            }
+            .ifEmpty { 
+                log.info("No unpaired samples found")
+                Channel.empty()
             }
 
         // bam_tumour_only
