@@ -7,9 +7,9 @@
 #############################################################################
 
 # Remote server details
-remote_user="username"
-remote_host="hostname_or_ip"
-remote_base_dir="/path/to/remote/base/folder/"
+remote_user="zhonggr"
+remote_host="hpc" # hpc2021-io1.hku.hk 
+remote_base_dir="/lustre1/g/path_my/250224_DFSP_WES"
 
 # Define folders to sync (relative or absolute paths)
 # Format: "local_path:remote_subpath"
