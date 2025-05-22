@@ -1,8 +1,6 @@
 #!/bin/bash
 
-####
-# Download the VEP cache file
-
+## Download the VEP cache file
 vep_data_dir="$PWD/data/reference/ensembl_vep"
 mkdir -p vep_data_dir
 cd ${vep_data_dir}
@@ -25,7 +23,7 @@ gunzip gencode.v43.basic.annotation.gtf.gz
 wget https://ftp.ensembl.org/pub/release-109/gtf/homo_sapiens/Homo_sapiens.GRCh38.109.gtf.gz
 gunzip Homo_sapiens.GRCh38.109.gtf.gz
 
-## ======================== repeatmasker regions ========================
+## repeatmasker regions 
 # url="https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=1237006675_NR5drEgvZ85edZVWA5an0D0VQBC4&boolshad.hgta_printCustomTrackHeaders=0&hgta_ctName=tb_rmsk&hgta_ctDesc=table+browser+query+on+rmsk&hgta_ctVis=pack&hgta_ctUrl=&fbQual=whole&fbUpBases=200&fbDownBases=200&hgta_doGetBed=get+BED"
 # wget  -O- -q  "$url" | 
 # grep -v "#" | 
@@ -58,7 +56,6 @@ tar -xzf ${annovar_dir}/annovar.latest.tar.gz -C ${annovar_dir}/annovar
 
 wget https://repo.bioserver.ieo.it/dima/hg38/humandb/hg38_ALL.sites.2015_08.txt
 
-
 # Download COSMIC (requires license, but a free subset is available)
 cosmic_dir="$PWD/data/reference/cosmic"
 wget https://cancer.sanger.ac.uk/cosmic/file_download/GRCh38/cosmic/vXX/CosmicMutantExport.tsv.gz
@@ -84,3 +81,29 @@ wget https://www.cancerhotspots.org/files/hotspots_v2.xls
 cancer_hotspots_dir="$PWD/data/reference/AlphaMissense"
 wget https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz
 gunzip AlphaMissense_hg38.tsv.gz
+
+# Benchmark data directory 
+cd /home/zhonggr/projects/250224_DFSP_WES/data/reference/NA12878
+
+##############################################################################
+# NA12878 (HG001) benchmark data from the GIAB
+##############################################################################
+out_dir="/home/zhonggr/projects/250224_DFSP_WES/data/reference/NA12878"
+mkdir -p ${out_dir}
+cd ${out_dir}
+
+## Download truth VCF and BED files (benchmark variants)
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/HG001_GRCh38_1_22_v4.2.1_benchmark.bed
+
+## Download the Garvan NA12878 fastq files, exome target regions, and BAM files
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/NA12878/Garvan_NA12878_HG001_HiSeq_Exome/Garvan_NA12878_HG001_HiSeq_Exome.README
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/NA12878/Garvan_NA12878_HG001_HiSeq_Exome/nexterarapidcapture_expandedexome_targetedregions.bed.gz
+gunzip -f nexterarapidcapture_expandedexome_targetedregions.bed.gz
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/NA12878/Garvan_NA12878_HG001_HiSeq_Exome/NIST7035_TAAGGCGA_L001_R1_001.fastq.gz
+wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/NA12878/Garvan_NA12878_HG001_HiSeq_Exome/NIST7035_TAAGGCGA_L001_R2_001.fastq.gz
+
+# For whole genome data (HG001/NA12878) aligned to GRCh38:
+# wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/NIST_NA12878_HG001_HiSeq_300x/NHGRI_Illumina300X_novoalign_bams/HG001.GRCh38.300x.bam
+# wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/NIST_NA12878_HG001_HiSeq_300x/NHGRI_Illumina300X_novoalign_bams/HG001.GRCh38.300x.bam.bai

@@ -54,3 +54,43 @@ write_excel_csv(
     vcf_samplesheet,
     here("data/wes/csv/mutect2_call_vcf.csv")
 )
+
+# tumour samples without matched normal
+tumour_samples <- vcf_samplesheet |> 
+    filter(status == 1) |> 
+    select(sample_id, vcf, tbi, f1r2)
+
+message(length(assume_normal_ids))
+
+normal_ids <- grep(
+    "N",
+    vcf_samplesheet$sample_id, 
+)
+
+sample_info <- read_csv(here("data/wes/sample_info/samplesheet.csv")) |> 
+    select(patient, sample, status)
+
+assume_normal_ids <- paste0(sample_info$patient, "-N") |> unique()
+avail_normal_ids <- sample_info |> 
+    filter(status == 0) |> 
+    pull(sample)
+
+no_normal_patient <- setdiff(
+    assume_normal_ids,
+    avail_normal_ids
+)
+no_normal_patient <- str_replace_all(
+    no_normal_patient,
+    "-N",
+    ""
+)
+
+tumour_only_samples <- sample_info |> 
+    filter(patient %in% no_normal_patient) |> 
+    pull(sample)
+    
+# Write tumour-only samples to a text file
+write_lines(
+    tumour_only_samples,
+    here("data/wes/sample_info/tumour_only_samples.txt")
+)
