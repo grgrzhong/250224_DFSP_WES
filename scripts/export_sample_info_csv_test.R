@@ -1,6 +1,54 @@
 # Load required libraries
 source(here::here("lib/R/study_lib.R"))
 
+sample_info_dir <- here("data/wes/sample_info")
+
+tumour_only_samples <- here(sample_info_dir, "tumour_only_samples.txt")
+tumour_only_samples <- readLines(tumour_only_samples)
+message("Tumour-only samples: ", length(tumour_only_samples))
+
+## Load the samplesheet
+bam_all_samples <- here(sample_info_dir, "bam_all_samples.csv")
+bam_all_samples <- read_csv(bam_all_samples)
+
+write_excel_csv(
+    bam_all_samples |>
+        filter(sample %in% tumour_only_samples),
+    here("data/wes/sample_info/bam_tumour_only.csv")
+)
+
+write_excel_csv(
+        bam_all_samples |>
+        filter(patient %in% "DFSP-001"),
+    here("data/wes/sample_info/bam_test1.csv")
+)
+
+write_excel_csv(
+        bam_all_samples |>
+        filter(patient %in% c("DFSP-001", "DFSP-106")),
+    here("data/wes/sample_info/bam_test2.csv")
+)
+
+write_excel_csv(
+        bam_all_samples |>
+        filter(patient %in% c("DFSP-001", "DFSP-106", "DFSP-198")),
+    here("data/wes/sample_info/bam_test3.csv")
+)
+
+write_excel_csv(
+        bam_all_samples |>
+        filter(patient %in% c("DFSP-001", "DFSP-106", "DFSP-198")),
+    here("data/wes/sample_info/bam_test3.csv")
+)
+
+write.csv(
+    tumour_only_samples, 
+    file=here("data/wes/sample_info/tumour_only_samplesheet.csv"), 
+    row.names=FALSE, 
+    na = "",
+    quote = FALSE
+)
+
 vcf_dir <- here("data/wes/variant_calling/mutect2")
 bam_dir <- here("data/wes/preprocessing/recalibrated")
 
@@ -30,12 +78,16 @@ vcf_samples_ids <- vcf_files |>
     str_replace_all("_", "-")
 
 bam_tbl <- tibble(
-    patient_id = bam_patient_ids,
-    sample_id = bam_sample_ids,
+    patient = bam_patient_ids,
+    sample = bam_sample_ids,
     status = bam_patient_status,
     bam = as.character(bam_files),
     bai = as.character(bai_files)
 )
+
+tumour_only_samplesheet <- bam_tbl |> 
+    filter(status == 1 & sample %in% tumour_only_samples)
+
 
 vcf_tbl <- tibble(
     sample_id = vcf_samples_ids,

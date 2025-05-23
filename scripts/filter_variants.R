@@ -1,8 +1,7 @@
-# %%
+
 ## Load required libraries and functions
 source(here::here("lib/R/study_lib.R"))
 
-# %% 
 ## Merge all the annovar annoated variants
 ## Run only once
 # maf_tbl <- MergeAnnovarOutput(
@@ -11,7 +10,6 @@ source(here::here("lib/R/study_lib.R"))
 #     save_dir = "data/wes/annotation/merged"
 # )
 
-# %% 
 ## Annotate variants with cancer hotspot info
 maf_tbl <- LoadMergedAnnovar()
 
@@ -24,7 +22,6 @@ maf_tbl <- AddCancerHotspot(
     log10_pvalue = NULL
 )
 
-# %% 
 ## Filter the variants based on common criteria
 filter_params <- list(
     # Minimum read depth
@@ -73,11 +70,11 @@ filter_params <- list(
     )
 )
 
-# %% 
+
 # availabel prediction tools for functional consequences
 maf_tbl |> select(matches("pred")) |> colnames()
 
-# %% 
+
 maf_filter <- FilterMergedMaf(
     maf_tbl = maf_tbl,
     filter_params = filter_params
@@ -87,7 +84,7 @@ maf_filter <- FilterMergedMaf(
     # filter(Variant_Classification == "Silent")
     # filter(Func.refGene == "ncRNA_exonic")
     # filter(ExonicFunc.refGene == "synonymous_SNV")
-# %% 
+
 ## Find the enriched variants in FST
 maf_obj <- read.maf(maf = maf_filter)
 
@@ -151,7 +148,6 @@ annotation_colors <- list(
     )
 )
 
-# %% 
 n_samples <- nrow(getSampleSummary(maf_obj))
 top_n_genes <- 30
 clinical_features <- c("sample_group", "Specimen.Nature")

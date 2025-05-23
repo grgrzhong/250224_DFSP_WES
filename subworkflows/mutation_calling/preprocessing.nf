@@ -30,6 +30,7 @@ include { BAMTOOLS_STATS                           } from '../../modules/local/b
 workflow PREPROCESSING {
 
     take:    
+        ch_reads      // Input reads channel
         fasta
         fai           
         dict
@@ -38,16 +39,9 @@ workflow PREPROCESSING {
         bait_intervals
         target_intervals
         intervals
-        ch_reads
+        bwa_index     // BWA index files
 
     main:
-    // Create BWA index channel with all index files
-    fasta_index = Channel.fromPath("${fasta}.{amb,ann,bwt,pac,sa}", checkIfExists: true)
-        .ifEmpty {
-            exit(1, "ERROR: BWA indices not found for: ${fasta}")
-        }
-        .collect()
-
     // Trim reads and extract UMI information
     FASTP_TRIM(ch_reads)
 
@@ -58,7 +52,7 @@ workflow PREPROCESSING {
     BWA_MEM(
         FASTP_TRIM.out.reads,
         fasta,
-        fasta_index,
+        bwa_index,
     )
 
     // Tag UMIs in alignments

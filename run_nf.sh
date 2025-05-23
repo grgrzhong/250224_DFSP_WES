@@ -26,7 +26,7 @@ rm -f .nextflow.log*
 # Run the Nextflow pipeline in local mode
 nextflow run workflows/somatic_variant_calling.nf \
     -profile local \
-    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test2.csv
+    --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/bam_test3.csv
 
 # Run the Nextflow pipeline in hpc mode
 # nextflow run workflows/somatic_variant_calling.nf \
