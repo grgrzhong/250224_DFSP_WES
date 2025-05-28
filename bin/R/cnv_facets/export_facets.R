@@ -40,10 +40,11 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
 
     # Define output file paths
     seg_file <- file.path(output_dir, paste0(sample_name, ".seg"))
-    filtered_seg_file <- file.path(
-        output_dir,
-        paste0(sample_name, ".filtered.seg")
-    )
+    # seg_file <- file.path(output_dir, paste0(sample_name, ".txt"))
+    # filtered_seg_file <- file.path(
+    #     output_dir,
+    #     paste0(sample_name, ".filtered.seg")
+    # )
 
     # Read VCF file
     con <- if (grepl("\\.gz$", vcf_file)) {
@@ -132,7 +133,7 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
         end <- as.integer(info_dict[["END"]])
         svtype <- info_dict[["SVTYPE"]]
 
-        # Extract NUM_MARK (Num_markers)
+        # Extract NUM_MARK (Num_Markers)
         num_mark <- if ("NUM_MARK" %in% names(info_dict)) {
             as.integer(info_dict[["NUM_MARK"]])
         } else {
@@ -150,9 +151,9 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
         record <- list(
             "Sample.ID" = sample_name,
             "Chromosome" = chrom,
-            "Start.Position" = pos,
-            "End.Position" = end,
-            "Num_markers" = num_mark,
+            "Start_Position" = pos,
+            "End_Position" = end,
+            "Num_Markers" = num_mark,
             "Seg.CN" = cnlr_median,
             "SVTYPE" = svtype
         )
@@ -186,7 +187,7 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
     # Define fixed columns - these will always be present in the output in this exact order
     fixed_cols <- c(
         # Required SEG format columns
-        "Sample.ID", "Chromosome", "Start.Position", "End.Position", "Num_markers", "Seg.CN", "SVTYPE",
+        "Chromosome", "Start_Position", "End_Position", "Num_Markers", "Seg.CN", "SVTYPE", "Sample.ID", 
 
         # Important sample metadata
         "purity", "ploidy", "dipLogR", "est_insert_size", "emflags",
@@ -220,8 +221,11 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
     # Apply column ordering
     df <- df[, final_cols]
 
+    df$Start_Position <- as.integer(df$Start_Position - 1)  # Convert to 0-based for bed file
+    df$End_Position <- as.integer(df$End_Position)
+
     # Clean it to bed format
-    df$Chromosome <- gsub("chr", "", df$Chromosome)
+    # df$Chromosome <- gsub("chr", "", df$Chromosome)
     # df$Chromosome <- ifelse(
     #     grepl("^[0-9]+$", df$Chromosome),
     #     as.numeric(df$Chromosome),
@@ -229,28 +233,14 @@ process_vcf_to_seg <- function(vcf_file, output_dir = NULL) {
     # )
 
     # Save to SEG file
-    write.table(
-        df,
-        file = seg_file, sep = "\t", quote = FALSE, row.names = FALSE
-    )
-    message("Saved segment file: ", seg_file)
-
-    # Create filtered version (non-neutral segments)
     filtered_df <- df[df$SVTYPE != "NEUTR", ]
+
     write.table(
         filtered_df,
-        file = filtered_seg_file,
-        sep = "\t",
-        quote = FALSE,
+        file = seg_file, 
+        sep = "\t", 
+        quote = FALSE, 
         row.names = FALSE
-    )
-    message("Saved filtered SEG file: ", filtered_seg_file)
-
-    return(
-        list(
-            filtered_seg_file = filtered_seg_file,
-            seg_file = seg_file
-        )
     )
 }
 
@@ -287,9 +277,11 @@ if (!interactive()) {
 }
 
 # test
-input_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/cnv/facets"
-process_files(input_dir)
+# input_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/cnv/facets"
+# input_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/cnv/facets_test_normal"
+# process_files(input_dir)
 
-# readr::read_tsv(
-#     "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/cnv/facets/DFSP-001-T/DFSP-001-T.filtered.seg"
-# )
+## Delete all .txt files in the directory
+# library(fs)
+# dir_ls(input_dir, glob = "*.txt", recurse = TRUE) |> 
+# file_delete()

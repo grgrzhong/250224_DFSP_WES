@@ -5,14 +5,14 @@ suppressPackageStartupMessages(
         library(qs)
         library(fs)
         library(here)
-        library(tidyverse)
         library(readxl)
         library(writexl)
+        library(tidyverse)
     })
 )
 
 SavePlot <- function(
-    plot, width = 8, height = 6, only_png = TRUE, dir, filename) {
+    plot, width = 8, height = 6, only_png = FALSE, dir, filename) {
     ### Save png or pdf plots using ggplot2
 
     fs::dir_create(here(dir))
@@ -29,6 +29,11 @@ SavePlot <- function(
             dpi = 300,
             device = ifelse(img_type == ".png", png, cairo_pdf)
         )
+        
+        message(
+            "Saved plot: ", here(dir, paste0(filename, img_type))
+        )
+
     } else {
         ### Save both png and pdf
         for (img_type in c(".png", ".pdf")) {
@@ -40,6 +45,10 @@ SavePlot <- function(
                 units = "in",
                 dpi = 300,
                 device = ifelse(img_type == ".png", png, cairo_pdf)
+            )
+            
+            message(
+                "Saved plot: ", here(dir, paste0(filename, img_type))
             )
         }
     }
@@ -566,7 +575,7 @@ MergeAnnovarOutput <- function(
     input_files <- dir_ls(annovar_dir, recurse = TRUE, glob = "*annovar.txt")
     
     message(
-        "    Collecting ", length(input_files),
+        "Collecting ", length(input_files),
         " annovar output files from: ", annovar_dir
     )
     
@@ -593,7 +602,7 @@ MergeAnnovarOutput <- function(
         file_name <- "annovar_maf_merged.qs"
         
         message(
-            "Saving merged maf file: ", here(save_dir, file_name)
+            "Saving merged data: ", here(save_dir, file_name)
         )
 
         fs::dir_create(here(save_dir))

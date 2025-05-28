@@ -1,6 +1,6 @@
 
 ## Load required libraries
-source(here::here("lib/R/study_lib.R"))
+source(here::here("bin/R/lib/study_lib.R"))
 
 ## List all cnv facet VCF files
 cnv_facet_dir <- here("data/wes/variant_calling/cnv/facets")
@@ -12,7 +12,6 @@ vcf_files <- list.files(
     full.names = TRUE
 )
 message(paste("Found", length(vcf_files), "VCF files"))
-
 
 ## Function to extract values from VCF header
 extract_facet_info <- function(vcf_file) {

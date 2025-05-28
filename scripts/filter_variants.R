@@ -1,14 +1,16 @@
 
 ## Load required libraries and functions
-source(here::here("lib/R/study_lib.R"))
+source(here::here("bin/R/lib/study_lib.R"))
 
 ## Merge all the annovar annoated variants
-## Run only once
-# maf_tbl <- MergeAnnovarOutput(
-#     annovar_dir = "data/wes/variant_calling/mutect2_filter",
-#     is_save = TRUE,
-#     save_dir = "data/wes/annotation/merged"
-# )
+annovar_dir <- "data/wes/variant_calling/mutect2_with_black_repeat_filter_new"
+
+# Run only once
+maf_tbl <- MergeAnnovarOutput(
+    annovar_dir = annovar_dir,
+    is_save = TRUE,
+    save_dir = "data/wes/variant_calling/merged"
+)
 
 ## Annotate variants with cancer hotspot info
 maf_tbl <- LoadMergedAnnovar()

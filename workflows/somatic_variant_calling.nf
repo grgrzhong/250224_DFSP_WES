@@ -127,12 +127,12 @@ workflow {
     bam_tumour_only     = samples.bam_tumour_only
 
     // Print out the sample information
-    log.info "================== Sample Information =================="
-    input_samples.count().subscribe { countVal -> log.info "Number of samples          = ${countVal}" }
-    tumour_samples.count().subscribe { countVal -> log.info "Number of tumour samples   = ${countVal}" }
-    normal_samples.count().subscribe { countVal -> log.info "Number of normal samples   = ${countVal}" }
-    bam_tumour_normal.count().subscribe { countVal -> log.info "Number of paired samples   = ${countVal}" }
-    bam_tumour_only.count().subscribe { countVal -> log.info "Number of unpaired samples = ${countVal}" }
+    // log.info "================== Sample Information =================="
+    // input_samples.count().subscribe { countVal -> log.info "Number of samples          = ${countVal}" }
+    // tumour_samples.count().subscribe { countVal -> log.info "Number of tumour samples   = ${countVal}" }
+    // normal_samples.count().subscribe { countVal -> log.info "Number of normal samples   = ${countVal}" }
+    // bam_tumour_normal.count().subscribe { countVal -> log.info "Number of paired samples   = ${countVal}" }
+    // bam_tumour_only.count().subscribe { countVal -> log.info "Number of unpaired samples = ${countVal}" }
 
     /*
         ======================================================================

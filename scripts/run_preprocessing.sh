@@ -18,21 +18,30 @@ if ! conda activate varcall; then
     echo "ERROR: Failed to activate conda environment 'varcall'"
     exit 1
 fi
+
 sample=DFSP-001-T
 fastq_1=/mnt/m/WES/DFSP/Raw/CPOS-231227-DS-21322a/primary_seq/DFSP-001-T_1.fastq.gz
 fastq_2=/mnt/m/WES/DFSP/Raw/CPOS-231227-DS-21322a/primary_seq/DFSP-001-T_2.fastq.gz
+
+fastq_1=/home/zhonggr/projects/250224_DFSP_WES/data/reference/NA12878/NIST7035_TAAGGCGA_L001_R1_001.fastq.gz
+fastq_2=/home/zhonggr/projects/250224_DFSP_WES/data/reference/NA12878/NIST7035_TAAGGCGA_L001_R2_001.fastq.gz
+
+zcat ${fastq_1} | head -n 15
+zcat ${fastq_2} | head -n 15
+
+work_dir=/home/zhonggr/projects/250224_DFSP_WES/data/reference/benchmark/NA12878
+
 # Function to process a single sample through fastp and BWA
 run_preprocessing() {
     local sample=$1
     local fastq_1=$2
     local fastq_2=$3
-    local fastq_trimmed_dir=$4
-    local bam_dir=$5
-    local reference=$6
-    local interval=$7
-    local dbsnp=$8
-    local bait_interval=$9
-    local target_interval=${10}
+    local work_dir=$4
+    local reference=$5
+    local interval=$6
+    local dbsnp=$7
+    local bait_interval=$8
+    local target_interval=${9}
     
     echo "Processing sample: $sample"
     echo "FASTQ1: $fastq_1"
@@ -45,9 +54,11 @@ run_preprocessing() {
     fi
     
     # Create output directories
+    fastq_trimmed_dir="${work_dir}/preprocessing/fastq_trimmed"
     mkdir -p ${fastq_trimmed_dir}
+
+    bam_dir="${work_dir}/preprocessing/bam"
     mkdir -p ${bam_dir}/${sample}
-    local cur_dir=${bam_dir}/${sample}
     
     # Step 1: Fastp trimming
     echo $(date +"%F") $(date +"%T") "Running Fastp trimming for $sample..."
@@ -61,16 +72,16 @@ run_preprocessing() {
     fastp \
         -i ${fastq_1} \
         -I ${fastq_2} \
-        -o ${fastq_trimmed_dir}/${sample}_trimmed_1.fastq.gz \
-        -O ${fastq_trimmed_dir}/${sample}_trimmed_2.fastq.gz \
+        -o ${fastq_trimmed_dir}/${sample}/${sample}_trimmed_1.fastq.gz \
+        -O ${fastq_trimmed_dir}/${sample}/${sample}_trimmed_2.fastq.gz \
         --detect_adapter_for_pe \
         --adapter_sequence=${adapter_1} \
         --adapter_sequence_r2=${adapter_2} \
         --trim_poly_g \
         --trim_poly_x \
         ${umi_opts} \
-        -j ${fastq_trimmed_dir}/${sample}.json \
-        -h ${fastq_trimmed_dir}/${sample}.html \
+        -j ${fastq_trimmed_dir}/${sample}/${sample}.json \
+        -h ${fastq_trimmed_dir}/${sample}/${sample}.html \
         -w 8
 
     if [[ $? -ne 0 ]]; then
@@ -83,9 +94,9 @@ run_preprocessing() {
     bwa mem -M -t 16 \
         -R "@RG\tID:${sample}\tLB:${kit_name}\tPL:${platform}\tPM:${platform_model}\tSM:${sample}\tPU:NA" \
         ${reference} \
-        ${fastq_trimmed_dir}/${sample}_trimmed_1.fastq.gz \
-        ${fastq_trimmed_dir}/${sample}_trimmed_2.fastq.gz | \
-        samtools view -Sb - > ${cur_dir}/${sample}.bwa.bam
+        ${fastq_trimmed_dir}/${sample}/${sample}_trimmed_1.fastq.gz \
+        ${fastq_trimmed_dir}/${sample}/${sample}_trimmed_2.fastq.gz | \
+        samtools view -Sb - > ${bam_dir}/${sample}/${sample}.bwa.bam
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: BWA alignment failed for ${sample}" >&2
@@ -94,7 +105,9 @@ run_preprocessing() {
 
     # Step 3: Extract and tag UMI
     echo $(date +"%F") $(date +"%T") "Extract and tag UMI for ${sample}..."
-    python /home/zhonggr/projects/250224_DFSP_WES/bin/python/tag_umi.py -I ${cur_dir}/${sample}.bwa.bam -O ${cur_dir}/${sample}.umi.bam
+    python /home/zhonggr/projects/250224_DFSP_WES/bin/python/tag_umi.py \
+        -I ${bam_dir}/${sample}/${sample}.bwa.bam \
+        -O ${bam_dir}/${sample}/${sample}.umi.bam
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: UMI tagging failed for ${sample}" >&2
@@ -103,7 +116,9 @@ run_preprocessing() {
 
     # Step 4: Sort by coordinate
     echo $(date +"%F") $(date +"%T") "Sorting BAM file for ${sample}..."
-    samtools sort ${cur_dir}/${sample}.umi.bam -o ${cur_dir}/${sample}.sorted.bam
+    samtools sort \
+        ${bam_dir}/${sample}/${sample}.umi.bam \
+        -o ${bam_dir}/${sample}/${sample}.sorted.bam
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: BAM sorting failed for ${sample}" >&2
@@ -113,9 +128,9 @@ run_preprocessing() {
     # Step 5: Mark duplicates
     echo $(date +"%F") $(date +"%T") "Marking duplicates for ${sample}..."
     gatk --java-options -Xmx4g MarkDuplicates \
-        -I ${cur_dir}/${sample}.sorted.bam \
-        -M ${cur_dir}/${sample}.metrics.txt \
-        -O ${cur_dir}/${sample}.marked.bam \
+        -I ${bam_dir}/${sample}/${sample}.sorted.bam \
+        -M ${bam_dir}/${sample}/${sample}.metrics.txt \
+        -O ${bam_dir}/${sample}/${sample}.marked.bam \
         --BARCODE_TAG "RX"
 
     if [[ $? -ne 0 ]]; then
@@ -125,7 +140,7 @@ run_preprocessing() {
 
     # Step 6: Index BAM
     echo $(date +"%F") $(date +"%T") "Indexing BAM file for ${sample}..."
-    samtools index ${cur_dir}/${sample}.marked.bam
+    samtools index ${bam_dir}/${sample}/${sample}.marked.bam
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: BAM indexing failed for ${sample}" >&2
@@ -135,10 +150,10 @@ run_preprocessing() {
     # Step 7: Base recalibration
     echo $(date +"%F") $(date +"%T") "Running base recalibration for ${sample}..."
     gatk BaseRecalibrator \
-        -I ${cur_dir}/${sample}.marked.bam \
+        -I ${bam_dir}/${sample}/${sample}.marked.bam \
         -R ${reference} \
         -L ${interval} \
-        -O ${cur_dir}/${sample}.recal.table \
+        -O ${bam_dir}/${sample}/${sample}.recal.table \
         --known-sites ${dbsnp}
 
     if [[ $? -ne 0 ]]; then
@@ -149,10 +164,10 @@ run_preprocessing() {
     # Step 8: Apply BQSR
     echo $(date +"%F") $(date +"%T") "Applying BQSR for ${sample}..."
     gatk ApplyBQSR \
-        -I ${cur_dir}/${sample}.marked.bam \
-        -O ${cur_dir}/${sample}.recal.bam \
+        -I ${bam_dir}/${sample}/${sample}.marked.bam \
+        -O ${bam_dir}/${sample}/${sample}.recal.bam \
         -L ${interval} \
-        -bqsr ${cur_dir}/${sample}.recal.table \
+        -bqsr ${bam_dir}/${sample}/${sample}.recal.table \
         --create-output-bam-md5
 
     if [[ $? -ne 0 ]]; then
@@ -163,8 +178,8 @@ run_preprocessing() {
     # Step 9: Collect metrics
     echo $(date +"%F") $(date +"%T") "Collecting HsMetrics for ${sample}..."
     gatk CollectHsMetrics \
-        -I ${cur_dir}/${sample}.recal.bam \
-        -O ${cur_dir}/${sample}.hsmetrics.txt \
+        -I ${bam_dir}/${sample}/${sample}.recal.bam \
+        -O ${bam_dir}/${sample}/${sample}.hsmetrics.txt \
         -R ${reference} \
         -BI ${bait_interval} \
         -TI ${target_interval}
@@ -176,7 +191,9 @@ run_preprocessing() {
 
     # Step 10: Generate alignment stats
     echo $(date +"%F") $(date +"%T") "Generating alignment stats for ${sample}..."
-    bamtools stats -in ${cur_dir}/${sample}.recal.bam > ${cur_dir}/${sample}.alnstat.txt
+    bamtools stats \
+        -in ${bam_dir}/${sample}/${sample}.recal.bam \
+        > ${bam_dir}/${sample}/${sample}.alnstat.txt
 
     if [[ $? -ne 0 ]]; then
         echo "ERROR: Generating alignment stats failed for ${sample}" >&2

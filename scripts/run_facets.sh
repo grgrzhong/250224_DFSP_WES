@@ -80,6 +80,7 @@ export -f run_cnv_facets
 ref_dir="/home/zhonggr/projects/250224_DFSP_WES/data/reference"
 bam_dir="/home/zhonggr/projects/250224_DFSP_WES/data/wes/preprocessing/recalibrated"
 out_dir="/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/cnv/facets_test_normal"
+out_dir="/tmp"
 mkdir -p "${out_dir}"
 
 dbsnp="${ref_dir}/dbSNP.vcf.gz"
@@ -90,8 +91,8 @@ defined_normal="DFSP-336-N"
 
 ## sample list
 # tumour_samples=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/sample_list.txt
-# tumour_samples=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_only_samples.txt
-tumour_samples=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_test1.txt
+tumour_samples=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_only_samples.txt
+# tumour_samples=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_test1.txt
 
 # Count the number of samples
 num_sample=$(cat "$tumour_samples" | wc -l)

@@ -18,26 +18,56 @@ workflow CNV_FACETS {
 
     main:
 
-    // Initialize the empty results channels
-    paired_results = Channel.empty()
-    unpaired_results = Channel.empty()
+    // Initialize empty channels for results
+    paired_cnv = Channel.empty()
+    paired_cov = Channel.empty()
+    paired_csv = Channel.empty()
+    paired_spider = Channel.empty()
+    paired_vcf = Channel.empty()
+    paired_tbi = Channel.empty()
     
-    // Run FACETS for paired samples if available
+    unpaired_cnv = Channel.empty()
+    unpaired_cov = Channel.empty()
+    unpaired_csv = Channel.empty()
+    unpaired_spider = Channel.empty()
+    unpaired_vcf = Channel.empty()
+    unpaired_tbi = Channel.empty()
+    
+    // Run FACETS for paired samples
+    bam_tumour_normal
+        .ifEmpty { 
+            log.info "No paired samples found for FACETS analysis"
+            Channel.empty()
+        }
+        .set { paired_input }
+
+    // Only run FACETS_PAIRED if there are paired samples
     FACETS_PAIRED(
-        bam_tumour_normal, 
+        paired_input, 
         dbsnp, 
         dbsnp_tbi
     )
-    paired_results = FACETS_PAIRED.out
+    
+    // Set paired results if process ran
+    paired_cnv = FACETS_PAIRED.out.cnv
+    paired_cov = FACETS_PAIRED.out.cov
+    paired_csv = FACETS_PAIRED.out.csv
+    paired_spider = FACETS_PAIRED.out.spider
+    paired_vcf = FACETS_PAIRED.out.vcf
+    paired_tbi = FACETS_PAIRED.out.vcf_tbi
 
-
-    // Run FACETS for unpaired samples if all requirements are met
+    // Run FACETS for unpaired samples
     unpaired_ch = bam_tumour_only
+        .ifEmpty { 
+            log.info "No tumour-only samples found for FACETS analysis"
+            Channel.empty()
+        }
         .map { meta, tumour_bam, tumour_bai, normal_bam, normal_bai ->
             // Create proper tuple structure expected by FACETS_UNPAIRED
             [meta, tumour_bam, tumour_bai]
         }
 
+    // Only run FACETS_UNPAIRED if there are unpaired samples
     FACETS_UNPAIRED(
         unpaired_ch, 
         defined_normal,
@@ -46,24 +76,13 @@ workflow CNV_FACETS {
         dbsnp_tbi
     )
     
-    unpaired_results = FACETS_UNPAIRED.out
-
-    
-    // Create empty channels for unpaired results if not run
-    unpaired_cnv    = unpaired_results.cnv ?: Channel.empty()
-    unpaired_cov    = unpaired_results.cov ?: Channel.empty()
-    unpaired_csv    = unpaired_results.csv ?: Channel.empty()
-    unpaired_spider = unpaired_results.spider ?: Channel.empty()
-    unpaired_vcf    = unpaired_results.vcf ?: Channel.empty()
-    unpaired_tbi    = unpaired_results.vcf_tbi ?: Channel.empty()
-    
-    // Create empty channels for paired results if not run
-    paired_cnv    = paired_results.cnv ?: Channel.empty()
-    paired_cov    = paired_results.cov ?: Channel.empty()
-    paired_csv    = paired_results.csv ?: Channel.empty()
-    paired_spider = paired_results.spider ?: Channel.empty()
-    paired_vcf    = paired_results.vcf ?: Channel.empty()
-    paired_tbi    = paired_results.vcf_tbi ?: Channel.empty()
+    // Set unpaired results if process ran
+    unpaired_cnv = FACETS_UNPAIRED.out.cnv
+    unpaired_cov = FACETS_UNPAIRED.out.cov
+    unpaired_csv = FACETS_UNPAIRED.out.csv
+    unpaired_spider = FACETS_UNPAIRED.out.spider
+    unpaired_vcf = FACETS_UNPAIRED.out.vcf
+    unpaired_tbi = FACETS_UNPAIRED.out.vcf_tbi
     
     emit:
     // Mix results from both processes (will be empty if not run)

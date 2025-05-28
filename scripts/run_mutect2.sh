@@ -19,8 +19,6 @@ if ! conda activate varcall; then
     exit 1
 fi
 
-# Set strict error handling
-set -euo pipefail
 
 # Function to run mutect2 and filtering
 run_mutect2() {
