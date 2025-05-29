@@ -110,3 +110,9 @@ wget https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/NA12878/Garva
 # For whole genome data (HG001/NA12878) aligned to GRCh38:
 # wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/NIST_NA12878_HG001_HiSeq_300x/NHGRI_Illumina300X_novoalign_bams/HG001.GRCh38.300x.bam
 # wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/NIST_NA12878_HG001_HiSeq_300x/NHGRI_Illumina300X_novoalign_bams/HG001.GRCh38.300x.bam.bai
+
+
+################################################################################
+## HCC1395 vs. HCC1395BL
+################################################################################
+https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/seqc/Somatic_Mutation_WG/analysis/SNVs/cancer_reference_samples_supporting_files/README.md

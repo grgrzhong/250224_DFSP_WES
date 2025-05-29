@@ -2,90 +2,110 @@
 ## Load required libraries and functions
 source(here::here("bin/R/lib/study_lib.R"))
 
-## Merge all the annovar annoated variants
+## Merge all the annovar annoated variants -------------
 annovar_dir <- "data/wes/variant_calling/mutect2_with_black_repeat_filter_new"
 
 # Run only once
 maf_tbl <- MergeAnnovarOutput(
     annovar_dir = annovar_dir,
     is_save = TRUE,
-    save_dir = "data/wes/variant_calling/merged"
+    save_dir = "data/wes/results/merged"
 )
 
 ## Annotate variants with cancer hotspot info
-maf_tbl <- LoadMergedAnnovar()
+maf_tbl <- LoadMergedAnnovar("data/wes/results/merged")
 
 ## 1. Use cancer hotspot databases (e.g., COSMIC, OncoKB, or custom hotspot lists) to prioritize variants located in known cancer-associated regions.
 ## 2. Filter variants to retain only those that overlap with hotspot regions, as these are more likely to have clinical significance.
-maf_tbl <- AddCancerHotspot(
-    maf = maf_tbl,
-    qvalue = 0.05,
-    median_allele_freq_rank = 0.5,
-    log10_pvalue = NULL
-)
+# maf_tbl <- AddCancerHotspot(
+#     maf = maf_tbl,
+#     qvalue = NULL,
+#     median_allele_freq_rank = NULL,
+#     log10_pvalue = NULL
+# )
 
-## Filter the variants based on common criteria
-filter_params <- list(
-    # Minimum read depth
-    DP = list(op = ">=", value = 8),
+## Filter the variants based on criteria ----------------
+filter_data1 <- maf_tbl |> 
+    filter(
+        is.na(DP) | DP >= 20,
+        is.na(VAD) | VAD >= 4,
+        is.na(AF) | AF >= 0.05
+    ) |> 
+    mutate(gnomAD_exome_ALL_num = as.numeric(gnomAD_exome_ALL)) |> 
+    filter(is.na(gnomAD_exome_ALL_num) | gnomAD_exome_ALL_num <= 0.01) |> 
+    select(-gnomAD_exome_ALL_num)
 
-    # Minimum variant allele depth
-    VAD = list(op = ">=", value = 4),
+filter_data2 <- maf_tbl |> 
+    filter(
+        is.na(DP) | DP >= 20,
+        is.na(VAD) | VAD >= 4,
+        is.na(AF) | AF >= 0.05
+    ) 
 
-    # Minimum variant allele frequency
-    AF = list(op = ">=", value = 0.05),
+filter_data1
 
-    # Maximum population frequency
-    gnomAD_exome_ALL = list(op = "<=", value = 0.01),
+!Variant_Classification %in% c("Silent", NA),
+        !ExonicFunc.refGene %in% c("synonymous_SNV", "."),
+        Func.refGene %in% c("exonic", "UTR5", "splicing", "upstream")
 
-    # Variant classifications mutation type
-    Variant_Classification = list(
-        op = "out", 
-        value = c("Silent")
-        # other options are included: 
-        # NA, "Unknown", "Missense_Mutation", "In_Frame_Del,"Inframe_INDEL",
-        # "Frame_Shift_Del", "Frame_Shift_Ins", "Nonsense_Mutation",
-        # "In_Frame_Ins", "Translation_Start_Site", "Nonstop_Mutation",
-    ),
+# filter_params <- list(
+#     # Minimum read depth
+#     DP = list(op = ">=", value = 20),
 
-    # Variant classifications exonic function
-    ExonicFunc.refGene = list(
-        op = "out", 
-        value = c("synonymous_SNV")
-        # other options are included: 
-        # ".", "nonsynonymous SNV", "nonframeshift deletion",
-        # "frameshift deletion", "frameshift insertion", "stopgain", 
-        # "nonframeshift insertion","startloss", "stoploss", "unknown", 
-        # "nonframeshift substitution"
-    ),
+#     # Minimum variant allele depth
+#     VAD = list(op = ">=", value = 4),
 
-    # Variant classifications pathogenicity predictions
-    # Which tools to be used?
+#     # Minimum variant allele frequency
+#     AF = list(op = ">=", value = 0.05),
 
-    # Variant classifications functional consequences
-    Func.refGene = list(
-        op = "in", 
-        value = c("exonic", "UTR5", "splicing", "upstream")
-        # other options are excluded:
-        # "intronic", "ncRNA_exonic", "splicing", "ncRNA_splicing",
-        # "ncRNA_intronic", UTR3", "upstream", "intergenic", "downstream", 
-    )
-)
+#     # Maximum population frequency
+#     gnomAD_exome_ALL = list(op = "<=", value = 0.01),
+
+#     # Variant classifications mutation type
+#     Variant_Classification = list(
+#         op = "out", 
+#         value = c("Silent")
+#         # other options are included: 
+#         # NA, "Unknown", "Missense_Mutation", "In_Frame_Del,"Inframe_INDEL",
+#         # "Frame_Shift_Del", "Frame_Shift_Ins", "Nonsense_Mutation",
+#         # "In_Frame_Ins", "Translation_Start_Site", "Nonstop_Mutation",
+#     ),
+
+#     # Variant classifications exonic function
+#     ExonicFunc.refGene = list(
+#         op = "out", 
+#         value = c("synonymous_SNV")
+#         # other options are included: 
+#         # ".", "nonsynonymous SNV", "nonframeshift deletion",
+#         # "frameshift deletion", "frameshift insertion", "stopgain", 
+#         # "nonframeshift insertion","startloss", "stoploss", "unknown", 
+#         # "nonframeshift substitution"
+#     ),
+
+#     # Variant classifications pathogenicity predictions
+#     # Which tools to be used?
+
+#     # Variant classifications functional consequences
+#     Func.refGene = list(
+#         op = "in", 
+#         value = c("exonic", "UTR5", "splicing", "upstream")
+#         # other options are excluded:
+#         # "intronic", "ncRNA_exonic", "splicing", "ncRNA_splicing",
+#         # "ncRNA_intronic", UTR3", "upstream", "intergenic", "downstream", 
+#     )
+# )
+
+# maf_tbl |> colnames()
+
+# # availabel prediction tools for functional consequences
+# maf_tbl |> select(matches("pred")) |> colnames()
 
 
-# availabel prediction tools for functional consequences
-maf_tbl |> select(matches("pred")) |> colnames()
+# maf_filter <- FilterMergedMaf(
+#     maf_tbl = maf_tbl,
+#     filter_params = filter_params
+# )
 
-
-maf_filter <- FilterMergedMaf(
-    maf_tbl = maf_tbl,
-    filter_params = filter_params
-)
-
-# maf_filter |> 
-    # filter(Variant_Classification == "Silent")
-    # filter(Func.refGene == "ncRNA_exonic")
-    # filter(ExonicFunc.refGene == "synonymous_SNV")
 
 ## Find the enriched variants in FST
 maf_obj <- read.maf(maf = maf_filter)
