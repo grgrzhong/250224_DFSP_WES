@@ -563,46 +563,376 @@ AddCancerHotspot <- function(
     return(maf_hotspot)
 }
 
+LoadCancerHotspot <- function(
+    hotspot = NULL,                # path to the hotspot file
+    qvalue = NULL,                 # qvalue threshold
+    median_allele_freq_rank = NULL, # median Allele Frequency Rank threshold 
+    log10_pvalue = NULL           # log10 pvalue threshold
+
+) {
+    if (is.null(hotspot)) {
+
+        snv_hotspots <- read_xlsx(
+            here("data/clinical/hotspots_v2.xlsx"),
+            sheet = "SNV-hotspots"
+        )
+        
+
+        indel_hotspots <- read_xlsx(
+            here("data/clinical/hotspots_v2.xlsx"),
+            sheet = "INDEL-hotspots"
+        ) 
+        
+    } else {
+        
+        snv_hotspots <- read_xlsx(
+            here(hotspot),
+            sheet = "SNV-hotspots"
+        )
+        
+
+        indel_hotspots <- read_xlsx(
+            here(hotspot),
+            sheet = "INDEL-hotspots"
+        )
+    }
+
+    snv_hotspots <- snv_hotspots |>
+        select(
+            Hugo_Symbol, Amino_Acid_Position, Reference_Amino_Acid, Variant_Amino_Acid, qvalue, Median_Allele_Freq_Rank
+        ) |>
+        mutate(
+            ref_aa = str_extract(Reference_Amino_Acid, "^[A-Z*]"),
+            pos_aa = as.character(Amino_Acid_Position),
+            var_aa = str_extract(Variant_Amino_Acid, "^[A-Z*]"),
+            aaChange = paste0("p.", ref_aa, pos_aa, var_aa)
+        ) |>
+        distinct() |>
+        mutate(
+            snv_hotspot = paste(
+                Hugo_Symbol, aaChange,
+                sep = "_"
+            )
+        )
+    
+    indel_hotspots <- indel_hotspots |>
+        select(
+            Hugo_Symbol, Amino_Acid_Position, Reference_Amino_Acid, Variant_Amino_Acid, qvalue, Median_Allele_Freq_Rank
+        ) |>
+        mutate(
+            aaChange = str_extract(Variant_Amino_Acid, "^[^:]+")
+        ) |>
+        mutate(
+            aaChange = paste0("p.", aaChange)
+        ) |>
+        distinct() |>
+        mutate(
+            indel_hotspot = paste0(
+                Hugo_Symbol, "_", aaChange
+            )
+        )
+    
+    ## Match the variant info from the aaChange column in maf and
+    ## Variant_Amino_Acid column in the hotspot data
+    hotspots <- list(
+        snv_hotspots = snv_hotspots,
+        indel_hotspots = indel_hotspots
+    )
+
+    message(
+        sprintf(
+            "Total SNV hotspots: %d", nrow(hotspots$snv_hotspots)
+        ), "\n",
+        sprintf(
+            "Total INDEL hotspots: %d", nrow(hotspots$indel_hotspots)
+        )
+    )
+
+    ## Apply filtering only if filter parameters are provided
+    if (
+        !is.null(qvalue) || !is.null(median_allele_freq_rank) ||
+        !is.null(log10_pvalue)
+    ) {
+        ## build filter conditions
+        filter_expr <- list()
+    
+        if (!is.null(qvalue)) {
+            
+            filter_expr <- append(
+                filter_expr, rlang::expr(qvalue < !!qvalue)
+            )
+        }
+        
+        if (!is.null(median_allele_freq_rank)) {
+            filter_expr <- append(
+                filter_expr, 
+                rlang::expr(Median_Allele_Freq_Rank > !!median_allele_freq_rank)
+            )
+        }
+        
+        if (!is.null(log10_pvalue)) {
+            
+            filter_expr <- append(
+                filter_expr, rlang::expr(log10_pvalue > !!log10_pvalue)
+            )
+        }
+
+        ## Apply filtering to select the high confidence hotspot variants
+        hotspots <- map(
+            hotspots,
+            ~ .x |> filter(!!!filter_expr)
+        )
+
+        message("Applied filters:")
+        if (!is.null(qvalue)) message("  - qvalue < ", qvalue)
+        if (!is.null(median_allele_freq_rank)) message("  - Median_Allele_Freq_Rank > ", median_allele_freq_rank)
+        if (!is.null(log10_pvalue)) message("  - log10_pvalue > ", log10_pvalue)
+
+        message(
+            sprintf(
+                "After filtering SNV hotspots: %d", nrow(hotspots$snv_hotspots)
+            ), "\n",
+            sprintf(
+                "After filtering INDEL hotspots: %d", nrow(hotspots$indel_hotspots)
+            )
+        )
+
+    } else {
+
+        message("No filters applied - using all hotspots")
+    }
+
+    hotspots
+}
+
+
 MergeAnnovarOutput <- function(
     annovar_dir,
     is_save = FALSE,
     save_dir = "data/wes/annotation/merged"
 ) {
-    # 
-    # annovar_dir <- here("data/wes/annotation/annovar")
+    
+    ## The annovar directory should contain the annovar output files
     annovar_dir <- here(annovar_dir)
 
     input_files <- dir_ls(annovar_dir, recurse = TRUE, glob = "*annovar.txt")
     
+    ## Collect all annovar output files
     message(
         "Collecting ", length(input_files),
         " annovar output files from: ", annovar_dir
     )
     
-    maf <- annovarToMaf(input_files)
-
-    ## Clean the sample names and Clean the AD column
-    maf_tbl <- maf |> 
-        as_tibble() |> 
+    maf_data <- annovarToMaf(input_files) |>
+        as_tibble() |>
         mutate(
-            Tumor_Sample_Barcode = str_replace(Tumor_Sample_Barcode, "_annovar", "")
-        ) |> 
-        separate(AD, into = c("RAD", "VAD"), sep = ",", remove = TRUE) |>
-        mutate(
-            VAD = as.numeric(VAD),
-            DP = as.numeric(DP),
-            AF = as.numeric(AF),
-            gnomAD_exome_ALL = as.numeric(
-                replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
+            ## If the tumour sample has a matched normal sample, Otherinfo13 = normal allell data, Otherinfo14 = tumour allell data
+            ## if the tumour sample does not have a matched normal sample, Otherinfo13 = tumour allell data, Otherinfo14 = NA
+            is_paired_normal = if_else(
+                is.na(Otherinfo14) | Otherinfo14 == "NA" | Otherinfo14 == "",
+                FALSE,
+                TRUE
             )
         )
 
+    ## Extract the allele data for paired samples
+    maf_data_paired <- maf_data |> filter(is_paired_normal)
+    maf_data_unpaired <- maf_data |> filter(!is_paired_normal)
+
+    n_paired_samples <- length(unique(maf_data_paired$Tumor_Sample_Barcode))
+    n_unpaired_samples <- length(unique(maf_data_unpaired$Tumor_Sample_Barcode))
+
+    if (n_paired_samples > 0) {
+
+        message(
+            sprintf(
+                "Extracting allele data for tumor-normal sample: %d", 
+                n_paired_samples
+            )
+        )
+        
+        maf_data_paired <- maf_data_paired |> 
+            ## Extract the tumour allele data
+            mutate(
+                tumor_AD = sapply(
+                    str_split(Otherinfo14, ":"),
+                    function(x) x[2]
+                )
+            ) |> 
+            separate(
+                tumor_AD, 
+                into = c("tumor_RAD", "tumor_VAD"), 
+                sep = ",", 
+                remove = TRUE,
+
+            ) |> 
+            mutate(
+                tumor_RAD = as.numeric(tumor_RAD),
+                tumor_VAD = as.numeric(tumor_VAD)
+            ) |> 
+            mutate(
+                tumor_AF = as.numeric(
+                        sapply(
+                        str_split(Otherinfo14, ":"), 
+                        function(x) x[3]
+                    )
+                ),
+                tumor_DP = as.numeric(
+                        sapply(
+                        str_split(Otherinfo14, ":"), 
+                        function(x) x[4]
+                    )
+                )
+            ) |> 
+            ## Extract the normal allele data
+            mutate(
+                normal_AD = sapply(
+                    str_split(Otherinfo13, ":"),
+                    function(x) x[2]
+                )
+            ) |> 
+            separate(
+                normal_AD, 
+                into = c("normal_RAD", "normal_VAD"), 
+                sep = ",", 
+                remove = TRUE,
+
+            ) |> 
+            mutate(
+                normal_RAD = as.numeric(normal_RAD),
+                normal_VAD = as.numeric(normal_VAD)
+            ) |> 
+            mutate(
+                normal_AF = as.numeric(
+                        sapply(
+                        str_split(Otherinfo13, ":"), 
+                        function(x) x[3]
+                    )
+                ),
+                normal_DP = as.numeric(
+                        sapply(
+                        str_split(Otherinfo13, ":"), 
+                        function(x) x[4]
+                    )
+                )
+            )
+
+    } else {
+
+        maf_data_paired <- maf_data_paired |> 
+            mutate(
+                tumor_RAD = NA_real_,
+                tumor_VAD = NA_real_,
+                tumor_AF = NA_real_,
+                tumor_DP = NA_real_,
+                normal_RAD = NA_real_,
+                normal_VAD = NA_real_,
+                normal_AF = NA_real_,
+                normal_DP = NA_real_
+            )
+    }
+
+    if (n_unpaired_samples > 0) {
+
+        message(
+            sprintf(
+                "Extracting allele data for tumor-only sample: %d", 
+                n_unpaired_samples
+            )
+        )
+
+        maf_data_unpaired <- maf_data_unpaired |> 
+            mutate(
+                tumor_AD = sapply(
+                    str_split(Otherinfo13, ":"),
+                    function(x) x[2]
+                )
+            ) |> 
+            separate(
+                tumor_AD, 
+                into = c("tumor_RAD", "tumor_VAD"), 
+                sep = ",", 
+                remove = TRUE,
+
+            ) |> 
+            mutate(
+                tumor_RAD = as.numeric(tumor_RAD),
+                tumor_VAD = as.numeric(tumor_VAD)
+            ) |>
+            mutate(
+                tumor_AF = as.numeric(
+                        sapply(
+                        str_split(Otherinfo13, ":"), 
+                        function(x) x[3]
+                    )
+                ),
+                tumor_DP = as.numeric(
+                        sapply(
+                        str_split(Otherinfo13, ":"), 
+                        function(x) x[4]
+                    )
+                )
+            ) |> 
+            mutate(
+                normal_RAD = NA_real_,
+                normal_VAD = NA_real_,
+                normal_AF = NA_real_,
+                normal_DP = NA_real_
+            )
+    } else {
+        
+        maf_data_unpaired <- maf_data_unpaired |> 
+            mutate(
+                tumor_RAD = NA_real_,
+                tumor_VAD = NA_real_,
+                tumor_AF = NA_real_,
+                tumor_DP = NA_real_,
+                normal_RAD = NA_real_,
+                normal_VAD = NA_real_,
+                normal_AF = NA_real_,
+                normal_DP = NA_real_
+            )
+    }
+
+    ## Combine the paired and unpaired samples
+    all_columns <- colnames(maf_data_paired)
+    
+    maf_data_unpaired <- maf_data_unpaired |> 
+        select(all_of(all_columns))
+    
+    stopifnot(
+        all.equal(
+            colnames(maf_data_paired),
+            colnames(maf_data_unpaired)
+        )
+    )
+
+    maf_tbl <- bind_rows(
+        maf_data_paired,
+        maf_data_unpaired
+    ) |>
+        mutate(
+            gnomAD_exome_ALL = as.numeric(
+                replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
+            )
+        ) |> 
+        ## reange the columns
+        relocate(
+            is_paired_normal, 
+            Otherinfo13, Otherinfo14,
+            AD, AF, DP, 
+            tumor_RAD, tumor_VAD, tumor_AF, tumor_DP,
+            normal_RAD, normal_VAD, normal_AF, normal_DP,
+            .after = last_col()
+        )
+
+    ## Save the data
     if (is_save && !is.null(save_dir)) {
         # Save the merged maf file
         file_name <- "annovar_maf_merged.qs"
         
         message(
-            "Saving merged data: ", here(save_dir, file_name)
+            "Saving merged annovar data: ", here(save_dir, file_name)
         )
 
         fs::dir_create(here(save_dir))

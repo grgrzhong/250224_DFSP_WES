@@ -2,8 +2,41 @@
 source(here::here("bin/R/lib/study_lib.R"))
 
 # Original format
-input_files <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.annovar.txt"
-maf <- annovarToMaf(input_files)
+paired_annovar_file <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.annovar.txt"
+paired_annovar_data <- read_delim(paired_annovar_file, delim = "\t", col_names = TRUE) |> 
+    as_tibble()
+
+paired_multi_file <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.hg38_multianno.txt"
+paired_multi_data <- read_delim(paired_multi_file, delim = "\t", col_names = TRUE) |> 
+    as_tibble()
+
+ncol(paired_multi_data)
+colnames(paired_multi_data)
+
+paired_multi_data[, tail(names(paired_multi_data), 1)]
+paired_multi_data |> 
+    select(Otherinfo13, Otherinfo14)
+
+unpaired_multi_file <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-037-T/DFSP-037-T.hg38_multianno.txt"
+unpaired_multi_data <- read_delim(unpaired_multi_file, delim = "\t", col_names = TRUE) |> 
+    as_tibble()
+
+ncol(unpaired_multi_data)
+colnames(unpaired_multi_data)
+
+maf2 <- read_delim(input_files_multi, delim = "\t", col_names = TRUE) |> 
+    as_tibble()
+
+unpaired_file <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-037-T/DFSP-0037-T.unpaired.txt"
+# maf1 <- annovarToMaf(input_files) |> as_tibble()
+# maf2 <- annovarToMaf(input_files_multi) |> as_tibble()
+
+colnames(maf1)
+colnames(maf2)
+
+maf1 |> select(matches("other"))
+## akk are tsa
+setdiff(colnames(maf1), colnames(maf2))
 
 ## Clean the sample names and Clean the AD column
 maf_tbl <- maf |> 
@@ -23,23 +56,17 @@ maf_tbl <- maf |>
 
 # New format with both original and new columns
 input_files2 <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.annovar_test.txt"
-maf2 <- annovarToMaf(input_files2)
+input_files2 <- "/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.annovar_with_normal.txt"
+maf_tbl2 <- annovarToMaf(input_files2) |> 
+    as_tibble() 
 
 ## Clean the sample names and process new format
-maf_tbl2 <- maf2 |> 
-    as_tibble() |> 
-    mutate(
-        Tumor_Sample_Barcode = str_replace(Tumor_Sample_Barcode, "_annovar", ""),
-        gnomAD_exome_ALL = as.numeric(
-            replace(gnomAD_exome_ALL, gnomAD_exome_ALL == ".", NA)
-        )
-    )
 
 maf_tbl2 |> 
     select(
         AD, DP, AF, 
         TUMOR_AD, TUMOR_DP, TUMOR_AF, 
-        NORMAL_AD, NORMAL_DP, NORMAL_AF,
+        NORMAL_AD, NORMAL_DP, NORMAL_AF, SAMPLE_TYPE
     ) |>
     # Separate original AD column
     separate(AD, into = c("RAD", "VAD"), sep = ",", remove = FALSE) |>

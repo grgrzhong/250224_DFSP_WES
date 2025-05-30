@@ -22,8 +22,8 @@ mkdir -p ${work_dir}
 cnvkit_norm_ref=${work_dir}/cnvkit_pooled_normal_reference.cnn
 
 ## Download the gene annotations file as the targets not provided
-wget -P ${work_dir} https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/refFlat.txt.gz
-gunzip -f ${work_dir}/refFlat.txt.gz
+# wget -P ${work_dir} https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/refFlat.txt.gz
+# gunzip -f ${work_dir}/refFlat.txt.gz
 
 ## Collect the norma bam files
 # normal_bams=${work_dir}/normal_bams.txt
@@ -46,44 +46,44 @@ if [ ! -f "${cnvkit_norm_ref}" ]; then
         >& ${work_dir}/cnvkit_pooled_normal_reference.log
 fi
 
-## Step2. Use this reference in processing all tumor samples
-tumour_bams=$(find ${bam_dir} -type f -name "*.bam" | grep -v "N")
+# ## Step2. Use this reference in processing all tumor samples
+# tumour_bams=$(find ${bam_dir} -type f -name "*.bam" | grep -v "N")
 
-echo "Processing : ${tumour_id}"
+# echo "Processing : ${tumour_id}"
 
-run_cnvkit() {
-    local tumour_bam=$1
-    local work_dir=$2
-    local cnvkit_norm_ref=$3
+# run_cnvkit() {
+#     local tumour_bam=$1
+#     local work_dir=$2
+#     local cnvkit_norm_ref=$3
     
-    tumour_id=$(basename ${tumour_bam} _recalibrated.bam) 
-    out_dir=${work_dir}/${tumour_id}
+#     tumour_id=$(basename ${tumour_bam} _recalibrated.bam) 
+#     out_dir=${work_dir}/${tumour_id}
 
-    echo "Processing : ${tumour_id}"
+#     echo "Processing : ${tumour_id}"
 
-    # Run cnvkit for the tumour sample
-    cnvkit.py batch \
-        ${tumour_bam} \
-        --reference ${cnvkit_norm_ref} \
-        --scatter \
-        --diagram \
-        --output-dir ${out_dir} \
-        >& ${out_dir}/${tumour_id}.cnvkit.log
+#     # Run cnvkit for the tumour sample
+#     cnvkit.py batch \
+#         ${tumour_bam} \
+#         --reference ${cnvkit_norm_ref} \
+#         --scatter \
+#         --diagram \
+#         --output-dir ${out_dir} \
+#         >& ${out_dir}/${tumour_id}.cnvkit.log
     
-    # Generate additional reports
-    # cnvkit.py heatmap \
-    #     "${out_dir}/${tumour_id}.cns" \
-    #     -o "${sample_output_dir}/${sample_id}_heatmap.pdf"
+#     # Generate additional reports
+#     # cnvkit.py heatmap \
+#     #     "${out_dir}/${tumour_id}.cns" \
+#     #     -o "${sample_output_dir}/${sample_id}_heatmap.pdf"
         
-    # # Generate genome-wide plot
-    # cnvkit.py scatter "${out_dir}/${tumour_id}.cnr" \
-    #     -s "${out_dir}/${tumour_id}.cns" \
-    #     -o "${out_dir}/${tumour_id}.scatter.pdf"
+#     # # Generate genome-wide plot
+#     # cnvkit.py scatter "${out_dir}/${tumour_id}.cnr" \
+#     #     -s "${out_dir}/${tumour_id}.cns" \
+#     #     -o "${out_dir}/${tumour_id}.scatter.pdf"
 
-}
+# }
 
-echo "${tumor_bams}" | parallel \
-    -j 4 \
-    run_cnvkit {} "${work_dir}" "${cnvkit_norm_ref}"
+# echo "${tumor_bams}" | parallel \
+#     -j 4 \
+#     run_cnvkit {} "${work_dir}" "${cnvkit_norm_ref}"
 
-echo "All tumor samples processed successfully!"
+# echo "All tumor samples processed successfully!"

@@ -6,14 +6,18 @@ source(here::here("bin/R/lib/study_lib.R"))
 annovar_dir <- "data/wes/variant_calling/mutect2_with_black_repeat_filter_new"
 
 # Run only once
-maf_tbl <- MergeAnnovarOutput(
-    annovar_dir = annovar_dir,
-    is_save = TRUE,
-    save_dir = "data/wes/results/merged"
-)
+# maf_tbl <- MergeAnnovarOutput(
+#     annovar_dir = annovar_dir,
+#     is_save = TRUE,
+#     save_dir = "data/wes/results/merged"
+# )
 
 ## Annotate variants with cancer hotspot info
 maf_tbl <- LoadMergedAnnovar("data/wes/results/merged")
+
+maf_tbl |> 
+    select(tail(names(maf_tbl), 15), gnomAD_exome_ALL) |> 
+    filter(!is_paired_normal)
 
 ## 1. Use cancer hotspot databases (e.g., COSMIC, OncoKB, or custom hotspot lists) to prioritize variants located in known cancer-associated regions.
 ## 2. Filter variants to retain only those that overlap with hotspot regions, as these are more likely to have clinical significance.
@@ -24,89 +28,178 @@ maf_tbl <- LoadMergedAnnovar("data/wes/results/merged")
 #     log10_pvalue = NULL
 # )
 
-## Filter the variants based on criteria ----------------
+## Indels/Splice sit filtering  ----------------
+## VAF >= 5% and VAD >= 4 and DP >=20 in the tumor samples
 filter_data1 <- maf_tbl |> 
     filter(
-        is.na(DP) | DP >= 20,
-        is.na(VAD) | VAD >= 4,
-        is.na(AF) | AF >= 0.05
-    ) |> 
-    mutate(gnomAD_exome_ALL_num = as.numeric(gnomAD_exome_ALL)) |> 
-    filter(is.na(gnomAD_exome_ALL_num) | gnomAD_exome_ALL_num <= 0.01) |> 
-    select(-gnomAD_exome_ALL_num)
+        is.na(tumor_AF) | tumor_AF >= 0.05, 
+        is.na(tumor_DP) | tumor_DP >= 20,
+        is.na(tumor_VAD) | tumor_VAD >= 4,
+        is.na(gnomAD_exome_ALL) | gnomAD_exome_ALL < 0.001
+    )
 
+## VAF <=1% and VAD<=1 in the paired normal samples
 filter_data2 <- maf_tbl |> 
+    filter(!is_paired_normal) |> 
     filter(
-        is.na(DP) | DP >= 20,
-        is.na(VAD) | VAD >= 4,
-        is.na(AF) | AF >= 0.05
-    ) 
+        is.na(normal_AF) | normal_AF <= 0.01, 
+        is.na(normal_VAD) | normal_VAD <= 1
+    )
 
-filter_data1
+## Specific for tert promotor mutations
+tert_gene <- filter_data1 |> 
+    filter(Hugo_Symbol == "TERT") |> 
+    filter(Func.refGene %in% c("exonic", "splicing", "upstream"))
 
-!Variant_Classification %in% c("Silent", NA),
-        !ExonicFunc.refGene %in% c("synonymous_SNV", "."),
-        Func.refGene %in% c("exonic", "UTR5", "splicing", "upstream")
+## Combine the filtered data
+first_inclusion <- bind_rows(
+    filter_data1,
+    filter_data2,
+    tert_gene
+) |> 
+    distinct()
 
-# filter_params <- list(
-#     # Minimum read depth
-#     DP = list(op = ">=", value = 20),
+## All indel/splice site mutations
+unique(first_inclusion$Variant_Classification)
+unique(first_inclusion$ExonicFunc.refGene)
+unique(first_inclusion$Variant_Type)
+unique(first_inclusion$Func.refGene)
 
-#     # Minimum variant allele depth
-#     VAD = list(op = ">=", value = 4),
+first_inclusion_splice <- first_inclusion |> 
+    filter(Func.refGene %in% c("splicing"))
 
-#     # Minimum variant allele frequency
-#     AF = list(op = ">=", value = 0.05),
+first_inclusion_indels <- first_inclusion |> 
+    ## "SNP" "DEL" "INS" "DNP" "ONP"
+    filter(Variant_Type %in% c("DEL", "INS")) |> 
+    ## "Missense_Mutation" "Silent" "In_Frame_Del" "Frame_Shift_Del" NA 
+    ## "Frame_Shift_Ins" "Nonsense_Mutation" "In_Frame_Ins" "Nonstop_Mutation"
+    ## "Translation_Start_Site" "Unknown" "Inframe_INDEL"  
+    filter(
+        Variant_Classification %in% c(
+            "In_Frame_Del", 
+            "In_Frame_Ins", 
+            "Inframe_INDEL",
+            "Frame_Shift_Del", 
+            "Frame_Shift_Ins", 
+            "Nonsense_Mutation", 
+            "Nonstop_Mutation",
+            "Unknown",
+            NA,
+            "NA",
+            "Translation_Start_Site"
+        )
+    )
 
-#     # Maximum population frequency
-#     gnomAD_exome_ALL = list(op = "<=", value = 0.01),
+message(
+    "Number of indels/splice site mutations: ", 
+    nrow(first_inclusion_indels) + nrow(first_inclusion_splice)
+)
 
-#     # Variant classifications mutation type
-#     Variant_Classification = list(
-#         op = "out", 
-#         value = c("Silent")
-#         # other options are included: 
-#         # NA, "Unknown", "Missense_Mutation", "In_Frame_Del,"Inframe_INDEL",
-#         # "Frame_Shift_Del", "Frame_Shift_Ins", "Nonsense_Mutation",
-#         # "In_Frame_Ins", "Translation_Start_Site", "Nonstop_Mutation",
-#     ),
+##############################################################################
+## SNV filtering  ----------------
+##############################################################################
+## Exclude the synonymous SNVs
+first_inclusion_snv <- first_inclusion |> 
+    ## >=2 base substitution also include
+    filter(Variant_Type  %in% c("SNP", "DNP", "ONP")) |> 
+    filter(!(ExonicFunc.refGene %in% c("synonymous SNV")))
 
-#     # Variant classifications exonic function
-#     ExonicFunc.refGene = list(
-#         op = "out", 
-#         value = c("synonymous_SNV")
-#         # other options are included: 
-#         # ".", "nonsynonymous SNV", "nonframeshift deletion",
-#         # "frameshift deletion", "frameshift insertion", "stopgain", 
-#         # "nonframeshift insertion","startloss", "stoploss", "unknown", 
-#         # "nonframeshift substitution"
-#     ),
+## Deleteriousness functional impact or pathogenicity predictions
+## Check if variant meets at least 3 deleterious functional impact or pathogenic predictions
+## First options
+second_inclusion_snv1 <- first_inclusion_snv |> 
+    rowwise() |>
+    mutate(
+        deleterious_count = sum(
+            # CADD >= 20
+            (!is.na(CADD_phred) && CADD_phred >= 20),
+            # VEST3 criteria
+            (!is.na(VEST3_score) && VEST3_score >= 0.7) || (!is.na(VEST3_rankscore) && VEST3_rankscore >= 0.9),
+            # DANN >= 0.9
+            (!is.na(DANN_score) && DANN_score >= 0.9),
+            # SIFT prediction = "D" (Deleterious)
+            (!is.na(SIFT_pred) && SIFT_pred == "D"),
+            # Polyphen2 prediction = "P"/"D" (Possibly/Probably damaging)
+            (!is.na(Polyphen2_HVAR_pred) && Polyphen2_HVAR_pred %in% c("P", "D")) || 
+                (!is.na(Polyphen2_HDIV_pred) && Polyphen2_HDIV_pred %in% c("P", "D")),
+            # MutationTaster prediction = "A"/"D" (Disease causing automatic/Disease causing)
+            (!is.na(MutationTaster_pred) && MutationTaster_pred %in% c("A", "D")),
+            # NA in at least one prediction algorithm qualifies
+            is.na(CADD_phred) || is.na(VEST3_score) || is.na(DANN_score) || 
+                is.na(SIFT_pred) || is.na(Polyphen2_HVAR_pred) || is.na(Polyphen2_HDIV_pred) || 
+                is.na(MutationTaster_pred)
+        )
+    ) |>
+    ungroup() |>
+    filter(deleterious_count >= 3)
 
-#     # Variant classifications pathogenicity predictions
-#     # Which tools to be used?
+message(
+    "Number of SNVs with at least 3 deleterious functional impact or pathogenic predictions: ", 
+    nrow(second_inclusion_snv1)
+)
 
-#     # Variant classifications functional consequences
-#     Func.refGene = list(
-#         op = "in", 
-#         value = c("exonic", "UTR5", "splicing", "upstream")
-#         # other options are excluded:
-#         # "intronic", "ncRNA_exonic", "splicing", "ncRNA_splicing",
-#         # "ncRNA_intronic", UTR3", "upstream", "intergenic", "downstream", 
-#     )
-# )
+## Second options
+## CLNSIG, cancer hotspot, oncoKB, COSMIC
+## Filter by CLNSIG, cancer hotspot, oncoKB, COSMIC
+second_inclusion_snv_clnsig <- first_inclusion_snv |>
+    filter(
+        CLNSIG %in% c(
+            "Pathogenic", "Likely_pathogenic", "Pathogenic/Likely_pathogenic"
+        )
+    )
 
-# maf_tbl |> colnames()
+## COSMIC
+second_inclusion_snv_cosmic <- first_inclusion_snv |> 
+    filter(!(cosmic70 %in% c(".")))
 
-# # availabel prediction tools for functional consequences
-# maf_tbl |> select(matches("pred")) |> colnames()
+## Cancer hotspot
+snv_hotspots <- LoadCancerHotspot()[["snv_hotspots"]]
 
+second_inclusion_snv_hotspot <- first_inclusion_snv |> 
+    mutate(match_change = paste0(Hugo_Symbol, "_", aaChange)) |>
+    mutate(
+        is_hotspot = if_else(
+            match_change %in% snv_hotspots$snv_hotspot,
+            TRUE,
+            FALSE
+        )
+    ) |>
+    filter(is_hotspot) |>
+    select(-match_change, -is_hotspot)
 
-# maf_filter <- FilterMergedMaf(
-#     maf_tbl = maf_tbl,
-#     filter_params = filter_params
-# )
+message(
+    "Number of SNVs in cancer hotspots: ",
+    nrow(second_inclusion_snv_hotspot)
+)
 
+## OncoKB
+second_inclusion_snv_oncokb <- first_inclusion_snv |>
+    filter(
+        !is.na(OncoKB_Clinical_Significance) & 
+        OncoKB_Clinical_Significance != "NA" & 
+        OncoKB_Clinical_Significance != ""
+    )
 
+message(
+        "Number of variants with clinical significance, in hotspots, oncoKB, or COSMIC: ", 
+        nrow(second_inclusion_snv2)
+)
+
+# Combine both SNV filter results
+second_inclusion_snv <- bind_rows(
+        second_inclusion_snv1,
+        second_inclusion_snv2
+) |> 
+        distinct()
+
+message(
+        "Total number of filtered SNVs: ", 
+        nrow(second_inclusion_snv)
+)
+
+##############################################################################
+## Explore the variants ----------------
+##############################################################################
 ## Find the enriched variants in FST
 maf_obj <- read.maf(maf = maf_filter)
 

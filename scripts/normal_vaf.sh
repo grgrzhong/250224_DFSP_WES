@@ -1,40 +1,40 @@
 
-vcf=/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-037-T/DFSP-037-T.final.vcf.gz 
+# vcf=/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-037-T/DFSP-037-T.final.vcf.gz 
 
-vcf=/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.final.vcf.gz
+# vcf=/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2_with_black_repeat_filter_new/DFSP-001-T/DFSP-001-T.final.vcf.gz
 
-bcftools view -h ${vcf} | grep "^#CHROM"
+# bcftools view -h ${vcf} | grep "^#CHROM"
 
-bcftools view -h ${vcf} | grep "^##FORMAT=<ID=AF"
+# bcftools view -h ${vcf} | grep "^##FORMAT=<ID=AF"
 
-# Extract sample data to see what's actually in the normal vs tumor columns
-echo "Sample order:"
-bcftools query -l ${vcf}
+# # Extract sample data to see what's actually in the normal vs tumor columns
+# echo "Sample order:"
+# bcftools query -l ${vcf}
 
-echo -e "\nFirst 5 variants with detailed sample information:"
-bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%SAMPLE]\t[%GT]\t[%AD]\t[%AF]\t[%DP]\n' ${vcf} | head -10
+# echo -e "\nFirst 5 variants with detailed sample information:"
+# bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%SAMPLE]\t[%GT]\t[%AD]\t[%AF]\t[%DP]\n' ${vcf} | head -10
 
-echo -e "\nFormatted view of first 3 variants:"
-bcftools query -f '%CHROM:%POS %REF>%ALT\n[%SAMPLE: GT=%GT AD=%AD AF=%AF DP=%DP]\n' ${vcf} | head -12
+# echo -e "\nFormatted view of first 3 variants:"
+# bcftools query -f '%CHROM:%POS %REF>%ALT\n[%SAMPLE: GT=%GT AD=%AD AF=%AF DP=%DP]\n' ${vcf} | head -12
 
-# Extract normal sample AF values specifically
-echo -e "\nNormal sample (DFSP-001-N) AF values for first 10 variants:"
-bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%AF]\n' -s DFSP-001-N ${vcf} | head -10
+# # Extract normal sample AF values specifically
+# echo -e "\nNormal sample (DFSP-001-N) AF values for first 10 variants:"
+# bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%AF]\n' -s DFSP-001-N ${vcf} | head -10
 
-# Check how many variants have normal AF <= 0.01 (1%)
-echo -e "\nAnalyzing normal sample VAF distribution:"
-bcftools query -f '[%AF]\n' -s DFSP-001-N ${vcf} | \
-awk '{
-    total++
-    if ($1 + 0 <= 0.01) low_vaf++
-    if ($1 + 0 == 0) zero_vaf++
-} 
-END {
-    print "Total variants: " total
-    print "Normal VAF = 0: " zero_vaf
-    print "Normal VAF <= 0.01 (1%): " low_vaf
-    print "Percentage with VAF <= 1%: " (low_vaf/total)*100 "%"
-}'
+# # Check how many variants have normal AF <= 0.01 (1%)
+# echo -e "\nAnalyzing normal sample VAF distribution:"
+# bcftools query -f '[%AF]\n' -s DFSP-001-N ${vcf} | \
+# awk '{
+#     total++
+#     if ($1 + 0 <= 0.01) low_vaf++
+#     if ($1 + 0 == 0) zero_vaf++
+# } 
+# END {
+#     print "Total variants: " total
+#     print "Normal VAF = 0: " zero_vaf
+#     print "Normal VAF <= 0.01 (1%): " low_vaf
+#     print "Percentage with VAF <= 1%: " (low_vaf/total)*100 "%"
+# }'
 
 ###############################################################################
 ## Test the extraction of normal sample VAFs from a VCF file
