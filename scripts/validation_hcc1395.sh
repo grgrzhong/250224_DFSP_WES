@@ -289,8 +289,8 @@ gatk --java-options -Xmx4g FilterMutectCalls \
     --output ${mutect2_dir}/${tumour_id}.filtermutectcalls.vcf.gz \
     >& ${mutect2_dir}/${tumour_id}.filtermutectcalls.log
 
-# filtered_variants=$(bcftools view -H ${mutect2_dir}/${sample}.filtermutectcalls.vcf.gz | wc -l)
-# echo "After FilterMutectCalls: $filtered_variants (removed: $((raw_variants - filtered_variants)))"
+filtered_variants=$(bcftools view -H ${mutect2_dir}/${tumour_id}.filtermutectcalls.vcf.gz | wc -l)
+echo "After FilterMutectCalls: $filtered_variants (removed: $((raw_variants - filtered_variants)))"
 
 # # Normalize reads to ensures variants are represented in a consistent way
 echo $(date +"%F") $(date +"%T") "Normalizing Mutect calls ..."
@@ -299,19 +299,19 @@ bcftools norm \
     -m-both -f ${reference} \
     -Oz -o ${mutect2_dir}/${tumour_id}.normalized.vcf.gz 
 
-# norm_variants=$(bcftools view -H ${mutect2_dir}/${sample}.normalized.vcf.gz | wc -l)
-# echo "After normalize: $norm_variants (removed: $((filtered_variants - norm_variants)))"
+tabix -p vcf ${mutect2_dir}/${tumour_id}.normalized.vcf.gz
+
+norm_variants=$(bcftools view -H ${mutect2_dir}/${tumour_id}.normalized.vcf.gz | wc -l)
+echo "After normalize: $norm_variants (removed: $((filtered_variants - norm_variants)))"
 
 # keep variants that have passed all filters (low-quality or failed variant calls)
 echo $(date +"%F") $(date +"%T") "Filtering PASS variants ..."
 bcftools view \
     -f PASS ${mutect2_dir}/${tumour_id}.normalized.vcf.gz \
-    ${mutect2_dir}/${tumour_id}.normalized.vcf.gz \
     -o ${mutect2_dir}/${tumour_id}.passed.vcf.gz
 
-# pass_variants=$(bcftools view -H ${mutect2_dir}/${sample}.passed.vcf.gz | wc -l)
-# echo "After pass filtering: $pass_variants (removed: $((norm_variants - pass_variants)))"
-
+pass_variants=$(bcftools view -H ${mutect2_dir}/${tumour_id}.passed.vcf.gz | wc -l)
+echo "After pass filtering: $pass_variants (removed: $((norm_variants - pass_variants)))"
 
 # # Annotate repeatmasker and blacklist regions
 # echo $(date +"%F") $(date +"%T") "Annotating repeatmasker regions ..."
@@ -324,47 +324,122 @@ bcftools annotate \
 
 echo $(date +"%F") $(date +"%T") "Annotating blacklist regions ..."
 bcftools annotate \
-    ${mutect2_dir}/${annotate}.repeatmasker.vcf.gz \
+    ${mutect2_dir}/${tumour_id}.repeatmasker.vcf.gz \
     --header-lines ${mutect2_dir}/vcf.map.header \
     --annotations ${ref_dir}/blacklist.bed.gz \
     --columns CHROM,FROM,TO,EncodeDacMapability \
     --output-type z \
-    --output ${mutect2_dir}/${annotate}.blacklist.vcf.gz
+    --output ${mutect2_dir}/${tumour_id}.blacklist.vcf.gz
 
 # # Filter out variants in RepeatMasker or Mapability
 echo $(date +"%F") $(date +"%T") "Filtering RepeatMasker and blacklist regions ..."
 bcftools filter \
-    ${mutect2_dir}/${annotate}.blacklist.vcf.gz \
+    ${mutect2_dir}/${tumour_id}.blacklist.vcf.gz \
     -e 'INFO/RepeatMasker != "." || INFO/EncodeDacMapability != "."' \
     -Oz \
-    -o ${mutect2_dir}/${annotate}.final.vcf.gz
+    -o ${mutect2_dir}/${tumour_id}.final.vcf.gz
 
 # Index the final VCF file
-tabix -p vcf ${mutect2_dir}/${annotate}.final.vcf.gz
+tabix -p vcf ${mutect2_dir}/${tumour_id}.final.vcf.gz
+
+final_variants=$(bcftools view -H ${mutect2_dir}/${tumour_id}.final.vcf.gz | wc -l)
+echo "After pass filtering: $final_variants (removed: $((pass_variants - final_variants)))"
 
 ###############################################################################
-## Test the mutect2 call vs  truth set
+## Hap.py the mutect2 call vs  truth set
 ###############################################################################
 echo $(date +"%F") $(date +"%T") "Comparing results against truth set..."
 conda activate hap
 
-reference=/home/zhonggr/projects/250224_DFSP_WES/data/reference/Gencode/gencode.hg38.v36.primary_assembly.fa
+# mutect2_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/WES_IL_1.novo.muTect2.vcf.gz
+mutect2_vcf=${mutect2_dir}/${tumour_id}.mutect2.vcf.gz
+
+# less ${mutect2_vcf}
+mutect2_variants=$(bcftools view -H ${mutect2_vcf} | wc -l)
+echo "Mutect2 variants: $mutect2_variants"
+bcftools query -l ${mutect2_vcf}
+zgrep "^#CHROM" ${mutect2_vcf}
+
+# truth_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sINDEL_in_HC_regions_v1.2.1.vcf.gz
+truth_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sSNV_in_HC_regions_v1.2.1.vcf.gz
 
 truth_bed=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/High-Confidence_Regions_v1.2.bed
-truth_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sINDEL_in_HC_regions_v1.2.vcf.gz
 
+# tabix -p vcf ${truth_vcf}
+bcftools view -h ${truth_vcf} | tail -5
+bcftools view -h ${mutect2_vcf} | tail -5
+# bcftools query -l ${truth_vcf}
+# zgrep "^#CHROM" ${truth_vcf}
 
-mutect2_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/WES_IL_1.novo.muTect2.vcf.gz
+truth_vcf_fixed=${work_dir}/truth_fixed.vcf.gz
+
+# Add FORMAT header for GT and sample columns to header, then add GT field to each variant
+(
+    # Output all header lines except the #CHROM line
+    bcftools view -h ${truth_vcf} | head -n -1
+    
+    # Add FORMAT header for GT
+    echo '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
+    
+    # Add the modified #CHROM line with FORMAT and sample columns
+    bcftools view -h ${truth_vcf} | tail -n 1 | sed 's/#CHROM.*/#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tTRUTH/'
+    
+    # Add all variant lines with GT format and genotype
+    bcftools view -H ${truth_vcf} | awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4,$5,$6,$7,$8,"GT","1/1"}'
+    
+) > ${work_dir}/truth_header.vcf
+
+bgzip -c ${work_dir}/truth_header.vcf > ${truth_vcf_fixed}
+tabix -p vcf ${truth_vcf_fixed}
+
+# Clean up temporary file
+rm ${work_dir}/truth_header.vcf
 
 export HGREF="${reference}"
 
+# Validate the fixed truth VCF before running hap.py
+echo $(date +"%F") $(date +"%T") "Validating fixed truth VCF..."
+bcftools view -h ${truth_vcf_fixed} | tail -5
+echo "Truth VCF samples:"
+bcftools query -l ${truth_vcf_fixed}
+echo "Truth VCF variant count:"
+bcftools view -H ${truth_vcf_fixed} | wc -l
+
+# Check chromosome names in both files
+echo "Chromosomes in truth VCF:"
+bcftools view -H ${truth_vcf_fixed} | cut -f1 | sort | uniq -c
+echo "Chromosomes in mutect2 VCF:"
+bcftools view -H ${mutect2_vcf} | cut -f1 | sort | uniq -c
+
+# Check if chromosome names match
+truth_chroms=$(bcftools view -H ${truth_vcf_fixed} | cut -f1 | sort | uniq | head -5)
+mutect2_chroms=$(bcftools view -H ${mutect2_vcf} | cut -f1 | sort | uniq | head -5)
+echo "First 5 chromosomes in truth: ${truth_chroms}"
+echo "First 5 chromosomes in mutect2: ${mutect2_chroms}"
+
+
 hap.py \
-    ${truth_vcf} \
+    ${truth_vcf_fixed} \
     ${mutect2_vcf} \
     -r ${reference} \
     -f ${truth_bed} \
-    --target-regions=${interval} \
-    -o /home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/hpy \
-    --threads 10 \
-    --engine=vcfeval \
-    --pass-only
+    -o ${work_dir}/hap \
+    --threads 1 \
+    --verbose
+
+###############################################################################
+## Bcftools isec for simple comparison
+###############################################################################
+# Alternative: Simple comparison using bcftools
+echo $(date +"%F") $(date +"%T") "Running simple VCF comparison with bcftools..."
+conda activate varcall
+# Intersect truth and mutect2 variants
+bcftools isec \
+    -p ${work_dir}/isec_results \
+    ${truth_vcf_fixed} \
+    ${mutect2_vcf}
+
+echo "Simple intersection results:"
+echo "Truth only: $(bcftools view -H ${work_dir}/isec_results/0000.vcf | wc -l)"
+echo "Mutect2 only: $(bcftools view -H ${work_dir}/isec_results/0001.vcf | wc -l)"
+echo "Common: $(bcftools view -H ${work_dir}/isec_results/0002.vcf | wc -l)"

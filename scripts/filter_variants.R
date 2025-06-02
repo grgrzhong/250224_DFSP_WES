@@ -4,29 +4,21 @@ source(here::here("bin/R/lib/study_lib.R"))
 
 ## Merge all the annovar annoated variants -------------
 annovar_dir <- "data/wes/variant_calling/mutect2_with_black_repeat_filter_new"
+out_dir <- "data/wes/results/merged"
 
 # Run only once
-# maf_tbl <- MergeAnnovarOutput(
-#     annovar_dir = annovar_dir,
-#     is_save = TRUE,
-#     save_dir = "data/wes/results/merged"
-# )
+maf_tbl <- MergeAnnovarOutput(
+    annovar_dir = annovar_dir,
+    is_save = TRUE,
+    save_dir = out_dir
+)
 
 ## Annotate variants with cancer hotspot info
-maf_tbl <- LoadMergedAnnovar("data/wes/results/merged")
+maf_tbl <- LoadMergedAnnovar(out_dir)
 
-maf_tbl |> 
-    select(tail(names(maf_tbl), 15), gnomAD_exome_ALL) |> 
-    filter(!is_paired_normal)
-
-## 1. Use cancer hotspot databases (e.g., COSMIC, OncoKB, or custom hotspot lists) to prioritize variants located in known cancer-associated regions.
-## 2. Filter variants to retain only those that overlap with hotspot regions, as these are more likely to have clinical significance.
-# maf_tbl <- AddCancerHotspot(
-#     maf = maf_tbl,
-#     qvalue = NULL,
-#     median_allele_freq_rank = NULL,
-#     log10_pvalue = NULL
-# )
+# maf_tbl |> 
+#     select(tail(names(maf_tbl), 15), gnomAD_exome_ALL) |> 
+#     filter(!is_paired_normal)
 
 ## Indels/Splice sit filtering  ----------------
 ## VAF >= 5% and VAD >= 4 and DP >=20 in the tumor samples
@@ -38,6 +30,8 @@ filter_data1 <- maf_tbl |>
         is.na(gnomAD_exome_ALL) | gnomAD_exome_ALL < 0.001
     )
 
+# filter_data1 |> select(matches("tumor|normal|AF|VAD|DP"))
+
 ## VAF <=1% and VAD<=1 in the paired normal samples
 filter_data2 <- maf_tbl |> 
     filter(!is_paired_normal) |> 
@@ -45,6 +39,8 @@ filter_data2 <- maf_tbl |>
         is.na(normal_AF) | normal_AF <= 0.01, 
         is.na(normal_VAD) | normal_VAD <= 1
     )
+
+# filter_data2 |> select(matches("tumor|normal|AF|VAD|DP"))
 
 ## Specific for tert promotor mutations
 tert_gene <- filter_data1 |> 
@@ -149,13 +145,14 @@ second_inclusion_snv_clnsig <- first_inclusion_snv |>
     )
 
 ## COSMIC
+# unique(first_inclusion_snv$cosmic70)
 second_inclusion_snv_cosmic <- first_inclusion_snv |> 
     filter(!(cosmic70 %in% c(".")))
 
 ## Cancer hotspot
 snv_hotspots <- LoadCancerHotspot()[["snv_hotspots"]]
 
-second_inclusion_snv_hotspot <- first_inclusion_snv |> 
+dfsp_snv_hotsopts <- first_inclusion_snv |> 
     mutate(match_change = paste0(Hugo_Symbol, "_", aaChange)) |>
     mutate(
         is_hotspot = if_else(
@@ -164,7 +161,9 @@ second_inclusion_snv_hotspot <- first_inclusion_snv |>
             FALSE
         )
     ) |>
-    filter(is_hotspot) |>
+    filter(is_hotspot)
+
+second_inclusion_snv_hotspot <- dfsp_snv_hotsopts |>
     select(-match_change, -is_hotspot)
 
 message(
@@ -173,29 +172,77 @@ message(
 )
 
 ## OncoKB
+oncokb_gene_list <- "data/reference/OncoKB/cancerGeneList.tsv"
+
+oncokb_gene_list <- read_tsv(here(oncokb_gene_list)) |> 
+    pull(`Hugo Symbol`)
+
 second_inclusion_snv_oncokb <- first_inclusion_snv |>
-    filter(
-        !is.na(OncoKB_Clinical_Significance) & 
-        OncoKB_Clinical_Significance != "NA" & 
-        OncoKB_Clinical_Significance != ""
-    )
+    mutate(
+        is_oncokb = if_else(
+            Hugo_Symbol %in% oncokb_gene_list,
+            TRUE,
+            FALSE
+        )
+    ) |> 
+    filter(is_oncokb) |> 
+    select(-is_oncokb)
 
 message(
-        "Number of variants with clinical significance, in hotspots, oncoKB, or COSMIC: ", 
-        nrow(second_inclusion_snv2)
+        "Number of variants with oncoKB ", 
+        nrow(second_inclusion_snv_oncokb)
 )
 
-# Combine both SNV filter results
-second_inclusion_snv <- bind_rows(
-        second_inclusion_snv1,
-        second_inclusion_snv2
+snv_oncokb_uniq <- second_inclusion_snv_oncokb |> 
+    select(Hugo_Symbol, aaChange) |> 
+    distinct()
+
+message(
+    "Number of unique OncoKB SNVs: ", 
+    nrow(snv_oncokb_uniq)
+)
+
+# Combine all included variants
+all_included_variants <- bind_rows(
+    first_inclusion_splice,
+    first_inclusion_indels,
+    second_inclusion_snv1,
+    second_inclusion_snv_clnsig,
+    second_inclusion_snv_cosmic,
+    second_inclusion_snv_hotspot,
+    second_inclusion_snv_oncokb
 ) |> 
-        distinct()
+    distinct()
 
 message(
-        "Total number of filtered SNVs: ", 
-        nrow(second_inclusion_snv)
+    "Total number of filtered variants: ", 
+    nrow(maf_tbl) - nrow(all_included_variants)
 )
+
+message(
+    "Total number of included variants: ", 
+    nrow(all_included_variants)
+)
+
+qsave(
+    all_included_variants, 
+    here(out_dir, "dfsp_included_variants.qs")
+)
+
+## Print out the summary of the filtered variants
+message(
+    "Summary of the filtered variants:\n",
+    "Total variants: ", nrow(maf_tbl), "\n",
+    "Indels/Splice site mutations: ", nrow(first_inclusion_indels) + nrow(first_inclusion_splice), "\n",
+    "SNVs with at least 3 deleterious functional impact or pathogenic predictions: ", nrow(second_inclusion_snv1), "\n",
+    "SNVs in CLNSIG: ", nrow(second_inclusion_snv_clnsig), "\n",
+    "SNVs in COSMIC: ", nrow(second_inclusion_snv_cosmic), "\n",
+    "SNVs in cancer hotspots: ", nrow(second_inclusion_snv_hotspot), "\n",
+    "SNVs in OncoKB: ", nrow(second_inclusion_snv_oncokb), "\n",
+    "Total included variants: ", nrow(all_included_variants), "\n",
+    "Total filtered variants: ", nrow(maf_tbl) - nrow(all_included_variants), "\n"
+)
+
 
 ##############################################################################
 ## Explore the variants ----------------
