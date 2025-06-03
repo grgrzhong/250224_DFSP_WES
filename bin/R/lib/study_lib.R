@@ -54,6 +54,49 @@ SavePlot <- function(
     }
 }
 
+plot_theme <- function(line_width = 0.3, base_size = 8) {
+    ## General theme for publication figures
+    # theme_classic(base_size = 10, base_family = "Arial") +
+    # theme_classic(
+    #     base_size = base_size,
+    #     base_family = "Arial",
+    #     base_line_size = line_width
+    # ) +
+    theme(
+            plot.title = element_text(
+                face = "plain", # "bold",
+                # hjust = 0.5, 
+                size = base_size
+            ),
+            # strip.background = element_blank(),
+            # axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+            # legend.position = "right",
+            legend.title = element_text(
+                # hjust = 0,
+                size = base_size - 1
+                # face = "bold"
+            ),
+            legend.key.size = unit(0.3, "cm"),
+            legend.text = element_text(size = base_size - 1),
+            # legend.box = "vertical",
+            # legend.box = "horizontal",
+            # legend.box.just = "left", # Align legend box to the left,
+            # text = element_text(size = 11),
+            # axis.text = element_text(color = "black"),
+            # panel.grid = element_blank(),
+            axis.ticks = element_line(
+                # color = "black",
+                linewidth = line_width
+            ),
+            # axis.line = element_line(color = "black", linewidth = line_width),
+            # axis.line = element_blank(),
+            # panel.border = element_rect(
+            #     linewidth = line_width, color = "black", fill = NA
+            # ),
+            plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), units = "cm")
+        )
+}
+
 figure_theme <- function(line_width = 0.3, base_size = 8) {
     ## General theme for publication figures
     # theme_classic(base_size = 10, base_family = "Arial") +
@@ -65,7 +108,8 @@ figure_theme <- function(line_width = 0.3, base_size = 8) {
         theme(
             plot.title = element_text(
                 face = "plain", # "bold",
-                hjust = 0.5, size = base_size
+                # hjust = 0.5, 
+                size = base_size
             ),
             strip.background = element_blank(),
             # axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
@@ -734,6 +778,13 @@ MergeAnnovarOutput <- function(
                 TRUE
             )
         )
+    
+    # maf_data |> 
+    #     select(
+    #         Tumor_Sample_Barcode, Hugo_Symbol, aaChange, 
+    #         Otherinfo13, Otherinfo14, is_paired_normal,
+    #         AD, AF, DP
+    #     )
 
     ## Extract the allele data for paired samples
     maf_data_paired <- maf_data |> filter(is_paired_normal)

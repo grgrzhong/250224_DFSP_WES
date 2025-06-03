@@ -32,8 +32,8 @@ bam_dir="${work_dir}/raw"
 # mkdir -p ${fastq_trimmed_dir}
 # bam_dir="${work_dir}/preprocessing/bam"
 # mkdir -p ${bam_dir}
-
-mutect2_dir="${work_dir}/mutect2"
+depth=20
+mutect2_dir="${work_dir}/mutect2_${depth}"
 mkdir -p ${mutect2_dir}
 
 echo "reference: ${reference}"
@@ -261,7 +261,7 @@ gatk --java-options -Xmx8g Mutect2 \
     --panel-of-normals ${pon} \
     --f1r2-tar-gz ${mutect2_dir}/${tumour_id}.f1r2.tar.gz \
     --native-pair-hmm-threads 8 \
-    --callable-depth 20 \
+    --callable-depth ${depth} \
     -O ${mutect2_dir}/${tumour_id}.mutect2.vcf.gz \
     >& ${mutect2_dir}/${tumour_id}.mutect2.log
 
@@ -349,97 +349,56 @@ echo "After pass filtering: $final_variants (removed: $((pass_variants - final_v
 ## Hap.py the mutect2 call vs  truth set
 ###############################################################################
 echo $(date +"%F") $(date +"%T") "Comparing results against truth set..."
-conda activate hap
 
-# mutect2_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/WES_IL_1.novo.muTect2.vcf.gz
-mutect2_vcf=${mutect2_dir}/${tumour_id}.mutect2.vcf.gz
+## The original mutect call variants=20235
+truth_mutect2_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/WES_IL_1.novo.muTect2.vcf.gz
+truth_mutect2_variants=$(bcftools view -H ${truth_mutect2_vcf} | wc -l)
+echo "Mutect2 variants: $truth_mutect2_variants"
+bcftools query -l ${truth_mutect2_vcf}
+zgrep "^#CHROM" ${truth_mutect2_vcf}
 
-# less ${mutect2_vcf}
+## Our call have 19900 variants, 
+## have format and sample filed
+mutect2_vcf=${mutect2_dir}/${tumour_id}.final.vcf.gz
 mutect2_variants=$(bcftools view -H ${mutect2_vcf} | wc -l)
 echo "Mutect2 variants: $mutect2_variants"
-bcftools query -l ${mutect2_vcf}
-zgrep "^#CHROM" ${mutect2_vcf}
+# bcftools query -l ${mutect2_vcf}
+# zgrep "^#CHROM" ${mutect2_vcf}
 
-# truth_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sINDEL_in_HC_regions_v1.2.1.vcf.gz
-truth_vcf=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sSNV_in_HC_regions_v1.2.1.vcf.gz
+## Truth set, indel=1625, snv=39447
+truth_vcf_indel=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sINDEL_in_HC_regions_v1.2.1.vcf.gz
+truth_indel_variants=$(bcftools view -H ${truth_vcf_indel} | wc -l)
+echo "Truth indel variants: $truth_indel_variants"
+
+truth_vcf_snv=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/high-confidence_sSNV_in_HC_regions_v1.2.1.vcf.gz
+truth_snv_variants=$(bcftools view -H ${truth_vcf_snv} | wc -l)
+echo "Truth snv variants: $truth_snv_variants"
 
 truth_bed=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395/raw/High-Confidence_Regions_v1.2.bed
 
-# tabix -p vcf ${truth_vcf}
-bcftools view -h ${truth_vcf} | tail -5
-bcftools view -h ${mutect2_vcf} | tail -5
-# bcftools query -l ${truth_vcf}
-# zgrep "^#CHROM" ${truth_vcf}
-
-truth_vcf_fixed=${work_dir}/truth_fixed.vcf.gz
-
-# Add FORMAT header for GT and sample columns to header, then add GT field to each variant
-(
-    # Output all header lines except the #CHROM line
-    bcftools view -h ${truth_vcf} | head -n -1
-    
-    # Add FORMAT header for GT
-    echo '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
-    
-    # Add the modified #CHROM line with FORMAT and sample columns
-    bcftools view -h ${truth_vcf} | tail -n 1 | sed 's/#CHROM.*/#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tTRUTH/'
-    
-    # Add all variant lines with GT format and genotype
-    bcftools view -H ${truth_vcf} | awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4,$5,$6,$7,$8,"GT","1/1"}'
-    
-) > ${work_dir}/truth_header.vcf
-
-bgzip -c ${work_dir}/truth_header.vcf > ${truth_vcf_fixed}
-tabix -p vcf ${truth_vcf_fixed}
-
-# Clean up temporary file
-rm ${work_dir}/truth_header.vcf
-
+## Combine truth indel and snv into one VCF
 export HGREF="${reference}"
+conda activate hap
 
-# Validate the fixed truth VCF before running hap.py
-echo $(date +"%F") $(date +"%T") "Validating fixed truth VCF..."
-bcftools view -h ${truth_vcf_fixed} | tail -5
-echo "Truth VCF samples:"
-bcftools query -l ${truth_vcf_fixed}
-echo "Truth VCF variant count:"
-bcftools view -H ${truth_vcf_fixed} | wc -l
+# hap_dir=${work_dir}/hap/mutect2_vs_truthmutect2
+# mkdir -p ${hap_dir}
 
-# Check chromosome names in both files
-echo "Chromosomes in truth VCF:"
-bcftools view -H ${truth_vcf_fixed} | cut -f1 | sort | uniq -c
-echo "Chromosomes in mutect2 VCF:"
-bcftools view -H ${mutect2_vcf} | cut -f1 | sort | uniq -c
+# hap.py \
+#     ${truth_mutect2_vcf} \
+#     ${mutect2_vcf} \
+#     -r ${reference} \
+#     -f ${truth_bed} \
+#     -o ${hap_dir}/hap \
+#     --verbose
 
-# Check if chromosome names match
-truth_chroms=$(bcftools view -H ${truth_vcf_fixed} | cut -f1 | sort | uniq | head -5)
-mutect2_chroms=$(bcftools view -H ${mutect2_vcf} | cut -f1 | sort | uniq | head -5)
-echo "First 5 chromosomes in truth: ${truth_chroms}"
-echo "First 5 chromosomes in mutect2: ${mutect2_chroms}"
+hap_dir=${work_dir}/hap/mutect2_vs_truth_snv
+mkdir -p ${hap_dir}
 
 
 hap.py \
-    ${truth_vcf_fixed} \
+    ${truth_vcf_snv} \
     ${mutect2_vcf} \
     -r ${reference} \
     -f ${truth_bed} \
-    -o ${work_dir}/hap \
-    --threads 1 \
+    -o ${hap_dir}/hap \
     --verbose
-
-###############################################################################
-## Bcftools isec for simple comparison
-###############################################################################
-# Alternative: Simple comparison using bcftools
-echo $(date +"%F") $(date +"%T") "Running simple VCF comparison with bcftools..."
-conda activate varcall
-# Intersect truth and mutect2 variants
-bcftools isec \
-    -p ${work_dir}/isec_results \
-    ${truth_vcf_fixed} \
-    ${mutect2_vcf}
-
-echo "Simple intersection results:"
-echo "Truth only: $(bcftools view -H ${work_dir}/isec_results/0000.vcf | wc -l)"
-echo "Mutect2 only: $(bcftools view -H ${work_dir}/isec_results/0001.vcf | wc -l)"
-echo "Common: $(bcftools view -H ${work_dir}/isec_results/0002.vcf | wc -l)"

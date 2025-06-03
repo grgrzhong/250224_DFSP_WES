@@ -1,19 +1,31 @@
 #!/bin/bash
 
 ## Install STAR-Fusion
-# conda create -n starfusion bioconda::star-fusion
-conda activate starfusion
-# conda install bioconda::star-fusion
+# conda create -n starfusion python=2.7
+# conda activate starfusion
+# conda install -c bioconda star-fusion
+# conda install -c bioconda trinity
+# conda install -c conda-forge -c bioconda samtools bzip2
+
+# conda activate starfusion
 
 ## Reference directories in multiomics
-ref_dir=/mnt/m/Reference
+# conda activate starfusion
+# export TRINITY_HOME=/home/zhonggr/miniforge3/envs/starfusion/opt/trinity-2.8.5
 
+singularity shell \
+    --bind /mnt/m/Reference:/mnt/m/Reference \
+    --bind /mnt/m/RNA-seq/STUMP/Input-trimmed:/mnt/m/RNA-seq/STUMP/Input-trimmed \
+    --bind /mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion:/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion \
+    /home/zhonggr/projects/250224_DFSP_WES/containers/singularity/star-fusion.v1.15.0.simg
+
+ref_dir=/mnt/m/Reference
 STARINDEX=${ref_dir}/Gencode/STAR_index/
 STARINDEX_HG19=${ref_dir}/Gencode/STAR_index_hg19/
 REFERENCE=${ref_dir}/Gencode/gencode.hg38.v36.primary_assembly.fa
 ANNOTATION=${ref_dir}/Gencode/gencode.v36.primary_assembly.annotation.gtf
-CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/
-
+# CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/
+CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v33_CTAT_lib_Apr062020.plug-n-play/ctat_genome_lib_build_dir/
 INPUT=/mnt/m/RNA-seq/STUMP/Input-trimmed
 
 # Check if required directories and files exist
@@ -46,15 +58,27 @@ if [ ! -d "$INPUT" ]; then
     exit 1
 fi
 
-# if [ ! -d "$CTAT_RESOURCE_LIB" ]; then
-#     echo "ERROR: CTAT resource library $CTAT_RESOURCE_LIB does not exist" >&2
-#     exit 1
-# fi
+if [ ! -d "$CTAT_RESOURCE_LIB" ]; then
+    echo "ERROR: CTAT resource library $CTAT_RESOURCE_LIB does not exist" >&2
+    exit 1
+fi
 
 
 # Check if input files exist
 input_files=$(ls ${INPUT}/*.fastq.gz 2>/dev/null | grep "R1")
-output_dir=/home/zhonggr/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion
+output_dir=/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion
+
+# singularity exec -e -B `pwd` -B /path/to/ctat_genome_lib_build_dir \
+#         star-fusion-v$version.simg \
+#         STAR-Fusion \
+#         --left_fq reads_1.fq.gz \
+#         --right_fq reads_2.fq.gz \
+#         --genome_lib_dir /path/to/ctat_genome_lib_build_dir \
+#         -O StarFusionOut \
+#         --FusionInspector validate \
+#         --examine_coding_effect \
+#         --denovo_reconstruct
+# file=/mnt/m/RNA-seq/STUMP/Input-trimmed/S13_trimmed_R1.fastq.gz
 
 for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do 
 
@@ -66,12 +90,12 @@ for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do
     
     OUTPUT=${output_dir}/${FILENAME}/
     mkdir -p $OUTPUT
-
     echo $OUTPUT;
+
     STAR --genomeDir $STARINDEX \
         --readFilesIn $file ${file//R1/R2} \
         --outReadsUnmapped None \
-        --runThreadN 16 \
+        --runThreadN 8 \
         --twopassMode Basic \
         --readFilesCommand "gunzip -c" \
         --outSAMstrandField intronMotif \
@@ -96,20 +120,23 @@ for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do
         --outFileNamePrefix $OUTPUT \
         --outSAMtype BAM SortedByCoordinate \
         --outTmpDir /tmp/STAR_${FILENAME}/ \
-        --quantMode GeneCounts;
+        --quantMode GeneCounts \
+        >& ${OUTPUT}/STAR.log
+
     # bam file needs SM tag for CTAT mutation
 
     # # --no_filter \
-    # STAR-Fusion --genome_lib_dir $CTAT_RESOURCE_LIB \
-    #             -J $OUTPUT/Chimeric.out.junction \
-    #             --left_fq $file\
-    #             --right_fq ${file//R1/R2}\
-    #             --output_dir $OUTPUT \
-    #             --examine_coding_effect \
-    #             --extract_fusion_reads \
-    #             --FusionInspector inspect;
+    STAR-Fusion --genome_lib_dir $CTAT_RESOURCE_LIB \
+                -J $OUTPUT/Chimeric.out.junction \
+                --left_fq $file\
+                --right_fq ${file//R1/R2}\
+                --output_dir $OUTPUT \
+                --examine_coding_effect \
+                --extract_fusion_reads \
+                --FusionInspector inspect \
+                >& ${OUTPUT}/STAR-Fusion.log
 
-    # samtools index ${OUTPUT}/Aligned.sortedByCoord.out.bam
+    samtools index ${OUTPUT}/Aligned.sortedByCoord.out.bam
             
     ## Set minimum FFPM to filter; Default 0.1; set to 0 to turn off
     ## --min_FFPM 100

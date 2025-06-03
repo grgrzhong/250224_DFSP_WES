@@ -26,8 +26,8 @@ export dbsnp="${ref_dir}/Population_database/dbSNP.vcf.gz"
 export germline="${ref_dir}/Population_database/somatic-hg38_af-only-gnomad.hg38.vcf.gz"
 
 tumour_id=NA12878
-fastq_1=/home/zhonggr/projects/250224_DFSP_WES/data/reference/benchmark/NA12878/raw/NIST7035_TAAGGCGA_L001_R1_001.fastq.gz
-fastq_2=/home/zhonggr/projects/250224_DFSP_WES/data/reference/benchmark/NA12878/raw/NIST7035_TAAGGCGA_L001_R2_001.fastq.gz
+fastq_1=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/NA12878/raw/NIST7035_TAAGGCGA_L001_R1_001.fastq.gz
+fastq_2=/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/NA12878/raw/NIST7035_TAAGGCGA_L001_R2_001.fastq.gz
 
 # zcat ${fastq_1} | head -n 15
 # zcat ${fastq_2} | head -n 15
@@ -79,98 +79,97 @@ adapter_2="CTGTCTCTTATACACATCTGACGCTGCCGACGA"
 ## Preprocessing and Alignment ----
 ############################################################################
 # Step 1: Fastp trimming
-echo $(date +"%F") $(date +"%T") "Running Fastp trimming for $tumour_id..."
-fastp \
-    -i ${fastq_1} \
-    -I ${fastq_2} \
-    -o ${fastq_trimmed_dir}/${tumour_id}_trimmed_1.fastq.gz \
-    -O ${fastq_trimmed_dir}/${tumour_id}_trimmed_2.fastq.gz \
-    --detect_adapter_for_pe \
-    --adapter_sequence=${adapter_1} \
-    --adapter_sequence_r2=${adapter_2} \
-    --trim_poly_g \
-    --trim_poly_x \
-    ${umi_opts} \
-    -j ${fastq_trimmed_dir}/${tumour_id}.json \
-    -h ${fastq_trimmed_dir}/${tumour_id}.html \
-    -w 8
+# echo $(date +"%F") $(date +"%T") "Running Fastp trimming for $tumour_id..."
+# fastp \
+#     -i ${fastq_1} \
+#     -I ${fastq_2} \
+#     -o ${fastq_trimmed_dir}/${tumour_id}_trimmed_1.fastq.gz \
+#     -O ${fastq_trimmed_dir}/${tumour_id}_trimmed_2.fastq.gz \
+#     --detect_adapter_for_pe \
+#     --adapter_sequence=${adapter_1} \
+#     --adapter_sequence_r2=${adapter_2} \
+#     --trim_poly_g \
+#     --trim_poly_x \
+#     ${umi_opts} \
+#     -j ${fastq_trimmed_dir}/${tumour_id}.json \
+#     -h ${fastq_trimmed_dir}/${tumour_id}.html \
+#     -w 8
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: Fastp trimming failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: Fastp trimming failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
-# Step 2: BWA Alignment
-echo $(date +"%F") $(date +"%T") "Aligning ${tumour_id} to reference genome..."
+# # Step 2: BWA Alignment
+# echo $(date +"%F") $(date +"%T") "Aligning ${tumour_id} to reference genome..."
 
-kit_name="Nextera_Rapid_Capture_Exome"
-platform="ILLUMINA"
-platform_model="HISEQ2500" 
+# kit_name="Nextera_Rapid_Capture_Exome"
+# platform="ILLUMINA"
+# platform_model="HISEQ2500" 
 
-bwa mem -M -t 16 \
-    -R "@RG\tID:${tumour_id}\tLB:${kit_name}\tPL:${platform}\tPM:${platform_model}\tSM:${tumour_id}\tPU:NA" \
-    ${reference} \
-    ${fastq_trimmed_dir}/${tumour_id}_trimmed_1.fastq.gz \
-    ${fastq_trimmed_dir}/${tumour_id}_trimmed_2.fastq.gz > ${bam_dir}/${tumour_id}.sam
+# bwa mem -M -t 16 \
+#     -R "@RG\tID:${tumour_id}\tLB:${kit_name}\tPL:${platform}\tPM:${platform_model}\tSM:${tumour_id}\tPU:NA" \
+#     ${reference} \
+#     ${fastq_trimmed_dir}/${tumour_id}_trimmed_1.fastq.gz \
+#     ${fastq_trimmed_dir}/${tumour_id}_trimmed_2.fastq.gz > ${bam_dir}/${tumour_id}.sam
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: BWA alignment failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: BWA alignment failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
-samtools view -Sb ${bam_dir}/${tumour_id}.sam > ${bam_dir}/${tumour_id}.bwa.bam
+# samtools view -Sb ${bam_dir}/${tumour_id}.sam > ${bam_dir}/${tumour_id}.bwa.bam
 
-# # Step 3: Extract and tag UMI, remove as 
-# echo $(date +"%F") $(date +"%T") "Extract and tag UMI for ${tumour_id}..."
-# python /home/zhonggr/projects/250224_DFSP_WES/bin/python/tag_umi.py \
-#     -I ${bam_dir}/${tumour_id}.bwa.bam \
-#     -O ${bam_dir}/${tumour_id}.umi.bam
+# # # Step 3: Extract and tag UMI, remove as 
+# # echo $(date +"%F") $(date +"%T") "Extract and tag UMI for ${tumour_id}..."
+# # python /home/zhonggr/projects/250224_DFSP_WES/bin/python/tag_umi.py \
+# #     -I ${bam_dir}/${tumour_id}.bwa.bam \
+# #     -O ${bam_dir}/${tumour_id}.umi.bam
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: UMI tagging failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: UMI tagging failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
-# Step 4: Sort by coordinate
-echo $(date +"%F") $(date +"%T") "Sorting BAM file for ${tumour_id}..."
-samtools sort \
-    ${bam_dir}/${tumour_id}.bwa.bam \
-    -o ${bam_dir}/${tumour_id}.sorted.bam
+# # Step 4: Sort by coordinate
+# echo $(date +"%F") $(date +"%T") "Sorting BAM file for ${tumour_id}..."
+# samtools sort \
+#     ${bam_dir}/${tumour_id}.bwa.bam \
+#     -o ${bam_dir}/${tumour_id}.sorted.bam
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: BAM sorting failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: BAM sorting failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
-# Step 5: Mark duplicates
-echo $(date +"%F") $(date +"%T") "Marking duplicates for ${tumour_id}..."
-gatk --java-options -Xmx4g MarkDuplicates \
-    -I ${bam_dir}/${tumour_id}.sorted.bam \
-    -M ${bam_dir}/${tumour_id}.metrics.txt \
-    -O ${bam_dir}/${tumour_id}.marked.bam \
-    >& ${bam_dir}/${tumour_id}.markduplicates.log
-    # Remove: --BARCODE_TAG "RX"  # No UMIs available
+# # Step 5: Mark duplicates
+# echo $(date +"%F") $(date +"%T") "Marking duplicates for ${tumour_id}..."
+# gatk --java-options -Xmx4g MarkDuplicates \
+#     -I ${bam_dir}/${tumour_id}.sorted.bam \
+#     -M ${bam_dir}/${tumour_id}.metrics.txt \
+#     -O ${bam_dir}/${tumour_id}.marked.bam \
+#     >& ${bam_dir}/${tumour_id}.markduplicates.log
+#     # Remove: --BARCODE_TAG "RX"  # No UMIs available
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: Marking duplicates failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: Marking duplicates failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
-# Step 6: Index BAM
-echo $(date +"%F") $(date +"%T") "Indexing BAM file for ${tumour_id}..."
-samtools index ${bam_dir}/${tumour_id}.marked.bam
+# # Step 6: Index BAM
+# echo $(date +"%F") $(date +"%T") "Indexing BAM file for ${tumour_id}..."
+# samtools index ${bam_dir}/${tumour_id}.marked.bam
 
-if [[ $? -ne 0 ]]; then
-    echo "ERROR: BAM indexing failed for ${tumour_id}" >&2
-    return 1
-fi
+# if [[ $? -ne 0 ]]; then
+#     echo "ERROR: BAM indexing failed for ${tumour_id}" >&2
+#     return 1
+# fi
 
 # Step 7: Base recalibration
 echo $(date +"%F") $(date +"%T") "Running base recalibration for ${tumour_id}..."
 gatk BaseRecalibrator \
     -I ${bam_dir}/${tumour_id}.marked.bam \
     -R ${reference} \
-    -L ${interval} \
     -O ${bam_dir}/${tumour_id}.recal.table \
     --known-sites ${dbsnp} \
     >& ${bam_dir}/${tumour_id}.baserecalibrator.log
@@ -185,7 +184,6 @@ echo $(date +"%F") $(date +"%T") "Applying BQSR for ${tumour_id}..."
 gatk ApplyBQSR \
     -I ${bam_dir}/${tumour_id}.marked.bam \
     -O ${bam_dir}/${tumour_id}.recal.bam \
-    -L ${interval} \
     -bqsr ${bam_dir}/${tumour_id}.recal.table \
     --create-output-bam-md5 \
     >& ${bam_dir}/${tumour_id}.applybqsr.log
@@ -201,8 +199,6 @@ gatk CollectHsMetrics \
     -I ${bam_dir}/${tumour_id}.recal.bam \
     -O ${bam_dir}/${tumour_id}.hsmetrics.txt \
     -R ${reference} \
-    -BI ${bait_interval} \
-    -TI ${target_interval} \
     >& ${bam_dir}/${tumour_id}.collecthsmetrics.log
 
 if [[ $? -ne 0 ]]; then
@@ -261,7 +257,6 @@ echo $(date +"%F") $(date +"%T") "Running Mutect2 on NA12878..."
 gatk --java-options -Xmx8g Mutect2 \
     -I ${bam_dir}/${tumour_id}.recal.bam \
     -R ${reference} \
-    -L ${interval} \
     --germline-resource ${germline} \
     --f1r2-tar-gz ${mutect2_dir}/${tumour_id}.f1r2.tar.gz \
     --callable-depth 20 \
@@ -287,11 +282,8 @@ gatk --java-options -Xmx4g FilterMutectCalls \
     --ob-priors ${mutect2_dir}/${tumour_id}.readorientationmodel.tar.gz \
     --contamination-table ${mutect2_dir}/${tumour_id}.contamination.table \
     --tumor-segmentation ${mutect2_dir}/${tumour_id}.segments.table \
-    --min-allele-fraction 0.2 \
-    --unique-alt-read-count 3 \
-    --max-alt-allele-count 1000000 \
-    --min-median-mapping-quality 20 \
-    --min-median-base-quality 20 \
+    --min-allele-fraction 0.01 \
+    --unique-alt-read-count 1 \
     --output ${mutect2_dir}/${tumour_id}.filtermutectcalls.vcf.gz \
     >& ${mutect2_dir}/${tumour_id}.filtermutectcalls.log
 
@@ -365,6 +357,11 @@ conda activate hap
 truth_vcf="${work_dir}/raw/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz"
 truth_bed="${work_dir}/raw/HG001_GRCh38_1_22_v4.2.1_benchmark.bed"
 # zgrep "^#CHROM" ${truth_vcf}
+# zcat "${work_dir}/raw/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz" | grep -v "^#" | wc -l
+
+total_true_variants=$(bcftools view -H ${truth_vcf} | wc -l)
+
+echo "Total true variants in truth set: $total_true_variants"
 
 # Check if truth files exist
 if [[ ! -f "$truth_vcf" ]]; then
@@ -380,7 +377,7 @@ fi
 export HGREF="${reference}"
 # zgrep "^#CHROM" ${mutect2_dir}/${tumour_id}.final.vcf.gz
 mutect2_vcf=${mutect2_dir}/${tumour_id}.final.vcf.gz
-bcftools view -h ${mutect2_vcf} | tail -15
+mutect2_variants=$(bcftools view -H ${mutect2_vcf} | wc -l)
 
 hap.py \
     ${truth_vcf} \

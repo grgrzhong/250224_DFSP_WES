@@ -1,5 +1,18 @@
 #!/bin/bash
 
+#SBATCH --job-name=Test_NF
+#SBATCH --partition=amd
+#SBATCH --time=48:00:00
+#SBATCH --qos=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem-per-cpu=4G
+#SBATCH --output=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.out
+#SBATCH --error=/home/zhonggr/projects/250224_DFSP_WES/slurm/%x_%j.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=zhonggr@hku.hk
+
 ##############################################################################
 # Script to run CNVkit for CNV analysis on tumor samples
 # https://cnvkit.readthedocs.io/en/stable/quickstart.html
