@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Test_NF
 #SBATCH --partition=amd
-#SBATCH --time=96:00:00
+#SBATCH --time=8:00:00
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -130,11 +130,30 @@ mutect_call_filter() {
         -o ${VAROUT}/${tumour_id}.passed.vcf.gz
 
     # Annotate repeatmasker and blacklist regions
+    
+    # Sort and index RepeatMasker file if needed
+    if [ ! -f "${ref_dir}/RepeatMasker.bed.gz.tbi" ]; then
+        echo "Sorting and indexing RepeatMasker file..."
+        zcat ${ref_dir}/RepeatMasker.bed.gz | \
+        sort -k1,1 -k2,2n | \
+        bgzip > ${ref_dir}/RepeatMasker.sorted.bed.gz
+        tabix -p bed ${ref_dir}/RepeatMasker.sorted.bed.gz
+    fi
+    
+    # Sort and index blacklist file if needed  
+    if [ ! -f "${ref_dir}/blacklist.bed.gz.tbi" ]; then
+        echo "Sorting and indexing blacklist file..."
+        zcat ${ref_dir}/blacklist.bed.gz | \
+        sort -k1,1 -k2,2n | \
+        bgzip > ${ref_dir}/blacklist.sorted.bed.gz
+        tabix -p bed ${ref_dir}/blacklist.sorted.bed.gz
+    fi
+
     echo $(date +"%F") $(date +"%T") "Annotating repeatmasker regions ..."
     bcftools annotate \
         ${VAROUT}/${tumour_id}.passed.vcf.gz \
         --header-lines ${work_dir}/vcf.rm.header \
-        --annotations ${ref_dir}/RepeatMasker.bed.gz \
+        --annotations ${ref_dir}/RepeatMasker.sorted.bed.gz \
         --columns CHROM,FROM,TO,RepeatMasker \
         --output ${VAROUT}/${tumour_id}.repeatmasker.vcf.gz
 
@@ -142,7 +161,7 @@ mutect_call_filter() {
     bcftools annotate \
         ${VAROUT}/${tumour_id}.repeatmasker.vcf.gz \
         --header-lines ${work_dir}/vcf.map.header \
-        --annotations ${ref_dir}/blacklist.bed.gz \
+        --annotations ${ref_dir}/blacklist.sorted.bed.gz \
         --columns CHROM,FROM,TO,EncodeDacMapability \
         --output-type z \
         --output ${VAROUT}/${tumour_id}.blacklist.vcf.gz
@@ -224,7 +243,7 @@ export -f mutect_call_filter
 # Number of parallel processes to run (adjust based on your system's capacity)
 sample_list=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_all_samples.txt
 
-PARALLEL_JOBS=10
+PARALLEL_JOBS=25
 
 # Run the processing in parallel
 echo "Starting parallel processing of samples with $PARALLEL_JOBS jobs..."
