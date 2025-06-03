@@ -30,6 +30,10 @@ export ANNOTATION_FILE=${ref_dir}/Funocator_Datasource/funcotator_dataSources.v1
 export INTERVAL=${ref_dir}/Exome/xgen-exome-hyb-panel-v2-hg38_200bp_sorted_merged/xgen-exome-hyb-panel-v2-hg38_200bp_sorted_merged.bed
 export PON=${ref_dir}/pon_dfsp/pon.vcf.gz
 
+# Create header files needed for repeatmasker and blacklist annotation
+echo -e "##INFO=<ID=RepeatMasker,Number=1,Type=String,Description=\"RepeatMasker\">" > ${work_dir}/vcf.rm.header
+echo -e "##INFO=<ID=EncodeDacMapability,Number=1,Type=String,Description=\"EncodeDacMapability\">" > ${work_dir}/vcf.map.header
+
 echo "Reference directory:  ${ref_dir}"
 echo "Bam directory:        ${bam_dir}"
 echo "Work directory:       ${work_dir}"
@@ -206,9 +210,6 @@ mutect_call_filter() {
 # Export function to make it available to GNU parallel
 export -f mutect_call_filter
 
-# Create header files needed for repeatmasker and blacklist annotation
-echo -e "##INFO=<ID=RepeatMasker,Number=1,Type=String,Description=\"RepeatMasker\">" > ${work_dir}/vcf.rm.header
-echo -e "##INFO=<ID=EncodeDacMapability,Number=1,Type=String,Description=\"EncodeDacMapability\">" > ${work_dir}/vcf.map.header
 
 # Get list of tumor samples to process
 # You can customize this part based on how you want to identify samples
@@ -223,7 +224,7 @@ echo -e "##INFO=<ID=EncodeDacMapability,Number=1,Type=String,Description=\"Encod
 # Number of parallel processes to run (adjust based on your system's capacity)
 sample_list=/home/zhonggr/projects/250224_DFSP_WES/data/wes/sample_info/tumour_all_samples.txt
 
-PARALLEL_JOBS=5
+PARALLEL_JOBS=10
 
 # Run the processing in parallel
 echo "Starting parallel processing of samples with $PARALLEL_JOBS jobs..."
@@ -233,6 +234,6 @@ cat "${sample_list}" | parallel \
     --joblog ${work_dir}/parallel.log \
     mutect_call_filter {} "$ref_dir" "$bam_dir" "$vcf_dir" "$work_dir" "$REFERENCE" "$GERMLINE" "$ANNOTATION_FILE" "$INTERVAL" "$PON"
 
-rm ${work_dir}/vcf.rm.header
-rm ${work_dir}/vcf.map.header
+# rm ${work_dir}/vcf.rm.header
+# rm ${work_dir}/vcf.map.header
 echo "All samples processed successfully."
