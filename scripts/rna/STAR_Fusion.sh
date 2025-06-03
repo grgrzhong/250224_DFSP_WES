@@ -1,6 +1,9 @@
 #!/bin/bash
 
+## Install STAR-Fusion
+# conda create -n starfusion bioconda::star-fusion
 conda activate starfusion
+# conda install bioconda::star-fusion
 
 ## Reference directories in multiomics
 ref_dir=/mnt/m/Reference
