@@ -185,6 +185,10 @@ plot_theme <- function() {
     theme(
         plot.title = element_text(face = "bold", hjust = 0.5, size = 9),
         # strip.background = element_blank(),
+        plot.background = element_rect(
+            fill = "white", # Set plot background to white
+            color = NA # No border
+        ),
         # axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top",
         legend.title = element_text(
@@ -197,7 +201,7 @@ plot_theme <- function() {
         legend.box = "vertical",
         # legend.box = "horizontal",
         legend.box.just = "left", # Align legend box to the left,
-        text = element_text(size = 11),
+        text = element_text(size = 11, family = "Arial"),
         axis.text = element_text(color = "black"),
         # axis.ticks = element_line(linewidth = 0.3, color = "black"),    # Set the thickness of axis ticks
         # axis.line = element_line(color = "black", linewidth = 0.5),
