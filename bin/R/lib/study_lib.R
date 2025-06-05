@@ -7,6 +7,7 @@ suppressPackageStartupMessages(
         library(here)
         library(readxl)
         library(writexl)
+        library(kableExtra)
         library(tidyverse)
     })
 )

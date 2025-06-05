@@ -12,45 +12,37 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
-# Setup the working directory
-# cd /home/zhonggr/projects/250224_DFSP_WES
+##############################################################################
+## Run STAR-Fusion using nextflow
+##############################################################################
+## Setup the working directory
+cd /home/zhonggr/projects/250224_DFSP_WES
 
-# # Global nextflow configuration
-# # export NXF_OFFLINE=true
-# # export NXF_HOME=$HOME/.nextflow
+# Global nextflow configuration
+# export NXF_OFFLINE=true
+# export NXF_HOME=$HOME/.nextflow
 # export NXF_DISABLE_CHECK_LATEST=true
 # export NXF_OPTS="-Xms512m -Xmx8g"
-# # export NXF_LOG_FILE="${PWD}/.nextflow.log"
-# rm -f .nextflow.log*
+# export NXF_LOG_FILE="${PWD}/.nextflow.log"
+export NXF_WORK="${PWD}/work"
 
-# # Run the Nextflow pipeline in local mode
-# nextflow run workflows/rna_fusion.nf \
-#     -profile local
+echo ${NXF_WORK}
+rm -f NXF_WORK
+rm -f .nextflow.log*
 
-# Run the Nextflow pipeline in hpc mode
-# nextflow run workflows/somatic_variant_calling.nf \
-#     -profile hpc \
-#     -resume \
-#     --input /home/zhonggr/projects/250224_DFSP_WES/data/wes/csv/test1.csv
+# Run the Nextflow pipeline in local mode
+nextflow run workflows/rna_fusion.nf \
+    -profile local
 
-## Install STAR-Fusion
-# conda create -n starfusion python=2.7
-# conda activate starfusion
-# conda install -c bioconda star-fusion
-# conda install -c bioconda trinity
-# conda install -c conda-forge -c bioconda samtools bzip2
-
-# conda activate starfusion
-
-## Reference directories in multiomics
-# conda activate starfusion
-# export TRINITY_HOME=/home/zhonggr/miniforge3/envs/starfusion/opt/trinity-2.8.5
-
+##############################################################################
+## Run STAR-Fusion using Singularity
+##############################################################################
+# Load the Singularity module
 singularity shell \
     --bind /mnt/m/Reference:/mnt/m/Reference \
     --bind /mnt/m/RNA-seq/STUMP/Input-trimmed:/mnt/m/RNA-seq/STUMP/Input-trimmed \
     --bind /mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion:/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion \
-    /home/zhonggr/projects/250224_DFSP_WES/containers/singularity/star-fusion.v1.15.0.simg
+    /home/zhonggr/projects/250224_DFSP_WES/containers/star-fusion.v1.15.0.simg
 
 ref_dir=/mnt/m/Reference
 STARINDEX=${ref_dir}/Gencode/STAR_index/
@@ -60,42 +52,6 @@ ANNOTATION=${ref_dir}/Gencode/gencode.v36.primary_assembly.annotation.gtf
 # CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/
 CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v33_CTAT_lib_Apr062020.plug-n-play/ctat_genome_lib_build_dir/
 INPUT=/mnt/m/RNA-seq/STUMP/Input-trimmed
-
-# Check if required directories and files exist
-echo "Checking required directories and files..."
-
-# Check reference directories
-if [ ! -d "$ref_dir" ]; then
-    echo "ERROR: Reference directory $ref_dir does not exist"
-    exit 1
-fi
-
-if [ ! -d "$STARINDEX" ]; then
-    echo "ERROR: STAR index directory $STARINDEX does not exist"
-    exit 1
-fi
-
-# Check reference files
-if [ ! -f "$REFERENCE" ]; then
-    echo "ERROR: Reference genome file $REFERENCE does not exist"
-    exit 1
-fi
-
-if [ ! -f "$ANNOTATION" ]; then
-    echo "ERROR: Annotation file $ANNOTATION does not exist"
-    exit 1
-fi
-
-if [ ! -d "$INPUT" ]; then
-    echo "ERROR: Input directory $INPUT does not exist"
-    exit 1
-fi
-
-if [ ! -d "$CTAT_RESOURCE_LIB" ]; then
-    echo "ERROR: CTAT resource library $CTAT_RESOURCE_LIB does not exist" >&2
-    exit 1
-fi
-
 
 # Check if input files exist
 input_files=$(ls ${INPUT}/*.fastq.gz 2>/dev/null | grep "R1")
@@ -155,7 +111,7 @@ for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do
         --outSAMtype BAM SortedByCoordinate \
         --outTmpDir /tmp/STAR_${FILENAME}/ \
         --quantMode GeneCounts \
-        >& ${OUTPUT}/STAR.log
+        >& ${OUTPUT}/staralignment.log
 
     # bam file needs SM tag for CTAT mutation
 
@@ -168,7 +124,7 @@ for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do
                 --examine_coding_effect \
                 --extract_fusion_reads \
                 --FusionInspector inspect \
-                >& ${OUTPUT}/STAR-Fusion.log
+                >& ${OUTPUT}/starfusion.log
 
     samtools index ${OUTPUT}/Aligned.sortedByCoord.out.bam
             

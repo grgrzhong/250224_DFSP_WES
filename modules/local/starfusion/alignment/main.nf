@@ -9,8 +9,9 @@ process STAR_ALIGNMENT {
     path star_index
 
     output:
-    tuple val(meta), path("*.junction"), emit: junction
-    tuple val(meta), path("*.bam")     , emit: bam
+    tuple val(meta), path("*Chimeric.out.junction"), emit: junction
+    tuple val(meta), path("*Aligned.sortedByCoord.out.bam"), emit: bam
+    tuple val(meta), path("*Aligned.sortedByCoord.out.bam.bai"), emit: bai
     // tuple val(meta), path("*.log")     , emit: log 
     
     when:
@@ -49,11 +50,12 @@ process STAR_ALIGNMENT {
         --alignSplicedMateMapLmin 30 \\
         --outSAMtype BAM SortedByCoordinate \\
         --outTmpDir /tmp/STAR_${prefix}/ \\
+        --outFileNamePrefix ${prefix}. \\
         --quantMode GeneCounts \\
         $args
     
     // Index the output BAM file
-    samtools index Aligned.sortedByCoord.out.bam
+    samtools index ${prefix}.Aligned.sortedByCoord.out.bam
 
     """
 }

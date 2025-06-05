@@ -15,7 +15,8 @@ remote_base_dir="/lustre1/g/path_my/250224_DFSP_WES"
 # Format: "local_absolute_path:remote_absolute_path"
 folders_to_sync=(
     "/home/zhonggr/projects/250224_DFSP_WES/data/reference:/lustre1/g/path_my/250224_DFSP_WES/data/reference"
-    # "/home/zhonggr/projects/250224_DFSP_WES/containers:/lustre1/g/path_my/250224_DFSP_WES/containers"
+    "/home/zhonggr/projects/250224_DFSP_WES/data/benchmark:/lustre1/g/path_my/250224_DFSP_WES/data/benchmark"
+    "/home/zhonggr/projects/250224_DFSP_WES/containers:/lustre1/g/path_my/250224_DFSP_WES/containers"
     # Add more folders as needed in the same format
 )
 
