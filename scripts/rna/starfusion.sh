@@ -16,7 +16,7 @@
 ## Run STAR-Fusion using nextflow
 ##############################################################################
 ## Setup the working directory
-cd /home/zhonggr/projects/250224_DFSP_WES
+# cd /home/zhonggr/projects/250224_DFSP_WES
 
 # Global nextflow configuration
 # export NXF_OFFLINE=true
@@ -24,38 +24,38 @@ cd /home/zhonggr/projects/250224_DFSP_WES
 # export NXF_DISABLE_CHECK_LATEST=true
 # export NXF_OPTS="-Xms512m -Xmx8g"
 # export NXF_LOG_FILE="${PWD}/.nextflow.log"
-export NXF_WORK="${PWD}/work"
+# export NXF_WORK="${PWD}/work"
 
-echo ${NXF_WORK}
-rm -f NXF_WORK
-rm -f .nextflow.log*
+# echo ${NXF_WORK}
+# rm -f NXF_WORK
+# rm -f .nextflow.log*
 
-# Run the Nextflow pipeline in local mode
-nextflow run workflows/rna_fusion.nf \
-    -profile local
+# # Run the Nextflow pipeline in local mode
+# nextflow run workflows/rna_fusion.nf \
+#     -profile local
 
 ##############################################################################
 ## Run STAR-Fusion using Singularity
 ##############################################################################
 # Load the Singularity module
-singularity shell \
-    --bind /mnt/m/Reference:/mnt/m/Reference \
-    --bind /mnt/m/RNA-seq/STUMP/Input-trimmed:/mnt/m/RNA-seq/STUMP/Input-trimmed \
-    --bind /mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion:/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion \
-    /home/zhonggr/projects/250224_DFSP_WES/containers/star-fusion.v1.15.0.simg
-
+input_trimmed_dir=/mnt/m/RNA-seq/STUMP/Input-trimmed
 ref_dir=/mnt/m/Reference
+output_dir=/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion
+singularity_dir=/home/zhonggr/projects/250224_DFSP_WES/containers
+
+# singularity shell \
+#     --bind ${ref_dir}:${ref_dir} \
+#     --bind ${input_trimmed_dir}:${input_trimmed_dir} \
+#     --bind ${output_dir}:${output_dir} \
+#     ${singularity_dir}/star-fusion.v1.15.0.simg
+
 STARINDEX=${ref_dir}/Gencode/STAR_index/
-STARINDEX_HG19=${ref_dir}/Gencode/STAR_index_hg19/
 REFERENCE=${ref_dir}/Gencode/gencode.hg38.v36.primary_assembly.fa
 ANNOTATION=${ref_dir}/Gencode/gencode.v36.primary_assembly.annotation.gtf
-# CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/
 CTAT_RESOURCE_LIB=${ref_dir}/GRCh38_gencode_v33_CTAT_lib_Apr062020.plug-n-play/ctat_genome_lib_build_dir/
-INPUT=/mnt/m/RNA-seq/STUMP/Input-trimmed
 
 # Check if input files exist
-input_files=$(ls ${INPUT}/*.fastq.gz 2>/dev/null | grep "R1")
-output_dir=/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion
+input_files=$(ls ${input_trimmed_dir}/*.fastq.gz 2>/dev/null | grep "R1")
 
 # singularity exec -e -B `pwd` -B /path/to/ctat_genome_lib_build_dir \
 #         star-fusion-v$version.simg \
@@ -68,9 +68,9 @@ output_dir=/mnt/f/projects/250224_DFSP_WES/outputs/stump/STAR-Fusion
 #         --examine_coding_effect \
 #         --denovo_reconstruct
 
-file=/mnt/m/RNA-seq/STUMP/Input-trimmed/S25_trimmed_R1.fastq.gz
+# file=/mnt/m/RNA-seq/STUMP/Input-trimmed/S25_trimmed_R1.fastq.gz
 
-for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do 
+for file in $(ls ${input_trimmed_dir}/*.fastq.gz | grep "R1"); do 
 
     echo $file; 
     
@@ -82,51 +82,69 @@ for file in $(ls ${INPUT}/*.fastq.gz | grep "R1"); do
     mkdir -p $OUTPUT
     echo $OUTPUT;
 
-    STAR --genomeDir $STARINDEX \
-        --readFilesIn $file ${file//R1/R2} \
-        --outReadsUnmapped None \
-        --runThreadN 8 \
-        --twopassMode Basic \
-        --readFilesCommand "gunzip -c" \
-        --outSAMstrandField intronMotif \
-        --outSAMunmapped Within \
-        --chimSegmentMin 12 \
-        --chimJunctionOverhangMin 8 \
-        --chimOutJunctionFormat 1 \
-        --alignSJDBoverhangMin 10 \
-        --alignMatesGapMax 100000 \
-        --alignIntronMax 100000 \
-        --alignSJstitchMismatchNmax 5 -1 5 5 \
-        --outSAMattrRGline ID:GRPundef SM:$FILENAME \
-        --chimMultimapScoreRange 3 \
-        --chimScoreJunctionNonGTAG -4 \
-        --chimMultimapNmax 20 \
-        --chimNonchimScoreDropMin 10 \
-        --peOverlapNbasesMin 12 \
-        --peOverlapMMp 0.1 \
-        --alignInsertionFlush Right \
-        --alignSplicedMateMapLminOverLmate 0 \
-        --alignSplicedMateMapLmin 30 \
-        --outFileNamePrefix $OUTPUT \
-        --outSAMtype BAM SortedByCoordinate \
-        --outTmpDir /tmp/STAR_${FILENAME}/ \
-        --quantMode GeneCounts \
-        >& ${OUTPUT}/staralignment.log
+    ## Run STAR alignment 
+    singularity exec \
+        --bind ${ref_dir}:${ref_dir} \
+        --bind ${input_trimmed_dir}:${input_trimmed_dir} \
+        --bind ${output_dir}:${output_dir} \
+        --bind /tmp:/tmp \
+        ${singularity_dir}/star-fusion.v1.15.0.simg \
+        STAR --genomeDir $STARINDEX \
+            --readFilesIn $file ${file//R1/R2} \
+            --outReadsUnmapped None \
+            --runThreadN 8 \
+            --twopassMode Basic \
+            --readFilesCommand "gunzip -c" \
+            --outSAMstrandField intronMotif \
+            --outSAMunmapped Within \
+            --chimSegmentMin 12 \
+            --chimJunctionOverhangMin 8 \
+            --chimOutJunctionFormat 1 \
+            --alignSJDBoverhangMin 10 \
+            --alignMatesGapMax 100000 \
+            --alignIntronMax 100000 \
+            --alignSJstitchMismatchNmax 5 -1 5 5 \
+            --outSAMattrRGline ID:GRPundef SM:$FILENAME \
+            --chimMultimapScoreRange 3 \
+            --chimScoreJunctionNonGTAG -4 \
+            --chimMultimapNmax 20 \
+            --chimNonchimScoreDropMin 10 \
+            --peOverlapNbasesMin 12 \
+            --peOverlapMMp 0.1 \
+            --alignInsertionFlush Right \
+            --alignSplicedMateMapLminOverLmate 0 \
+            --alignSplicedMateMapLmin 30 \
+            --outFileNamePrefix $OUTPUT \
+            --outSAMtype BAM SortedByCoordinate \
+            --outTmpDir /tmp/STAR_${FILENAME}/ \
+            --quantMode GeneCounts \
+            >& ${OUTPUT}/staralignment.log
 
     # bam file needs SM tag for CTAT mutation
 
-    # # --no_filter \
-    STAR-Fusion --genome_lib_dir $CTAT_RESOURCE_LIB \
-                -J $OUTPUT/Chimeric.out.junction \
-                --left_fq $file\
-                --right_fq ${file//R1/R2}\
-                --output_dir $OUTPUT \
-                --examine_coding_effect \
-                --extract_fusion_reads \
-                --FusionInspector inspect \
-                >& ${OUTPUT}/starfusion.log
+    # Run STAR-Fusion with singularity exec
+    singularity exec \
+        --bind ${ref_dir}:${ref_dir} \
+        --bind ${input_trimmed_dir}:${input_trimmed_dir} \
+        --bind ${output_dir}:${output_dir} \
+        ${singularity_dir}/star-fusion.v1.15.0.simg \
+        STAR-Fusion --genome_lib_dir $CTAT_RESOURCE_LIB \
+                    -J $OUTPUT/Chimeric.out.junction \
+                    --left_fq $file\
+                    --right_fq ${file//R1/R2}\
+                    --output_dir $OUTPUT \
+                    --examine_coding_effect \
+                    --extract_fusion_reads \
+                    --FusionInspector inspect \
+                    >& ${OUTPUT}/starfusion.log
 
-    samtools index ${OUTPUT}/Aligned.sortedByCoord.out.bam
+    # Run samtools with singularity exec
+    singularity exec \
+        --bind ${ref_dir}:${ref_dir} \
+        --bind ${input_trimmed_dir}:${input_trimmed_dir} \
+        --bind ${output_dir}:${output_dir} \
+        ${singularity_dir}/star-fusion.v1.15.0.simg \
+        samtools index ${OUTPUT}/Aligned.sortedByCoord.out.bam
             
     ## Set minimum FFPM to filter; Default 0.1; set to 0 to turn off
     ## --min_FFPM 100
