@@ -3,7 +3,7 @@ source(here::here("bin/R/lib/study_lib.R"))
 
 # Define paths
 work_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/HCC1395"
-work_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/NA12878"
+# work_dir <- "/home/zhonggr/projects/250224_DFSP_WES/data/benchmark/NA12878"
 
 mutect2_dirs <- dir_ls(work_dir, pattern = "mutect2_", type = "directory")
 mutect2_dirs <- mutect2_dirs[str_detect(basename(mutect2_dirs), "^mutect2_")]
@@ -89,36 +89,24 @@ performance_table <- performance_metrics |>
     select(
         Mutect2_Call_Depth, TP, FP, FN,
         Total_called, Total_truth, Sensitivity, Precision, F1_score, FDR
+    ) |> 
+    mutate(
+        Sensitivity = paste0(
+            round(Sensitivity * 100, 2), "%"
+        ),
+        Precision = paste0(
+            round(Precision * 100, 2), "%"
+        ),
+        F1_score = paste0(
+            round(F1_score * 100, 2), "%"
+        ),
+        FDR = paste0(
+            round(FDR * 100, 2), "%"
+        )
     )
 
 # Create a nicely formatted table
 print(performance_table)
-
-# Optional: If you want a more publication-quality table, you can use knitr::kable
-# Create a formatted table with knitr::kable
-if (requireNamespace("knitr", quietly = TRUE) && requireNamespace("kableExtra", quietly = TRUE)) {
-    formatted_table <- knitr::kable(performance_table,
-        format = "html",
-        caption = "Mutect2 Performance Metrics Across Different Depths",
-        digits = 4
-    ) %>%
-        kableExtra::kable_styling(
-            bootstrap_options = c("striped", "hover", "condensed"),
-            full_width = FALSE
-        )
-
-    print(formatted_table)
-
-    # Also save as HTML for better visualization
-    # kableExtra::save_kable(
-    #     formatted_table,
-    #     file = file.path(work_dir, "mutect2_performance_metrics.html")
-    # )
-} else {
-    # Fallback to simple kable if kableExtra is not available
-    cat("\nFormatted Table:\n")
-    print(knitr::kable(performance_table, format = "pipe"))
-}
 
 # Save the table to a CSV file
 write_csv(
@@ -126,3 +114,49 @@ write_csv(
     file.path(work_dir, "mutect2_performance_metrics.csv")
 )
 
+# Save the table as plot
+tg = gridExtra::tableGrob(performance_table)
+h = grid::convertHeight(sum(tg$heights), "in", TRUE)
+w = grid::convertWidth(sum(tg$widths), "in", TRUE)
+
+ggsave(
+    here(work_dir, "mutect2_performance_metrics.pdf"), 
+    tg, 
+    width=w, 
+    height=h
+)
+
+# formatted_table <- knitr::kable(performance_table,
+#     format = "html",
+#     caption = "Mutect2 Performance Metrics Across Different Depths",
+#     digits = 4
+# ) %>%
+#     kableExtra::kable_styling(
+#         bootstrap_options = c("striped", "hover", "condensed"),
+#         full_width = FALSE
+#     )
+# print(formatted_table)
+# hcc1395 <- performance_table
+# na12878 <- performance_table
+
+compare_table <- bind_rows(
+    na12878,
+    hcc1395
+) |> 
+    mutate(
+        truth_dataset = c("NA12878", "HCC1395")
+    ) |> 
+    relocate(
+        truth_dataset, .before = Mutect2_Call_Depth
+    )
+
+tg = gridExtra::tableGrob(compare_table)
+h = grid::convertHeight(sum(tg$heights), "in", TRUE)
+w = grid::convertWidth(sum(tg$widths), "in", TRUE)
+
+ggsave(
+    here(work_dir, "benchmark_performance_metrics.pdf"), 
+    tg, 
+    width=w, 
+    height=h
+)

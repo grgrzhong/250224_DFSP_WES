@@ -157,7 +157,7 @@ workflow PREPARE_SAMPLE {
             def normal_meta = normal[0]
 
             def meta = [
-                id: "${tumour_meta.sample_id}_vs_${normal_meta.sample_id}",
+                id: tumour_meta.sample_id,
                 patient_id: patient_id,
                 tumour_id: tumour_meta.sample_id,
                 normal_id: normal_meta.sample_id,
@@ -167,13 +167,9 @@ workflow PREPARE_SAMPLE {
             return [meta, tumour[3], tumour[4], normal[3], normal[4]]
         }
         .ifEmpty {
-            log.info("No paired samples found")
             Channel.empty()
         }
         // .view()
-
-    // Create a channel of patient IDs that have normal samples
-
 
     // Create a channel of patient IDs that have normal samples
     normal_patient_ids = normal_samples
@@ -182,59 +178,30 @@ workflow PREPARE_SAMPLE {
         .collect()
         .ifEmpty([]) // Empty list if no normal samples
 
-        // Fix for handling tumour-only samples properly
-        bam_tumour_only = tumour_samples
-            .map { meta, fastq_1, fastq_2, bam, bai ->
-                [meta, fastq_1, fastq_2, bam, bai]
-            }
-            .combine(normal_patient_ids.map { ids -> [ids] }) // Properly combine with collected IDs
-            .map { meta, _fastq_1, _fastq_2, bam, bai, normal_ids ->
-                // If this patient doesn't have a matching normal sample, it's tumour-only
-                def is_unpaired = !normal_ids.contains(meta.patient_id)
-                
-                if (is_unpaired) {
-                    // Check if defined normal is available
-                    if (params.defined_normal && params.defined_normal_index && params.defined_normal_id) {
-                        // Use defined normal for unpaired tumour samples
-                        def defined_normal_bam = file(params.defined_normal, checkIfExists: true)
-                        def defined_normal_bai = file(params.defined_normal_index, checkIfExists: true)
-                        
-                        def new_meta = [
-                            id: "${meta.sample_id}_vs_${params.defined_normal_id}",
-                            patient_id: meta.patient_id,
-                            tumour_id: meta.sample_id,
-                            normal_id: params.defined_normal_id,
-                            is_paired: true
-                        ]
-                        
-                        log.warn("Using defined normal (${params.defined_normal_id}) for creating ${meta.sample_id} meta")
-                        return [new_meta, bam, bai, defined_normal_bam, defined_normal_bai]
-                    } else {
-                        // No defined normal, truly unpaired
-                        def new_meta = [
-                            id: meta.sample_id,
-                            patient_id: meta.patient_id,
-                            tumour_id: meta.sample_id,
-                            normal_id: null,
-                            is_paired: false
-                        ]
-                        
-                        return [new_meta, bam, bai, null, null]
-                    }
-                } else {
-                    return null // Will be filtered out
-                }
-            }
-            .filter { it != null } // Remove paired samples
-            .ifEmpty {
-                log.info("No tumour-only samples found")
-                Channel.empty()
-            }
-            // .view()
+    // Create bam tumour-only samples channel
+    bam_tumour_only = tumour_samples
+        .map { meta, fastq_1, fastq_2, bam, bai -> [meta.patient_id, [meta, fastq_1, fastq_2, bam, bai]] }
+        .combine(normal_patient_ids)
+        .filter { patient_id, _tumour_data, normal_ids -> !(patient_id in normal_ids) }
+        .map { patient_id, tumour_data, _normal_ids ->
+            def tumour_meta = tumour_data[0]
+            
+            def meta = [
+                id: tumour_meta.sample_id,
+                patient_id: patient_id,
+                tumour_id: tumour_meta.sample_id,
+                normal_id: null,
+                is_paired: false
+            ]
+            
+            return [meta, tumour_data[3], tumour_data[4]] // [meta, bam, bai]
+        }
+        .ifEmpty {
+            Channel.empty()
+        }
+        .view()
 
-        // Combine paired and unpaired samples
-        // bam_all_samples = bam_tumour_normal.mix(bam_tumour_only)
-        
+    // Emit all channels
     emit:
         input_samples       = input_samples
         tumour_samples      = tumour_samples

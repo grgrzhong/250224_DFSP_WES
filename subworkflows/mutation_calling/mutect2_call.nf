@@ -67,80 +67,79 @@ workflow MUTECT2_CALL {
      * =================== TUMOUR-NORMAL PAIRED ANALYSIS ================
      */
     
+    // Extract tumour samples for pileup
+    paired_tumour_samples = bam_tumour_normal
+        .map { meta, tumour_bam, tumour_bai, _normal_bam, _normal_bai ->
+            def new_meta = meta.clone()
+            new_meta.id = meta.tumour_id
+            [new_meta, tumour_bam, tumour_bai]
+        }
 
-        // Extract tumour samples for pileup
-        paired_tumour_samples = bam_tumour_normal
-            .map { meta, tumour_bam, tumour_bai, _normal_bam, _normal_bai ->
-                def new_meta = meta.clone()
-                new_meta.id = meta.tumour_id
-                [new_meta, tumour_bam, tumour_bai]
-            }
+    // Extract normal samples for pileup
+    paired_normal_samples = bam_tumour_normal
+        .map { meta, _tumour_bam, _tumour_bai, normal_bam, normal_bai ->
+            def new_meta = meta.clone()
+            new_meta.id = meta.normal_id
+                [new_meta, normal_bam, normal_bai]
+        }
+    
+    // Get pileup summaries for tumour samples
+    paired_tumour_pileup = PILEUP_PAIRED_TUMOUR(
+        paired_tumour_samples, 
+        pileup_variants,
+        pileup_variants_tbi
+    )
+    
+    // Get pileup summaries for normal samples
+    paired_normal_pileup = PILEUP_PAIRED_NORMAL(
+        paired_normal_samples,
+        pileup_variants,
+        pileup_variants_tbi
+    )
 
-        // Extract normal samples for pileup
-        paired_normal_samples = bam_tumour_normal
-            .map { meta, _tumour_bam, _tumour_bai, normal_bam, normal_bai ->
-                def new_meta = meta.clone()
-                new_meta.id = meta.normal_id
-                    [new_meta, normal_bam, normal_bai]
-            }
-        
-        // Get pileup summaries for tumour samples
-        paired_tumour_pileup = PILEUP_PAIRED_TUMOUR(
-            paired_tumour_samples, 
-            pileup_variants,
-            pileup_variants_tbi
+    // Calculate contamination
+    paired_tumour_normal_pileup = paired_tumour_pileup.table
+        .map { meta, table -> [meta.patient_id, meta, table]}
+        .join(
+            paired_normal_pileup.table
+            .map{
+                meta, table -> [meta.patient_id, meta, table]
+            }, 
+            remainder: true
         )
+        .map {
+            patient_id, tumour_meta, tumour_table, normal_meta, normal_table -> 
+            [tumour_meta, tumour_table, normal_table]
+        }
         
-        // Get pileup summaries for normal samples
-        paired_normal_pileup = PILEUP_PAIRED_NORMAL(
-            paired_normal_samples,
-            pileup_variants,
-            pileup_variants_tbi
-        )
-
-        // Calculate contamination
-        paired_tumour_normal_pileup = paired_tumour_pileup.table
-            .map { meta, table -> [meta.patient_id, meta, table]}
-            .join(
-                paired_normal_pileup.table
-                .map{
-                    meta, table -> [meta.patient_id, meta, table]
-                }, 
-                remainder: true
-            )
-            .map {
-                patient_id, tumour_meta, tumour_table, normal_meta, normal_table -> 
-                [tumour_meta, tumour_table, normal_table]
-            }
-            
-        paired_contamination = CONTAMINATION_PAIRED(
-            paired_tumour_normal_pileup
-        )
-        
-        // Run Mutect2
-        paired_mutect2 = MUTECT2_PAIRED(
-            paired_tumour_samples,
-            paired_normal_samples,
-            fasta,
-            fai,
-            dict,
-            germline_resource,
-            germline_resource_tbi,
-            panel_of_normals,
-            panel_of_normals_tbi,
-            intervals
-        
-        )
-        // Learn read orientation model
-        paired_orientation = LEARNMODEL_PAIRED(paired_mutect2.f1r2)
-        
-        // Store output channels
-        tumour_normal_vcf = paired_mutect2.vcf
-        tumour_normal_tbi = paired_mutect2.tbi
-        tumour_normal_stats = paired_mutect2.stats
-        tumour_normal_orientation = paired_orientation.orientation
-        tumour_normal_contamination = paired_contamination.contamination
-        tumour_normal_segmentation = paired_contamination.segmentation
+    paired_contamination = CONTAMINATION_PAIRED(
+        paired_tumour_normal_pileup
+    )
+    
+    // Run Mutect2
+    paired_mutect2 = MUTECT2_PAIRED(
+        paired_tumour_samples,
+        paired_normal_samples,
+        fasta,
+        fai,
+        dict,
+        germline_resource,
+        germline_resource_tbi,
+        panel_of_normals,
+        panel_of_normals_tbi,
+        intervals
+    
+    )
+    // Learn read orientation model
+    paired_orientation = LEARNMODEL_PAIRED(paired_mutect2.f1r2)
+    
+    // Store output channels
+    tumour_normal_vcf = paired_mutect2.vcf
+    tumour_normal_tbi = paired_mutect2.tbi
+    tumour_normal_stats = paired_mutect2.stats
+    tumour_normal_orientation = paired_orientation.orientation
+    tumour_normal_contamination = paired_contamination.contamination
+    tumour_normal_segmentation = paired_contamination.segmentation
     
     
 
@@ -149,52 +148,50 @@ workflow MUTECT2_CALL {
      */
     // [[id,patient_id,t_id,n_id,is_paired], t_bam, t_bai, n_bam, n_bai]
 
-        unpaired_tumour_samples = bam_tumour_only
-            .map { meta, tumour_bam, tumour_bai, _normal_bam, _normal_bai ->
-                def new_meta = meta.clone()
-                new_meta.id = meta.tumour_id
-                [new_meta, tumour_bam, tumour_bai]
-            }
-        
-        // Get pileup summaries for tumour-only samples
-        unpaired_tumour_pileup = PILEUPS_UNPAIRED_TUMOUR(
-            unpaired_tumour_samples,
-            pileup_variants,
-            pileup_variants_tbi
-        )
-        
-        // Calculate contamination (no matched normal)
-        unpaired_tumour_only_pileup = unpaired_tumour_pileup.table
-            .map { meta, table -> [meta, table, []] }
+    unpaired_tumour_samples = bam_tumour_only
+        .map { meta, tumour_bam, tumour_bai, _normal_bam, _normal_bai ->
+            def new_meta = meta.clone()
+            new_meta.id = meta.tumour_id
+            [new_meta, tumour_bam, tumour_bai]
+        }
+    
+    // Get pileup summaries for tumour-only samples
+    unpaired_tumour_pileup = PILEUPS_UNPAIRED_TUMOUR(
+        unpaired_tumour_samples,
+        pileup_variants,
+        pileup_variants_tbi
+    )
+    
+    // Calculate contamination (no matched normal)
+    unpaired_tumour_only_pileup = unpaired_tumour_pileup.table
+        .map { meta, table -> [meta, table, []] }
 
-        unpaired_contamination = CONTAMINATION_UNPAIRED(unpaired_tumour_only_pileup)
+    unpaired_contamination = CONTAMINATION_UNPAIRED(unpaired_tumour_only_pileup)
 
-        
-        // Run Mutect2 for tumour-only samples
-        unpaired_mutect2 = MUTECT2_TUMOUR(
-            unpaired_tumour_samples,
-            fasta,
-            fai,
-            dict,
-            germline_resource,
-            germline_resource_tbi,
-            panel_of_normals,
-            panel_of_normals_tbi,
-            intervals
-        )
     
-        // Learn read orientation model
-        unpaired_orientation = LEARNMODEL_UNPAIRED(unpaired_mutect2.f1r2)
-        
-        // Store output channels
-        tumour_only_vcf = unpaired_mutect2.vcf
-        tumour_only_tbi = unpaired_mutect2.tbi
-        tumour_only_stats = unpaired_mutect2.stats
-        tumour_only_orientation = unpaired_orientation.orientation
-        tumour_only_contamination = unpaired_contamination.contamination
-        tumour_only_segmentation = unpaired_contamination.segmentation
+    // Run Mutect2 for tumour-only samples
+    unpaired_mutect2 = MUTECT2_TUMOUR(
+        unpaired_tumour_samples,
+        fasta,
+        fai,
+        dict,
+        germline_resource,
+        germline_resource_tbi,
+        panel_of_normals,
+        panel_of_normals_tbi,
+        intervals
+    )
+
+    // Learn read orientation model
+    unpaired_orientation = LEARNMODEL_UNPAIRED(unpaired_mutect2.f1r2)
     
-    
+    // Store output channels
+    tumour_only_vcf = unpaired_mutect2.vcf
+    tumour_only_tbi = unpaired_mutect2.tbi
+    tumour_only_stats = unpaired_mutect2.stats
+    tumour_only_orientation = unpaired_orientation.orientation
+    tumour_only_contamination = unpaired_contamination.contamination
+    tumour_only_segmentation = unpaired_contamination.segmentation
     
     // Combine all Mutect2 outputs for further processing
     mutect2_vcf = tumour_normal_vcf.mix(tumour_only_vcf)
@@ -214,8 +211,6 @@ workflow MUTECT2_CALL {
         .map { meta, vcf, tbi, stats, orientation, contamination, segmentation ->
             [meta, vcf, tbi, stats, orientation, contamination, segmentation]
         }
-    
-    // filter_input.view()
 
     // Filter Mutect2 calls
     filtered_calls = FILTERMUTECTCALLS(

@@ -4,7 +4,7 @@
 # using Singularity. The containers are used for the CNV_FACETS workflow.
 # https://seqera.io/containers/
 
-container_dir="/home/zhonggr/projects/250224_DFSP_WES/containers/singularity"
+container_dir="/home/zhonggr/projects/250224_DFSP_WES/containers"
 mkdir -p ${container_dir}
 
 singularity pull --force --dir ${container_dir} bamtools.sif oras://community.wave.seqera.io/library/bamtools:2.5.2--ec8f9631801f9901
@@ -26,6 +26,8 @@ singularity pull --force --dir ${container_dir} samtools.sif oras://community.wa
 singularity pull --force --dir ${container_dir} sequenzautils.sif oras://community.wave.seqera.io/library/samtools_sequenza-utils_tabix_python:0ed695c1d671ea87
 singularity pull --force --dir ${container_dir} tabix.sif oras://community.wave.seqera.io/library/tabix:1.11--dba91ce963b95ef9
 singularity pull --force --dir ${container_dir} vcf2maf.sif oras://community.wave.seqera.io/library/ensembl-vep_vcf2maf:df9fb21816c1659e
+singularity pull --force --dir ${container_dir} vcf2tsvpy.sif oras://community.wave.seqera.io/library/vcf2tsvpy:0.6.1--234569ac32056c31
+singularity pull --force --dir ${container_dir} starfusion.sif https://data.broadinstitute.org/Trinity/CTAT_SINGULARITY/STAR-Fusion/star-fusion.v1.15.0.simg
 
 
 

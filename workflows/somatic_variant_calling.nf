@@ -4,8 +4,7 @@
 include { PREPARE_SAMPLE     } from "../subworkflows/mutation_calling/prepare_sample.nf"
 include { PREPROCESSING      } from "../subworkflows/mutation_calling/preprocessing.nf"
 include { MUTECT2_CALL       } from "../subworkflows/mutation_calling/mutect2_call.nf"
-// include { CNV_SEQUENZA       } from "../subworkflows/mutation_calling/cnv_sequenza.nf"
-include { CNV_FACETS         } from "../subworkflows/mutation_calling/cnv_facets.nf"
+include { CNV_CALL_FACETS    } from "../subworkflows/mutation_calling/cnv_facets.nf"
 
 //  Reference genome and resources
 params.fasta                    = params.genomes[params.genome]?.fasta
@@ -119,20 +118,8 @@ workflow {
     */
     samples = PREPARE_SAMPLE(params.input)
 
-    input_samples       = samples.input_samples
-    tumour_samples      = samples.tumour_samples
-    normal_samples      = samples.normal_samples
-    fastq               = samples.fastq
     bam_tumour_normal   = samples.bam_tumour_normal
     bam_tumour_only     = samples.bam_tumour_only
-
-    // Print out the sample information
-    // log.info "================== Sample Information =================="
-    // input_samples.count().subscribe { countVal -> log.info "Number of samples          = ${countVal}" }
-    // tumour_samples.count().subscribe { countVal -> log.info "Number of tumour samples   = ${countVal}" }
-    // normal_samples.count().subscribe { countVal -> log.info "Number of normal samples   = ${countVal}" }
-    // bam_tumour_normal.count().subscribe { countVal -> log.info "Number of paired samples   = ${countVal}" }
-    // bam_tumour_only.count().subscribe { countVal -> log.info "Number of unpaired samples = ${countVal}" }
 
     /*
         ======================================================================
@@ -180,13 +167,10 @@ workflow {
     // )
 
     // CNV calling and annotation
-    CNV_FACETS(
-        bam_tumour_normal,
-        bam_tumour_only,
-        dbsnp,
-        dbsnp_tbi,
-        defined_normal,
-        defined_normal_index
-    )
+    // CNV_CALL_FACETS(
+    //     bam_tumour_normal,
+    //     dbsnp,
+    //     dbsnp_tbi
+    // )
 
 }

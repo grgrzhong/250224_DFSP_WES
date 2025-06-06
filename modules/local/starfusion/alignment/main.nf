@@ -23,6 +23,8 @@ process STAR_ALIGNMENT {
     def prefix = task.ext.prefix ?: "${meta.id}"
     
     """
+    # Create a temporary directory in the Linux filesystem
+
     STAR --genomeDir ${star_index} \\
         --readFilesIn ${fastq_1} ${fastq_2} \\
         --outReadsUnmapped None \\
@@ -56,6 +58,9 @@ process STAR_ALIGNMENT {
     
     // Index the output BAM file
     samtools index ${prefix}.Aligned.sortedByCoord.out.bam
+
+    # Clean up temporary directory
+    rm -rf /tmp/STAR_${prefix}
 
     """
 }

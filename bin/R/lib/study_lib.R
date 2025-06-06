@@ -8,6 +8,7 @@ suppressPackageStartupMessages(
         library(readxl)
         library(writexl)
         library(kableExtra)
+        library(gridExtra)
         library(tidyverse)
     })
 )

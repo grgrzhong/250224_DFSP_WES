@@ -31,8 +31,9 @@
 # rm -f .nextflow.log*
 
 # # Run the Nextflow pipeline in local mode
-# nextflow run workflows/rna_fusion.nf \
-#     -profile local
+nextflow run workflows/rna_fusion.nf \
+    -profile local \
+    -resume
 
 ##############################################################################
 ## Run STAR-Fusion using Singularity
