@@ -12,13 +12,13 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=zhonggr@hku.hk
 
-## =============================================================================
+## "==========================================================================="
 ## PCGR Annotation (https://sigven.github.io/pcgr/index.html)
 ## Authors: Zhong Guorui
 ## Date: 2025-06-10
 ## Description: This script was adapted from "M:\Scripts\DNA analysis\PCGR_annotate.sh"
-## Added prallelization and other features for PCGR annotation
-## =============================================================================
+## Key features: 1. Added prallelization; 2. Use singularity container
+## "==========================================================================="
 
 ## Project settings
 export project_dir="/mnt/f/projects/250224_DFSP_WES"
@@ -43,16 +43,30 @@ work_dir="${project_dir}/data/wes/PCGR"
 sample_list=$(ls $mutect2_dir)
 
 ## Parallel jobs
-num_sample=$(echo "$sample_list" | wc -l)
+num_sample=$(echo "${sample_list}" | wc -l)
 if [ "${num_sample}" -ge 15 ]; then    
     jobs=15
 else
     jobs=$num_sample
 fi
 
+## Print the configuration
+echo "===================================================================="
+echo "work_dir:                ${work_dir}"
+echo "mutect2_dir:             ${mutect2_dir}"
+echo "bam_dir:                 ${bam_dir}"
+echo "ref_data_dir:            ${ref_data_dir}"
+echo "vep_dir:                 ${vep_dir}"
+echo "panel_of_normals:        ${panel_of_normals}"
+echo "container_dir:           ${container_dir}"
+echo "Number of samples:       ${num_sample}"
+echo "Number of parallel jobs: ${jobs}"
+echo "===================================================================="
+
 # tumour_id="DFSP-001-T"
-tumour_id="DFSP-028-T"
+# tumour_id="DFSP-028-T"
 # tumour_id="DFSP-031-T"
+
 ## Function to run PCGR annotation
 pcgr_annotation() {
     local tumour_id=$1
@@ -184,37 +198,42 @@ pcgr_annotation() {
         singularity exec \
             --bind "${ref_data_dir}:${ref_data_dir}" \
             --bind "${vep_dir}:${vep_dir}" \
-            --bind "${bam_dir}:${bam_dir}" \
-            --bind "${mutect2_dir}:${mutect2_dir}" \
-            --bind "${work_dir}:${work_dir}" \
             --bind "${output_dir}:${output_dir}" \
-            --bind "${module_dir}:${module_dir}" \
+            --bind "${work_dir}:${work_dir}" \
             "${container_dir}/pcgr-2.2.1.sif" \
             pcgr \
-            --input_vcf "${reformatted_vcf}" \
-            --vep_dir "${vep_dir}" \
-            --refdata_dir "${ref_data_dir}" \
-            --output_dir "$output_dir" \
-            --genome_assembly grch38 \
-            --sample_id "${tumour_id}" \
-            --assay WES \
-            --effective_target_size_mb 34 \
-            --tumor_only \
-            --tumor_dp_tag TDP \
-            --tumor_af_tag TAF \
-            --tumor_dp_min 20 \
-            --tumor_af_min 0.05 \
-            --estimate_tmb \
-            --tmb_dp_min 20 \
-            --tmb_af_min 0.05 \
-            --estimate_msi \
-            --estimate_signatures \
-            --vcf2maf \
-            --ignore_noncoding \
-            --force_overwrite \
-            >& "${output_dir}/pcgr_annotation.log"
+                --input_vcf "${reformatted_vcf}" \
+                --vep_dir "${vep_dir}" \
+                --refdata_dir "${ref_data_dir}" \
+                --output_dir "$output_dir" \
+                --genome_assembly grch38 \
+                --sample_id "${tumour_id}" \
+                --assay WES \
+                --effective_target_size_mb 34 \
+                --tumor_only \
+                --tumor_dp_tag TDP \
+                --tumor_af_tag TAF \
+                --tumor_dp_min 20 \
+                --tumor_af_min 0.05 \
+                --estimate_tmb \
+                --tmb_dp_min 20 \
+                --tmb_af_min 0.05 \
+                --estimate_msi \
+                --estimate_signatures \
+                --vcf2maf \
+                --ignore_noncoding \
+                --force_overwrite \
+                >& "${output_dir}/pcgr_annotation.log"
 
     fi
 }
 
+export -f pcgr_annotation
 
+## Run PCGR annotation in parallel
+echo "${sample_list}" | parallel \
+    --jobs "${jobs}" \
+    --progress \
+    pcgr_annotation {} "${mutect2_dir}" "${bam_dir}" "${ref_data_dir}" "${vep_dir}" "${work_dir}" "${panel_of_normals}" "${container_dir}"
+
+echo "$(date +"%F") $(date +"%T")" "PCGR annotation completed for all samples."
