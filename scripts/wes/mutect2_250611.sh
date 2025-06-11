@@ -298,7 +298,6 @@ echo "Panel of Normal:      ${pon}"
 # Create header files needed for repeatmasker and blacklist annotation
 echo -e "##INFO=<ID=RepeatMasker,Number=1,Type=String,Description=\"RepeatMasker\">" > ${out_dir}/vcf.rm.header
 echo -e "##INFO=<ID=EncodeDacMapability,Number=1,Type=String,Description=\"EncodeDacMapability\">" > ${out_dir}/vcf.map.header
-
 # Get list of tumor samples to process
 #vcf_dir="/home/zhonggr/projects/250224_DFSP_WES/data/wes/variant_calling/mutect2"
 # find "$vcf_dir" -name "*_unfiltered.vcf.gz" | sort | sed 's|.*/||' | sed 's/_unfiltered.vcf.gz$//' > "${out_dir}/sample_list.txt"

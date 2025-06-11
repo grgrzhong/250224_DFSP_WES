@@ -20,35 +20,38 @@
 ## Added prallelization and other features for PCGR annotation
 ## =============================================================================
 
-## Download PCGR singularity container
-project_dir="/mnt/f/projects/250224_DFSP_WES"
-container_dir="${project_dir}/containers"
-singularity pull --force --dir ${container_dir} pcgr-2.2.1.sif oras://ghcr.io/sigven/pcgr:2.2.1.singularity
-
-## Define directories and paths
+## Project settings
+export project_dir="/mnt/f/projects/250224_DFSP_WES"
 export module_dir="${project_dir}/bin"
+export bam_dir="${project_dir}/data/wes/bam"
+export mutect2_dir="${project_dir}/data/wes/mutect2"
+
+## Reference settings
 export ref_dir="/mnt/m/Reference"
 export ref_data_dir="${ref_dir}/PCGR_reference/20250314"
 export vep_dir="${ref_dir}/VEP_cache"
-export bam_dir="${project_dir}/data/wes/bam"
-export mutect2_dir="${project_dir}/data/wes/mutect2"
 export panel_of_normals="${ref_dir}/WES/DFSP/PON-Mutect/pon.vcf.gz"
+
+## Download PCGR singularity container if not already present
+container_dir="${project_dir}/containers"
+singularity pull --force --dir ${container_dir} pcgr-2.2.1.sif oras://ghcr.io/sigven/pcgr:2.2.1.singularity
 
 ## Output directory for PCGR results
 work_dir="${project_dir}/data/wes/PCGR"
 
-## Sample list
-sample_list=$(ls $mutect2)
-num_sample=$(echo "$sample_list" | wc -l)
+## Sample list to run PCGR annotation
+sample_list=$(ls $mutect2_dir)
 
 ## Parallel jobs
+num_sample=$(echo "$sample_list" | wc -l)
 if [ "${num_sample}" -ge 15 ]; then    
     jobs=15
 else
     jobs=$num_sample
 fi
 
-tumour_id="DFSP-001-T"
+# tumour_id="DFSP-001-T"
+tumour_id="DFSP-028-T"
 # tumour_id="DFSP-031-T"
 ## Function to run PCGR annotation
 pcgr_annotation() {
@@ -118,15 +121,16 @@ pcgr_annotation() {
         
         ## Run PCGR annotation
         singularity exec \
-            --bind "${ref_data_dir}:/ref" \
-            --bind "${vep_dir}:/vep" \
-            --bind "${work_dir}:/work" \
+            --bind "${ref_data_dir}:${ref_data_dir}" \
+            --bind "${vep_dir}:${vep_dir}" \
+            --bind "${output_dir}:${output_dir}" \
+            --bind "${work_dir}:${work_dir}" \
             "${container_dir}/pcgr-2.2.1.sif" \
             pcgr \
-            --input_vcf "/work/${tumour_id}/${tumour_id}.reformatted.vcf.gz" \
-            --vep_dir "/vep" \
-            --refdata_dir "/ref" \
-            --output_dir "/work/${tumour_id}" \
+            --input_vcf "${reformatted_vcf}" \
+            --vep_dir "${vep_dir}" \
+            --refdata_dir "${ref_data_dir}" \
+            --output_dir "${output_dir}" \
             --genome_assembly grch38 \
             --sample_id "${tumour_id}" \
             --assay WES \
@@ -146,7 +150,8 @@ pcgr_annotation() {
             --estimate_signatures \
             --vcf2maf \
             --ignore_noncoding \
-            --force_overwrite
+            --force_overwrite \
+            >& "${output_dir}/pcgr.log"
 
     ## ========================================================================
     ## Tumour-Only PCGR Annotation

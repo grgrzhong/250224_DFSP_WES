@@ -64,7 +64,7 @@ else
     jobs=$num_sample
 fi
 
-tumour_id="DFSP-001-T"
+tumour_id="DFSP-010-T-P1"
 # tumour_id="DFSP-031-T"
 ## Function to run PCGR annotation
 pcgr_annotation() {
@@ -92,6 +92,8 @@ pcgr_annotation() {
 
     ## Check if input VCF exists
     input_vcf="${mutect2_dir}/${tumour_id}/${tumour_id}.final.vcf.gz"
+
+    # bcftools view -h "${input_vcf}" | grep "##INFO"
 
     if [ ! -f "${input_vcf}" ]; then
         echo "Input VCF not found: ${input_vcf}"
@@ -156,58 +158,58 @@ pcgr_annotation() {
         echo "$(date +"%F") $(date +"%T")" "Normal sample not found for ${tumour_id}. Running tumor-only analysis ..."
         
         ## Reformat VCF 
-        singularity exec \
-            --bind "${mutect2_dir}:${mutect2_dir}" \
-            --bind "${work_dir}:${work_dir}" \
-            --bind "${output_dir}:${output_dir}" \
-            --bind "${module_dir}:${module_dir}" \
-            --bind "/tmp:/tmp" \
-            "${container_dir}/pysam-0.23.2.sif" \
-            python "${module_dir}/pcgr_reformat_vcf_tumour_only.py" \
-                --input "${input_vcf}" \
-                --output "${reformatted_vcf}"
+        # singularity exec \
+        #     --bind "${mutect2_dir}:${mutect2_dir}" \
+        #     --bind "${work_dir}:${work_dir}" \
+        #     --bind "${output_dir}:${output_dir}" \
+        #     --bind "${module_dir}:${module_dir}" \
+        #     --bind "/tmp:/tmp" \
+        #     "${container_dir}/pysam-0.23.2.sif" \
+        #     python "${module_dir}/pcgr_reformat_vcf_tumour_only.py" \
+        #         --input "${input_vcf}" \
+        #         --output "${reformatted_vcf}"
         
-        ## Index it
-        rm -f "${reformatted_vcf}.tbi"
-        singularity exec \
-            --bind "${work_dir}:${work_dir}" \
-            --bind "${output_dir}:${output_dir}" \
-            "${container_dir}/tabix-1.11.sif" \
-            tabix -p vcf "${reformatted_vcf}"
+        # ## Index it
+        # rm -f "${reformatted_vcf}.tbi"
+        # singularity exec \
+        #     --bind "${work_dir}:${work_dir}" \
+        #     --bind "${output_dir}:${output_dir}" \
+        #     "${container_dir}/tabix-1.11.sif" \
+        #     tabix -p vcf "${reformatted_vcf}"
         
-        ## Run PCGR annotation
-        singularity exec \
-            --bind "${ref_data_dir}:${ref_data_dir}" \
-            --bind "${vep_dir}:${vep_dir}" \
-            --bind "${bam_dir}:${bam_dir}" \
-            --bind "${mutect2_dir}:${mutect2_dir}" \
-            --bind "${work_dir}:${work_dir}" \
-            --bind "${output_dir}:${output_dir}" \
-            --bind "${module_dir}:${module_dir}" \
-            "${container_dir}/pcgr-2.2.1.sif" \
-            pcgr \
-            --input_vcf "${reformatted_vcf}" \
-            --vep_dir "${vep_dir}" \
-            --refdata_dir "${ref_data_dir}" \
-            --output_dir "$output_dir" \
-            --genome_assembly grch38 \
-            --sample_id "${tumour_id}" \
-            --assay WES \
-            --effective_target_size_mb 34 \
-            --tumor_only \
-            --tumor_dp_tag TDP \
-            --tumor_af_tag TAF \
-            --tumor_dp_min 20 \
-            --tumor_af_min 0.05 \
-            --estimate_tmb \
-            --tmb_dp_min 20 \
-            --tmb_af_min 0.05 \
-            --estimate_msi \
-            --estimate_signatures \
-            --vcf2maf \
-            --ignore_noncoding \
-            --force_overwrite \
-            >& "${output_dir}/pcgr_annotation.log"
+        # ## Run PCGR annotation
+        # singularity exec \
+        #     --bind "${ref_data_dir}:${ref_data_dir}" \
+        #     --bind "${vep_dir}:${vep_dir}" \
+        #     --bind "${bam_dir}:${bam_dir}" \
+        #     --bind "${mutect2_dir}:${mutect2_dir}" \
+        #     --bind "${work_dir}:${work_dir}" \
+        #     --bind "${output_dir}:${output_dir}" \
+        #     --bind "${module_dir}:${module_dir}" \
+        #     "${container_dir}/pcgr-2.2.1.sif" \
+        #     pcgr \
+        #     --input_vcf "${reformatted_vcf}" \
+        #     --vep_dir "${vep_dir}" \
+        #     --refdata_dir "${ref_data_dir}" \
+        #     --output_dir "$output_dir" \
+        #     --genome_assembly grch38 \
+        #     --sample_id "${tumour_id}" \
+        #     --assay WES \
+        #     --effective_target_size_mb 34 \
+        #     --tumor_only \
+        #     --tumor_dp_tag TDP \
+        #     --tumor_af_tag TAF \
+        #     --tumor_dp_min 20 \
+        #     --tumor_af_min 0.05 \
+        #     --estimate_tmb \
+        #     --tmb_dp_min 20 \
+        #     --tmb_af_min 0.05 \
+        #     --estimate_msi \
+        #     --estimate_signatures \
+        #     --vcf2maf \
+        #     --ignore_noncoding \
+        #     --force_overwrite \
+        #     >& "${output_dir}/pcgr_annotation.log"
 
     fi
 }
